@@ -1,0 +1,87 @@
+{
+  "@@locale": "en",
+  
+  "appTitle": "Fitness Gem",
+  
+  "permissionTitle": "Permission Request",
+  "permissionGrantedTitle": "Permissions Granted",
+  "permissionMessage": "Camera and microphone access is required for pose analysis.",
+  "permissionGrantedMessage": "All permissions granted.\nPlease proceed to the next step.",
+  "grantPermission": "Grant Permission",
+  "skip": "Skip (Limited Features)",
+  "next": "Next",
+  "previous": "Previous",
+  "start": "Start",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "save": "Save",
+  "close": "Close",
+  
+  "profileInfo": "Profile Information",
+  "profileDescription": "Enter your information for personalized workout recommendations.",
+  "ageRange": "Age Range",
+  "selectAgeRange": "Select Age Range",
+  "injuryHistory": "Injury History",
+  "none": "None",
+  "neckShoulder": "Neck/Shoulder",
+  "lowerBack": "Lower Back",
+  "knee": "Knee",
+  "ankle": "Ankle",
+  "wrist": "Wrist",
+  "elbow": "Elbow",
+  "hip": "Hip",
+  "other": "Other",
+  "enterInjuryDetails": "Enter injury details",
+  
+  "fitnessGoal": "Fitness Goal",
+  "strengthBuilding": "Strength Building",
+  "weightLoss": "Weight Loss",
+  "endurance": "Endurance",
+  "flexibility": "Flexibility",
+  "postureCorrection": "Posture Correction",
+  "rehabilitation": "Rehabilitation",
+  "enterGoalDetails": "Enter your goal",
+  
+  "experienceLevel": "Experience Level",
+  "beginner": "Beginner (< 1 year)",
+  "intermediate": "Intermediate (1-3 years)",
+  "advanced": "Advanced (3+ years)",
+  
+  "targetExercise": "Target Exercise",
+  "selectExercise": "Select a target exercise",
+  
+  "safetySettings": "Safety Settings",
+  "safetyDescription": "Configure fall detection and emergency contacts.",
+  "enableFallDetection": "Enable Fall Detection",
+  "fallDetectionDescription": "Detects falls during exercise.",
+  "guardianPhone": "Guardian Phone (Optional)",
+  "guardianPhoneDescription": "Phone number for emergency SMS alerts.",
+  "setUpLater": "Set up later",
+  
+  "aiConsultant": "Talk with AI Consultant",
+  "aiConsultantDescription": "Get a more accurate personalized curriculum",
+  
+  "disclaimer": "⚠️ Medical Disclaimer",
+  "disclaimerContent": "This app does not provide medical advice.\nConsult a healthcare professional before exercising.\nStop immediately if you experience pain or injury.",
+  "autoRedirect": "Redirecting in 3 seconds...",
+  
+  "settings": "Settings",
+  "aiConsulting": "AI Consulting",
+  "aiConsultingSubtitle": "Deep consultation for personalized curriculum",
+  "reconsult": "Reconsult",
+  "daysUntilReconsult": "{days} days until available",
+  "@daysUntilReconsult": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "weeklyLimitMessage": "You can consult once a week",
+  "aiConsultResult": "AI Consultation Result",
+  "consultationUpdated": "Consultation results updated.",
+  
+  "permissionRequired": "Permission Required",
+  "permissionDeniedMessage": "Camera and microphone permissions were denied.\nPlease enable them in Settings.",
+  "openSettings": "Open Settings"
+}

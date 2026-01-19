@@ -85,12 +85,19 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
   // 낙상 감지
   final FallDetectionService _fallDetectionService = FallDetectionService();
-  bool _showFallConfirmDialog = false;
+  final bool _showFallConfirmDialog = false;
 
   // Ready Pose 감지
   List<Point3D>? _readyPoseReference;
-  double _poseSimilarity = 0.0;
+  final double _poseSimilarity = 0.0;
   static const double _readyPoseThreshold = 0.8; // 80% 유사도
+
+  // 신체 가시성 및 준비자세 카운트다운
+  bool _isFullBodyVisible = false;
+  bool _isWaitingForReadyPose = true;
+  int _countdownSeconds = 0;
+  Timer? _countdownTimer;
+  DateTime? _lastBodyNotVisibleTTS;
 
   // 실시간 자세 피드백
   final FormRuleChecker _formRuleChecker = FormRuleChecker();
@@ -127,6 +134,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     _videoRecorder.dispose();
     _displayViewModel.dispose();
     _workoutTimer?.cancel();
+    _countdownTimer?.cancel();
     _guideVideoController?.dispose();
     _ttsService.dispose();
     super.dispose();
@@ -267,16 +275,12 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       await _ttsService.speakWorkoutStart(_currentTask!.title);
     }
 
-    // 녹화 시작
-    if (_controller != null) {
-      await _startRecording();
-    }
-
-    // 타이머 시작
-    _startWorkoutTimer();
-
+    // 준비자세 대기 모드로 시작 (타이머/녹화는 카운트다운 후 시작)
     if (mounted) {
-      setState(() => _isCameraInitialized = true);
+      setState(() {
+        _isCameraInitialized = true;
+        _isWaitingForReadyPose = true;
+      });
     }
   }
 
@@ -371,13 +375,39 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         });
       }
 
-      // Rep 카운팅 및 실시간 피드백
-      if (smoothedPoses.isNotEmpty && !_isResting) {
+      // 신체 가시성 체크 및 카운트다운 로직
+      if (smoothedPoses.isNotEmpty) {
         final pose = smoothedPoses.first;
+        final bodyVisible = _checkBodyVisibility(pose);
+
+        if (mounted) {
+          setState(() => _isFullBodyVisible = bodyVisible);
+        }
+
+        // 준비자세 대기 중일 때
+        if (_isWaitingForReadyPose) {
+          if (bodyVisible) {
+            // 신체가 보이면 카운트다운 시작
+            if (_countdownSeconds == 0 && _countdownTimer == null) {
+              _startCountdown();
+            }
+          } else {
+            // 신체가 안 보이면 카운트다운 취소 및 TTS 안내
+            _cancelCountdown();
+            _speakBodyNotVisibleThrottled();
+          }
+          return; // 준비자세 대기 중에는 아래 로직 실행 안 함
+        }
+
+        // 운동 중 신체가 안 보이면 안내
+        if (!bodyVisible && !_isResting) {
+          _speakBodyNotVisibleThrottled();
+        }
+
         _videoRecorder.updatePose(pose); // ControlNet 프레임용
 
         // Rep 카운팅
-        if (_repCounter != null) {
+        if (_repCounter != null && !_isResting) {
           final newRep = _repCounter!.processFrame(pose);
           if (newRep && mounted) {
             _incrementRep();
@@ -385,19 +415,29 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         }
 
         // 실시간 자세 피드백
-        // 실시간 자세 피드백
-        final formFeedback = _formRuleChecker.checkForm(pose);
-        if (formFeedback != null) {
-          _ttsService.speakFormCorrection(formFeedback);
-        }
+        if (!_isResting) {
+          final formFeedback = _formRuleChecker.checkForm(pose);
+          if (formFeedback != null) {
+            _ttsService.speakFormCorrection(formFeedback);
+          }
 
-        // 외부 디스플레이 데이터 전송
-        _displayViewModel.updateSessionData(
-          exerciseName: _currentTask?.title ?? 'Ready',
-          reps: _currentRep,
-          feedback: formFeedback ?? 'Good Form!',
-          isGoodPose: formFeedback == null,
-        );
+          // 외부 디스플레이 데이터 전송
+          _displayViewModel.updateSessionData(
+            exerciseName: _currentTask?.title ?? 'Ready',
+            reps: _currentRep,
+            feedback: formFeedback ?? 'Good Form!',
+            isGoodPose: formFeedback == null,
+          );
+        }
+      } else {
+        // 포즈가 감지되지 않음
+        if (mounted) {
+          setState(() => _isFullBodyVisible = false);
+        }
+        if (_isWaitingForReadyPose) {
+          _cancelCountdown();
+          _speakBodyNotVisibleThrottled();
+        }
       }
     } catch (e) {
       debugPrint('Error detecting pose: $e');
@@ -434,6 +474,98 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     });
 
     return [Pose(landmarks: smoothedLandmarks)];
+  }
+
+  /// 신체 가시성 체크 - 주요 랜드마크가 충분히 감지되는지 확인
+  bool _checkBodyVisibility(Pose pose) {
+    final requiredLandmarks = [
+      PoseLandmarkType.leftShoulder,
+      PoseLandmarkType.rightShoulder,
+      PoseLandmarkType.leftHip,
+      PoseLandmarkType.rightHip,
+      PoseLandmarkType.leftKnee,
+      PoseLandmarkType.rightKnee,
+      PoseLandmarkType.leftAnkle,
+      PoseLandmarkType.rightAnkle,
+    ];
+
+    int visibleCount = 0;
+    const double minLikelihood = 0.5;
+
+    for (final type in requiredLandmarks) {
+      final landmark = pose.landmarks[type];
+      if (landmark != null && landmark.likelihood >= minLikelihood) {
+        visibleCount++;
+      }
+    }
+
+    // 8개 중 6개 이상 보이면 OK
+    return visibleCount >= 6;
+  }
+
+  /// 카운트다운 시작 (3초)
+  void _startCountdown() {
+    _countdownTimer?.cancel();
+    setState(() => _countdownSeconds = 3);
+
+    _ttsService.speakReady();
+
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        _countdownSeconds--;
+      });
+
+      if (_countdownSeconds > 0) {
+        _ttsService.speakCountdown(_countdownSeconds);
+      } else {
+        // 카운트다운 완료 - 운동 시작!
+        timer.cancel();
+        _countdownTimer = null;
+        _ttsService.speakCountdown(0); // "시작!"
+        _onCountdownComplete();
+      }
+    });
+  }
+
+  /// 카운트다운 취소
+  void _cancelCountdown() {
+    if (_countdownTimer != null) {
+      _countdownTimer?.cancel();
+      _countdownTimer = null;
+      if (mounted) {
+        setState(() => _countdownSeconds = 0);
+      }
+    }
+  }
+
+  /// TTS 안내 (5초에 한 번만)
+  void _speakBodyNotVisibleThrottled() {
+    final now = DateTime.now();
+    if (_lastBodyNotVisibleTTS == null ||
+        now.difference(_lastBodyNotVisibleTTS!).inSeconds >= 5) {
+      _lastBodyNotVisibleTTS = now;
+      _ttsService.speakBodyNotVisible();
+    }
+  }
+
+  /// 카운트다운 완료 후 운동 시작
+  Future<void> _onCountdownComplete() async {
+    setState(() {
+      _isWaitingForReadyPose = false;
+    });
+
+    // 녹화 시작
+    if (_controller != null) {
+      await _startRecording();
+    }
+
+    // 타이머 시작
+    _startWorkoutTimer();
   }
 
   void _incrementRep() {
@@ -618,12 +750,16 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           Positioned(right: 16, bottom: 40, child: _buildGuidePIP()),
 
           // 6. 하단 UI - 타이머 (좌측)
-          Positioned(bottom: 40, left: 16, child: _buildCircularTimer()),
+          if (!_isWaitingForReadyPose)
+            Positioned(bottom: 40, left: 16, child: _buildCircularTimer()),
 
-          // 7. 휴식 오버레이
+          // 7. 준비자세 대기 오버레이
+          if (_isWaitingForReadyPose) _buildReadyPoseOverlay(),
+
+          // 8. 휴식 오버레이
           if (_isResting) _buildRestOverlay(),
 
-          // 8. 일시정지 오버레이
+          // 9. 일시정지 오버레이
           if (_isPaused) _buildPauseOverlay(),
         ],
       ),
@@ -760,6 +896,66 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildReadyPoseOverlay() {
+    return Container(
+      color: Colors.black.withValues(alpha: 0.7),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 카운트다운 중일 때
+            if (_countdownSeconds > 0) ...[
+              Text(
+                '$_countdownSeconds',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 120,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '준비하세요!',
+                style: TextStyle(color: Colors.white70, fontSize: 24),
+              ),
+            ] else if (!_isFullBodyVisible) ...[
+              // 신체가 안 보일 때
+              const Icon(Icons.person_outline, size: 100, color: Colors.orange),
+              const SizedBox(height: 24),
+              const Text(
+                '전체 몸이 보이도록\n카메라를 조정해주세요',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '어깨, 엉덩이, 무릎, 발목이\n모두 화면에 보여야 합니다',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white54, fontSize: 16),
+              ),
+            ] else ...[
+              // 신체가 보이고 카운트다운 대기 중
+              const Icon(Icons.check_circle, size: 80, color: Colors.green),
+              const SizedBox(height: 16),
+              const Text(
+                '자세 확인 중...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

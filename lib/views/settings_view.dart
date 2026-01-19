@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/user_profile.dart';
 import '../services/gemini_service.dart';
 import 'camera_view.dart';
+import 'ai_interview_view.dart';
 
 /// SettingsView - 설정 화면
 class SettingsView extends StatefulWidget {
@@ -94,6 +95,15 @@ class _SettingsViewState extends State<SettingsView> {
                         _buildInfoRow('타겟 운동', _profile?.targetExercise ?? '-'),
                       ],
                     ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // AI 컨설팅
+                  _buildSection(
+                    title: 'AI 컨설팅',
+                    subtitle: '맞춤 커리큘럼을 위한 심층 상담',
+                    child: _buildReinterviewButton(),
                   ),
 
                   const SizedBox(height: 24),
@@ -280,6 +290,99 @@ class _SettingsViewState extends State<SettingsView> {
         ],
       ),
     );
+  }
+
+  Widget _buildReinterviewButton() {
+    final canReinterview = _profile?.canReinterview ?? true;
+    final daysRemaining = _profile?.daysUntilReinterview ?? 0;
+    final hasInterview = _profile?.interviewSummary != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (hasInterview && _profile?.interviewSummary != null) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: Colors.amber, size: 16),
+                    SizedBox(width: 6),
+                    Text(
+                      'AI 상담 결과',
+                      style: TextStyle(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _profile!.interviewSummary!,
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: canReinterview ? _startReinterview : null,
+            icon: const Icon(Icons.refresh, size: 18),
+            label: Text(canReinterview ? '다시 상담받기' : '$daysRemaining일 후 가능'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: canReinterview ? Colors.amber : Colors.grey[700],
+              foregroundColor: canReinterview ? Colors.black : Colors.white54,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              disabledBackgroundColor: Colors.grey[800],
+              disabledForegroundColor: Colors.white38,
+            ),
+          ),
+        ),
+        if (!canReinterview)
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Text(
+              '일주일에 한 번 상담을 받을 수 있어요',
+              style: TextStyle(color: Colors.white38, fontSize: 12),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _startReinterview() async {
+    if (_profile == null) return;
+
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            AIInterviewView(userProfile: _profile!, isFromOnboarding: false),
+      ),
+    );
+
+    // 인터뷰 완료 시 프로필 다시 로드
+    if (result == true) {
+      await _loadData();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('상담 결과가 업데이트되었습니다.')));
+      }
+    }
   }
 
   Widget _buildInfoRow(String label, String value) {

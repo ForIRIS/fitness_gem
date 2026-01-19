@@ -10,6 +10,11 @@ class UserProfile {
   String? guardianPhone; // 보호자 연락처 (선택)
   bool fallDetectionEnabled; // 낙상 감지 사용 여부
 
+  // AI 인터뷰 결과 필드
+  String? interviewSummary; // AI 인터뷰 요약
+  Map<String, String>? extractedDetails; // 상세 추출 정보
+  DateTime? lastInterviewDate; // 마지막 인터뷰 날짜
+
   UserProfile({
     required this.age,
     required this.injuryHistory,
@@ -18,7 +23,28 @@ class UserProfile {
     required this.targetExercise,
     this.guardianPhone,
     this.fallDetectionEnabled = true, // 기본값 활성화
+    this.interviewSummary,
+    this.extractedDetails,
+    this.lastInterviewDate,
   });
+
+  /// 7일 경과 여부 체크 - 재인터뷰 가능 여부
+  bool get canReinterview {
+    if (lastInterviewDate == null) return true;
+    final daysSinceInterview = DateTime.now()
+        .difference(lastInterviewDate!)
+        .inDays;
+    return daysSinceInterview >= 7;
+  }
+
+  /// 다음 인터뷰 가능 날짜까지 남은 일수
+  int get daysUntilReinterview {
+    if (lastInterviewDate == null) return 0;
+    final daysSinceInterview = DateTime.now()
+        .difference(lastInterviewDate!)
+        .inDays;
+    return (7 - daysSinceInterview).clamp(0, 7);
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -29,6 +55,9 @@ class UserProfile {
       'targetExercise': targetExercise,
       'guardianPhone': guardianPhone,
       'fallDetectionEnabled': fallDetectionEnabled,
+      'interviewSummary': interviewSummary,
+      'extractedDetails': extractedDetails,
+      'lastInterviewDate': lastInterviewDate?.toIso8601String(),
     };
   }
 
@@ -41,6 +70,13 @@ class UserProfile {
       targetExercise: map['targetExercise'] ?? '',
       guardianPhone: map['guardianPhone'],
       fallDetectionEnabled: map['fallDetectionEnabled'] ?? true,
+      interviewSummary: map['interviewSummary'],
+      extractedDetails: map['extractedDetails'] != null
+          ? Map<String, String>.from(map['extractedDetails'])
+          : null,
+      lastInterviewDate: map['lastInterviewDate'] != null
+          ? DateTime.parse(map['lastInterviewDate'])
+          : null,
     );
   }
 

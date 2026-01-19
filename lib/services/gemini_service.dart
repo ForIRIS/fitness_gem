@@ -175,6 +175,54 @@ You are "CoreFit AI Curriculum Planner." Your task is to create personalized wor
 }
 ''';
 
+  // 시스템 인스트럭션 - AI 인터뷰용
+  static const String _interviewSystemInstruction = '''
+**MODE: DEEP INTERVIEWER**
+You are a professional fitness consultant conducting a deep interview to understand the user better.
+
+**Your Goal**:
+Gather detailed context that wasn't captured in the basic onboarding form.
+- Ask **ONE question at a time**. Do not overwhelm the user.
+- Ask max **3-5 questions** total.
+- Be polite, empathetic, and professional.
+- Speak in **Korean**.
+
+**Input Context**:
+You will receive the user's basic info (Age, Injury, Goal, Experience Level, Target Exercise). Use this to formulate relevant questions.
+
+**Example Questions**:
+- If user has "Injury: 무릎", ask: "무릎 통증은 어떤 상황에서 발생하나요? 움직일 때인가요, 아니면 가만히 있을 때도 아프신가요?"
+- If user has "Goal: 다이어트", ask: "평소 식습관은 어떠신가요? 규칙적으로 식사하시나요?"
+- If user is "Beginner", ask: "운동 경험이 적으시다면, 어떤 운동이 가장 해보고 싶으신가요?"
+
+**Interview Progress**:
+Keep track of how many questions you have asked. After 3-5 meaningful exchanges, conclude the interview.
+
+**Termination & Extraction (CRITICAL)**:
+When you have gathered enough info (or after 5 turns), you MUST output the final summary.
+Say "감사합니다! 프로필이 업데이트되었습니다." followed by JSON in this EXACT format:
+
+```json
+{
+  "interview_complete": true,
+  "summary_text": "String (Korean, summarized bio for display, 2-3 sentences)",
+  "extracted_details": {
+    "injury_specifics": "String (or null if no injury)",
+    "lifestyle_notes": "String (daily routine, work style, etc.)",
+    "diet_preference": "String (or null)",
+    "stress_level": "String (or null)",
+    "exercise_preference": "String (preferred workout style)",
+    "available_time": "String (how much time for exercise)"
+  }
+}
+```
+
+**IMPORTANT**:
+- Only output JSON when concluding the interview.
+- During the interview, respond naturally in Korean as a friendly consultant.
+- If the user wants to skip or says they don't want to answer, respect that and conclude early.
+''';
+
   // ============ 커리큘럼 생성 ============
 
   /// 커리큘럼 생성
@@ -516,6 +564,106 @@ Output JSON only.
     }
   }
 
+  // ============ AI 인터뷰 ============
+
+  ChatSession? _interviewSession;
+
+  /// 인터뷰 세션 시작
+  Future<String?> startInterviewChat(UserProfile profile) async {
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-3-flash-preview',
+        apiKey: _apiKey,
+        systemInstruction: Content.system(_interviewSystemInstruction),
+      );
+
+      _interviewSession = model.startChat();
+
+      // 초기 프롬프트로 사용자 정보 전달
+      final initialPrompt =
+          '''
+TASK: START_INTERVIEW
+
+User Profile:
+- Age: ${profile.age}
+- Injury History: ${profile.injuryHistory.isEmpty ? "없음" : profile.injuryHistory}
+- Goal: ${profile.goal.isEmpty ? "미정" : profile.goal}
+- Experience Level: ${profile.experienceLevel}
+- Target Exercise: ${profile.targetExercise}
+
+Please start the interview in Korean.
+''';
+
+      final response = await _interviewSession!.sendMessage(
+        Content.text(initialPrompt),
+      );
+
+      return response.text;
+    } catch (e) {
+      debugPrint('Error starting interview: $e');
+      return null;
+    }
+  }
+
+  /// 인터뷰 메시지 전송 및 응답 받기
+  Future<InterviewResponse> sendInterviewMessage(String userMessage) async {
+    if (_interviewSession == null) {
+      return InterviewResponse(message: '인터뷰 세션이 없습니다.', isComplete: false);
+    }
+
+    try {
+      final response = await _interviewSession!.sendMessage(
+        Content.text(userMessage),
+      );
+
+      final responseText = response.text ?? '';
+
+      // JSON 포함 여부 확인 (인터뷰 완료 시)
+      if (responseText.contains('"interview_complete": true') ||
+          responseText.contains('"interview_complete":true')) {
+        // JSON 추출
+        final jsonMatch = RegExp(
+          r'\{[\s\S]*"interview_complete"[\s\S]*\}',
+        ).firstMatch(responseText);
+
+        if (jsonMatch != null) {
+          try {
+            final jsonData =
+                json.decode(jsonMatch.group(0)!) as Map<String, dynamic>;
+            return InterviewResponse(
+              message: responseText,
+              isComplete: true,
+              summaryText: jsonData['summary_text'] as String?,
+              extractedDetails: jsonData['extracted_details'] != null
+                  ? Map<String, String>.from(
+                      (jsonData['extracted_details'] as Map).map(
+                        (k, v) => MapEntry(k.toString(), v?.toString() ?? ''),
+                      ),
+                    )
+                  : null,
+            );
+          } catch (e) {
+            debugPrint('JSON parse error: $e');
+          }
+        }
+      }
+
+      return InterviewResponse(message: responseText, isComplete: false);
+    } catch (e) {
+      debugPrint('Error sending interview message: $e');
+      return InterviewResponse(
+        message: '오류가 발생했습니다. 다시 시도해주세요.',
+        isComplete: false,
+        hasError: true,
+      );
+    }
+  }
+
+  /// 인터뷰 세션 종료
+  void endInterviewSession() {
+    _interviewSession = null;
+  }
+
   // ============ 낙상 감지 분석 ============
 
   /// 낙상 상황 분석
@@ -620,4 +768,21 @@ Output as plain text (Korean), not JSON.
       return null;
     }
   }
+}
+
+/// 인터뷰 응답 모델
+class InterviewResponse {
+  final String message;
+  final bool isComplete;
+  final String? summaryText;
+  final Map<String, String>? extractedDetails;
+  final bool hasError;
+
+  InterviewResponse({
+    required this.message,
+    required this.isComplete,
+    this.summaryText,
+    this.extractedDetails,
+    this.hasError = false,
+  });
 }

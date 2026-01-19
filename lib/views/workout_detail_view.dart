@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import '../models/workout_curriculum.dart';
 import '../models/workout_task.dart';
+import 'loading_view.dart';
+import 'camera_view.dart';
 
 class WorkoutDetailView extends StatefulWidget {
   final WorkoutCurriculum curriculum;
@@ -26,7 +29,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
     _currentIndex = widget.initialIndex;
     _pageController = PageController(
       initialPage: widget.initialIndex,
-      viewportFraction: 0.9,
+      viewportFraction: 0.92,
     );
   }
 
@@ -38,17 +41,33 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    final taskCount = widget.curriculum.workoutTaskList.length;
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0A0A0A),
       body: SafeArea(
         child: Column(
           children: [
-            // Close Button
-            Align(
-              alignment: Alignment.topRight,
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Text(
+                    '오늘의 운동',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 48), // Balance
+                ],
               ),
             ),
 
@@ -56,184 +75,354 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: widget.curriculum.workoutTaskList.length,
+                itemCount: taskCount,
                 onPageChanged: (index) {
                   setState(() => _currentIndex = index);
                 },
                 itemBuilder: (context, index) {
                   final task = widget.curriculum.workoutTaskList[index];
-                  // Calculate scale/opacity for active vs inactive items
-                  final isCurrent = index == _currentIndex;
-                  final scale = isCurrent ? 1.0 : 0.9;
-                  final opacity = isCurrent ? 1.0 : 0.5;
-
-                  return AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: opacity,
-                    child: Transform.scale(
-                      scale: scale,
-                      child: _buildWorkoutCard(task, index),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: WorkoutDetailCard(
+                      task: task,
+                      index: index,
+                      isActive: index == _currentIndex,
                     ),
                   );
                 },
               ),
             ),
 
-            // Add some bottom padding
-            const SizedBox(height: 20),
+            // Page Indicator
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16, top: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(taskCount, (index) {
+                  final isActive = index == _currentIndex;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: isActive ? 24 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: isActive ? Colors.deepPurple : Colors.grey[700],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  );
+                }),
+              ),
+            ),
+
+            // Start Workout Button
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _startWorkout,
+                  icon: const Icon(Icons.play_arrow, size: 28),
+                  label: const Text(
+                    '운동 시작',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildWorkoutCard(WorkoutTask task, int index) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E), // Dark background matching design
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white12),
+  void _startWorkout() async {
+    // 리소스 캐싱 화면으로 이동
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoadingView(curriculum: widget.curriculum),
       ),
-      padding: const EdgeInsets.all(24.0),
-      margin: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Index Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2C2C2C),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              '${index + 1}',
-              style: const TextStyle(
-                color: Color(0xFF00E676), // Green accent color
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+    );
+
+    // 캐싱 완료 시 운동 화면으로 이동
+    if (result == true && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CameraView(curriculum: widget.curriculum),
+        ),
+      );
+    }
+  }
+}
+
+/// 개별 운동 상세 카드 위젯
+class WorkoutDetailCard extends StatefulWidget {
+  final WorkoutTask task;
+  final int index;
+  final bool isActive;
+
+  const WorkoutDetailCard({
+    super.key,
+    required this.task,
+    required this.index,
+    required this.isActive,
+  });
+
+  @override
+  State<WorkoutDetailCard> createState() => _WorkoutDetailCardState();
+}
+
+class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
+  VideoPlayerController? _videoController;
+  bool _isVideoInitialized = false;
+  bool _hasVideoError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeVideo();
+  }
+
+  @override
+  void didUpdateWidget(WorkoutDetailCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 활성화 상태에 따라 비디오 재생/일시정지
+    if (widget.isActive && _isVideoInitialized) {
+      _videoController?.play();
+    } else {
+      _videoController?.pause();
+    }
+  }
+
+  Future<void> _initializeVideo() async {
+    if (widget.task.exampleVideoUrl.isEmpty) return;
+
+    try {
+      _videoController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.task.exampleVideoUrl),
+      );
+      await _videoController!.initialize();
+      _videoController!.setLooping(true);
+      _videoController!.setVolume(0); // 음소거
+
+      if (widget.isActive) {
+        _videoController!.play();
+      }
+
+      if (mounted) {
+        setState(() => _isVideoInitialized = true);
+      }
+    } catch (e) {
+      debugPrint('Video init error: $e');
+      if (mounted) {
+        setState(() => _hasVideoError = true);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [const Color(0xFF1A1A2E), const Color(0xFF16213E)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.deepPurple.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Video Preview
+            _buildVideoPreview(),
 
-          const SizedBox(height: 32),
-
-          // Title & Stats Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  task.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    height: 1.2,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2C2C2C),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  _formatStats(task),
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                    height: 1.5,
-                    fontFamily: 'monospace',
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Description
-          Text(
-            task.description, // Using English description as subtitle/summary
-            style: const TextStyle(
-              color: Colors.white60,
-              fontSize: 16,
-              height: 1.4,
-            ),
-          ),
-
-          const Spacer(),
-
-          // Korean Advice Box (KR ADVICE)
-          if (task.koreanAdvice != null && task.koreanAdvice!.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0F1410), // Very dark green/black
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF1B5E20)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
+            // Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title Row
+                    Row(
                       children: [
-                        const TextSpan(
-                          text: 'KR ADVICE: ',
-                          style: TextStyle(
-                            color: Color(0xFF00E676),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                        // Index Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.deepPurple,
+                                Colors.deepPurple.shade700,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${widget.index + 1}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        TextSpan(
-                          text: task.koreanAdvice,
-                          style: const TextStyle(
-                            color: Color(0xFF00E676),
-                            fontSize: 14,
-                            height: 1.5,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            widget.task.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
                     ),
+
+                    const SizedBox(height: 8),
+
+                    // Category & Difficulty
+                    Row(
+                      children: [
+                        _buildTag(
+                          widget.task.categoryDisplayName,
+                          Colors.cyan.shade700,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildTag(
+                          widget.task.difficultyDisplayName,
+                          _getDifficultyColor(widget.task.difficulty),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Stats Grid
+                    _buildStatsGrid(),
+
+                    const SizedBox(height: 20),
+
+                    // Description
+                    _buildSection(
+                      icon: Icons.info_outline,
+                      title: '운동 설명',
+                      content: widget.task.description,
+                    ),
+
+                    // Precautions / Tips
+                    if (widget.task.koreanAdvice != null &&
+                        widget.task.koreanAdvice!.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      _buildPrecautionSection(),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideoPreview() {
+    return Container(
+      height: 200,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.grey.shade900, Colors.black],
+        ),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (_isVideoInitialized && _videoController != null)
+            FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _videoController!.value.size.width,
+                height: _videoController!.value.size.height,
+                child: VideoPlayer(_videoController!),
+              ),
+            )
+          else if (_hasVideoError || widget.task.exampleVideoUrl.isEmpty)
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.fitness_center,
+                    size: 48,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.task.title,
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
                   ),
                 ],
               ),
+            )
+          else
+            const Center(
+              child: CircularProgressIndicator(
+                color: Colors.deepPurple,
+                strokeWidth: 2,
+              ),
             ),
 
-          const SizedBox(height: 24),
-
-          // Preview Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                // Currently close, but could play video later
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2C2C2C),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'PREVIEW',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
+          // Gradient Overlay
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 60,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, const Color(0xFF1A1A2E)],
                 ),
               ),
             ),
@@ -243,10 +432,195 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
     );
   }
 
-  String _formatStats(WorkoutTask task) {
-    if (task.category == 'core') {
-      return '${task.timeoutSec} SEC EACH\n${task.adjustedSets} SETS'; // Core usually time based
+  Widget _buildStatsGrid() {
+    final isTimeBased = widget.task.category == 'core';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatItem(
+            icon: Icons.repeat,
+            value: isTimeBased
+                ? '${widget.task.timeoutSec}초'
+                : '${widget.task.adjustedReps}회',
+            label: isTimeBased ? '시간' : '반복',
+          ),
+          Container(
+            width: 1,
+            height: 40,
+            color: Colors.white.withValues(alpha: 0.1),
+          ),
+          _buildStatItem(
+            icon: Icons.layers,
+            value: '${widget.task.adjustedSets}',
+            label: '세트',
+          ),
+          Container(
+            width: 1,
+            height: 40,
+            color: Colors.white.withValues(alpha: 0.1),
+          ),
+          _buildStatItem(
+            icon: Icons.timer_outlined,
+            value: '${widget.task.timeoutSec}초',
+            label: '제한시간',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem({
+    required IconData icon,
+    required String value,
+    required String label,
+  }) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.deepPurple.shade300, size: 24),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSection({
+    required IconData icon,
+    required String title,
+    required String content,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: Colors.grey.shade400, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          content,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 15,
+            height: 1.6,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrecautionSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.orange.shade900.withValues(alpha: 0.3),
+            Colors.deepOrange.shade900.withValues(alpha: 0.2),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.orange.shade700.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange.shade400,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '주의사항',
+                style: TextStyle(
+                  color: Colors.orange.shade400,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            widget.task.koreanAdvice!,
+            style: TextStyle(
+              color: Colors.orange.shade100,
+              fontSize: 14,
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Color _getDifficultyColor(int difficulty) {
+    switch (difficulty) {
+      case 1:
+        return Colors.green;
+      case 2:
+        return Colors.lightGreen;
+      case 3:
+        return Colors.orange;
+      case 4:
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
-    return '${task.adjustedReps} REPS\n${task.adjustedSets} SETS';
   }
 }

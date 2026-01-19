@@ -162,4 +162,23 @@ class TTSService {
       await _flutterTts.setLanguage('ko-KR');
     }
   }
+
+  /// 신체가 카메라에 다 보이지 않을 때 안내
+  Future<void> speakBodyNotVisible() async {
+    await speak('전체 몸이 보이도록 카메라를 조정해주세요.');
+  }
+
+  /// 카운트다운 안내
+  Future<void> speakCountdown(int seconds) async {
+    if (seconds > 0) {
+      await speak('$seconds');
+    } else {
+      await speak('시작!');
+    }
+  }
+
+  /// 준비 완료 안내
+  Future<void> speakReady() async {
+    await speak('준비 완료! 곧 시작합니다.');
+  }
 }

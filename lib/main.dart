@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 import 'firebase_options.dart';
 import 'views/home_view.dart';
 import 'views/onboarding_view.dart';
@@ -38,6 +40,20 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Fitness Gem',
+
+      // Localization
+      locale: const Locale('en'), // Default to English
+      supportedLocales: const [
+        Locale('en'), // English (default)
+        Locale('ko'), // Korean
+      ],
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+
       theme: ThemeData(
         brightness: Brightness.dark,
         primaryColor: Colors.deepPurple,
