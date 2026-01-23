@@ -581,7 +581,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiChat.
   ///
   /// In en, this message translates to:
-  /// **'AI Chat'**
+  /// **'Chat'**
   String get aiChat;
 
   /// No description provided for @todayWorkout.
@@ -599,7 +599,7 @@ abstract class AppLocalizations {
   /// No description provided for @generatingWorkout.
   ///
   /// In en, this message translates to:
-  /// **'Generating workout...'**
+  /// **'Generating workout.'**
   String get generatingWorkout;
 
   /// No description provided for @generationFailed.

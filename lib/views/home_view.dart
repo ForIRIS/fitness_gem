@@ -115,7 +115,11 @@ class _HomeViewState extends State<HomeView> {
       debugPrint('Error generating curriculum: $e');
       if (mounted) {
         setState(() {
-          _generationError = AppLocalizations.of(context)!.generationFailed;
+          try {
+            _generationError = AppLocalizations.of(context)!.generationFailed;
+          } catch (_) {
+            _generationError = '운동 생성에 실패했습니다.'; // Fallback message
+          }
         });
       }
     } finally {
@@ -285,7 +289,7 @@ class _HomeViewState extends State<HomeView> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _openAIChat,
-                  icon: const Icon(Icons.chat),
+                  icon: const Icon(Icons.auto_awesome, size: 20),
                   label: Text(AppLocalizations.of(context)!.aiChat),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey[800],
@@ -408,13 +412,34 @@ class _HomeViewState extends State<HomeView> {
                   fontWeight: FontWeight.bold,
                 ),
               )
-            else
+            else if (_isGenerating)
               AnimatedLoadingText(
                 baseText: AppLocalizations.of(context)!.generatingWorkout,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
+                ),
+              )
+            else
+              // Fallback for when there is no curriculum, no error, and not generating.
+              Center(
+                child: Column(
+                  children: [
+                    const Text(
+                      '운동 정보를 불러올 수 없습니다.',
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _generateTodayCurriculum,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text(AppLocalizations.of(context)!.retry),
+                    ),
+                  ],
                 ),
               ),
             const SizedBox(height: 8),

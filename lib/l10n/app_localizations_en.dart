@@ -262,7 +262,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startWorkout => 'Start Workout';
 
   @override
-  String get aiChat => 'AI Chat';
+  String get aiChat => 'Chat';
 
   @override
   String get todayWorkout => 'Today\'s Workout';

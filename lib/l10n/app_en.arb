@@ -104,7 +104,7 @@
     }
   },
   "startWorkout": "Start Workout",
-  "aiChat": "AI Chat",
+  "aiChat": "Chat",
   "todayWorkout": "Today's Workout",
   "estimatedTime": "~{minutes} min",
   "@estimatedTime": {

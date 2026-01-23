@@ -679,7 +679,10 @@ class _OnboardingViewState extends State<OnboardingView> {
                   onPressed: _previousPage,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.indigo,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 14,
+                    ),
                   ),
                   child: Text(
                     AppLocalizations.of(context)!.previous,
@@ -728,7 +731,7 @@ class _OnboardingViewState extends State<OnboardingView> {
             onPressed: _previousPage,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.indigo,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
             ),
             child: Text(
               AppLocalizations.of(context)!.previous,

@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui'; // Required for PathMetric
 
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,7 @@ class _AIConsultantButtonState extends State<AIConsultantButton>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 6),
     )..repeat();
   }
 
@@ -81,31 +82,98 @@ class _BorderPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(0.5, 0.5, size.width - 1, size.height - 1);
-    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(14));
+    // Inset by 1.0 because strokeWidth is 2.0 (center is at 1.0)
+    // This aligns the border to occupy pixels 0..2
+    final rect = Rect.fromLTWH(1, 1, size.width - 2, size.height - 2);
+    // Radius should be 13 to match the center of the 2px gap (Outer 14, Inner 12)
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(13));
+    final path = Path()..addRRect(rrect);
 
-    // Create a sweep gradient that rotates
-    final Gradient gradient = SweepGradient(
-      startAngle: 0.0,
-      endAngle: pi * 2,
-      colors: const [
-        Colors.transparent,
-        Colors.transparent,
-        Colors.red,
-        Colors.blue,
-        Colors.transparent,
-        Colors.transparent,
-      ],
-      stops: const [0.0, 0.3, 0.45, 0.55, 0.7, 1.0],
-      transform: GradientRotation(animationValue * pi * 2),
-    );
+    for (final metric in path.computeMetrics()) {
+      final length = metric.length;
+      final wormLength = length * 0.3;
+      final start = length * animationValue;
+      final end = start + wormLength;
 
+      if (end <= length) {
+        _drawGradientSegment(canvas, metric, start, end, wormLength, 0.0);
+      } else {
+        // Wrap around
+        final firstSegmentLen = length - start;
+        _drawGradientSegment(canvas, metric, start, length, wormLength, 0.0);
+        _drawGradientSegment(
+          canvas,
+          metric,
+          0,
+          end - length,
+          wormLength,
+          firstSegmentLen,
+        );
+      }
+    }
+  }
+
+  void _drawGradientSegment(
+    Canvas canvas,
+    PathMetric metric,
+    double start,
+    double end,
+    double totalWormLength,
+    double currentWormDist,
+  ) {
+    const double step = 2.0;
     final paint = Paint()
-      ..shader = gradient.createShader(rect)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
 
-    canvas.drawRRect(rrect, paint);
+    for (double i = start; i < end; i += step) {
+      final next = (i + step) > end ? end : (i + step);
+      final pos1 = metric.getTangentForOffset(i)!.position;
+      final pos2 = metric.getTangentForOffset(next)!.position;
+
+      // Color logic: Gradient along the worm length
+      // progress: 0.0 (tail) -> 1.0 (head)
+      // Actually, since we draw start->end, and animation moves forward,
+      // start is tail, end is head.
+      // But we call standard drawing order.
+      final distFromTail = currentWormDist + (i - start);
+      final progress = distFromTail / totalWormLength;
+
+      paint.color = _getGradientColor(progress);
+
+      canvas.drawLine(pos1, pos2, paint);
+    }
+  }
+
+  Color _getGradientColor(double t) {
+    // Soft edges: fade in 0.0-0.2, solid 0.2-0.8, fade out 0.8-1.0
+    // Colors: Blue -> Purple -> Red
+    // We can use a linear interpolation manually or minimal logic.
+
+    double opacity = 1.0;
+    if (t < 0.2) {
+      opacity = t / 0.2;
+    } else if (t > 0.8) {
+      opacity = (1.0 - t) / 0.2;
+    }
+
+    // Clamp opacity
+    opacity = opacity.clamp(0.0, 1.0);
+
+    // Color gradient
+    // 0.0 - 0.5 : Blue -> Purple
+    // 0.5 - 1.0 : Purple -> Red
+    Color baseColor;
+    if (t < 0.5) {
+      final localT = t * 2;
+      baseColor = Color.lerp(Colors.blue, Colors.purple, localT)!;
+    } else {
+      final localT = (t - 0.5) * 2;
+      baseColor = Color.lerp(Colors.purple, Colors.red, localT)!;
+    }
+
+    return baseColor.withValues(alpha: opacity);
   }
 
   @override

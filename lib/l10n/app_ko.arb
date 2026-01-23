@@ -104,7 +104,7 @@
     }
   },
   "startWorkout": "운동 시작",
-  "aiChat": "AI 상담",
+  "aiChat": "상담",
   "todayWorkout": "오늘의 운동",
   "estimatedTime": "약 {minutes}분",
   "@estimatedTime": {

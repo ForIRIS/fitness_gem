@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../models/user_profile.dart';
 import '../models/workout_curriculum.dart';
@@ -26,6 +28,8 @@ class _AIChatViewState extends State<AIChatView>
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   WorkoutCurriculum? _suggestedCurriculum;
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
 
   late AnimationController _shimmerController;
 
@@ -65,57 +69,83 @@ class _AIChatViewState extends State<AIChatView>
     });
   }
 
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _selectedImage = File(image.path);
+      });
+    }
+  }
+
   Future<void> _sendMessage() async {
     final message = _messageController.text.trim();
-    if (message.isEmpty) return;
+    if (message.isEmpty && _selectedImage == null) return;
+
+    final imageToSend = _selectedImage;
 
     setState(() {
-      _messages.add(ChatMessage(text: message, isUser: true));
+      _messages.add(
+        ChatMessage(text: message, isUser: true, imagePath: imageToSend?.path),
+      );
       _isLoading = true;
       _suggestedCurriculum = null;
+      _selectedImage = null;
     });
     _messageController.clear();
     _scrollToBottom();
 
     try {
-      final firebaseService = FirebaseService();
       final geminiService = GeminiService();
 
-      // 모든 운동 가져오기
-      final allWorkouts = await firebaseService.fetchWorkoutAllList();
+      if (imageToSend != null) {
+        final response = await geminiService.chatWithImage(
+          imageFile: imageToSend,
+          userMessage: message.isEmpty ? "이 사진에 대해 설명해줘" : message,
+          profile: widget.userProfile,
+        );
 
-      // Gemini에 커리큘럼 요청
-      final curriculum = await geminiService.chatForCurriculum(
-        userMessage: message,
-        profile: widget.userProfile,
-        availableWorkouts: allWorkouts,
-      );
-
-      if (curriculum != null) {
-        _suggestedCurriculum = curriculum;
-
-        setState(() {
-          _messages.add(
-            ChatMessage(
-              text: AppLocalizations.of(
-                context,
-              )!.curriculumRecommendation(curriculum.title),
-              isUser: false,
-              curriculum: curriculum,
-            ),
-          );
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _messages.add(ChatMessage(text: response.message, isUser: false));
+            _isLoading = false;
+          });
+        }
       } else {
-        setState(() {
-          _messages.add(
-            ChatMessage(
-              text: AppLocalizations.of(context)!.curriculumGenerationError,
-              isUser: false,
-            ),
-          );
-          _isLoading = false;
-        });
+        final firebaseService = FirebaseService();
+        final allWorkouts = await firebaseService.fetchWorkoutAllList();
+
+        final curriculum = await geminiService.chatForCurriculum(
+          userMessage: message,
+          profile: widget.userProfile,
+          availableWorkouts: allWorkouts,
+        );
+
+        if (curriculum != null) {
+          _suggestedCurriculum = curriculum;
+          setState(() {
+            _messages.add(
+              ChatMessage(
+                text: AppLocalizations.of(
+                  context,
+                )!.curriculumRecommendation(curriculum.title),
+                isUser: false,
+                curriculum: curriculum,
+              ),
+            );
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _messages.add(
+              ChatMessage(
+                text: AppLocalizations.of(context)!.curriculumGenerationError,
+                isUser: false,
+              ),
+            );
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       setState(() {
@@ -224,35 +254,95 @@ class _AIChatViewState extends State<AIChatView>
               color: Colors.grey[900],
               border: Border(top: BorderSide(color: Colors.grey[800]!)),
             ),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.aiChatPlaceholder,
-                      hintStyle: const TextStyle(color: Colors.white38),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey[850],
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                if (_selectedImage != null)
+                  Container(
+                    height: 100,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(
+                                _selectedImage!,
+                                height: 100,
+                                width: 100,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: GestureDetector(
+                                onTap: () =>
+                                    setState(() => _selectedImage = null),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.photo_library, color: Colors.grey),
+                      onPressed: _pickImage,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(
+                            context,
+                          )!.aiChatPlaceholder,
+                          hintStyle: const TextStyle(color: Colors.white38),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[850],
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                        // Allow empty text when image is selected
+                        onSubmitted: (_) {
+                          if (_messageController.text.trim().isNotEmpty ||
+                              _selectedImage != null) {
+                            _sendMessage();
+                          }
+                        },
                       ),
                     ),
-                    onSubmitted: (_) => _sendMessage(),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                IconButton(
-                  onPressed: _isLoading ? null : _sendMessage,
-                  icon: const Icon(Icons.send),
-                  color: Colors.deepPurple,
-                  iconSize: 28,
+                    const SizedBox(width: 12),
+                    IconButton(
+                      onPressed: _isLoading ? null : _sendMessage,
+                      icon: const Icon(Icons.send),
+                      color: Colors.deepPurple,
+                      iconSize: 28,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -280,9 +370,27 @@ class _AIChatViewState extends State<AIChatView>
           color: message.isUser ? Colors.deepPurple : Colors.grey[850],
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Text(
-          message.text,
-          style: const TextStyle(color: Colors.white, fontSize: 15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (message.imagePath != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    File(message.imagePath!),
+                    height: 150,
+                    width: 200, // Limit width for better look in bubble
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            Text(
+              message.text,
+              style: const TextStyle(color: Colors.white, fontSize: 15),
+            ),
+          ],
         ),
       ),
     );
@@ -605,6 +713,12 @@ class ChatMessage {
   final String text;
   final bool isUser;
   final WorkoutCurriculum? curriculum;
+  final String? imagePath;
 
-  ChatMessage({required this.text, required this.isUser, this.curriculum});
+  ChatMessage({
+    required this.text,
+    required this.isUser,
+    this.curriculum,
+    this.imagePath,
+  });
 }

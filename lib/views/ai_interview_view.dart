@@ -288,9 +288,12 @@ class _AIInterviewViewState extends State<AIInterviewView>
           // 입력 필드
           if (!_isInterviewComplete)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.grey[900],
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
                 border: Border(top: BorderSide(color: Colors.grey[800]!)),
               ),
               child: Row(
@@ -382,7 +385,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
     return AnimatedBuilder(
       animation: _shimmerController,
       builder: (context, child) {
-        final offset = (_shimmerController.value + index * 0.15) % 1.0;
+        final offset = (_shimmerController.value + (2 - index) * 0.15) % 1.0;
         final opacity = (1 - (offset * 2 - 1).abs()).clamp(0.3, 1.0);
         return Container(
           width: 8,

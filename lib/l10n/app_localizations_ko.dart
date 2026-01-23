@@ -255,7 +255,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get startWorkout => '운동 시작';
 
   @override
-  String get aiChat => 'AI 상담';
+  String get aiChat => '상담';
 
   @override
   String get todayWorkout => '오늘의 운동';

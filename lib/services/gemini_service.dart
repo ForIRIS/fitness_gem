@@ -24,20 +24,24 @@ class GeminiService {
   // ... (system instructions omitted for brevity in diff, but they are separate blocks in the file)
 
   GeminiService() {
+    // 1. Initialize with dotenv immediately (Synchronous) to prevent race conditions
+    _apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+    _initModel();
+
+    // 2. Load user override asynchronously
     _initializeApiKey();
   }
 
-  /// API 키 초기화
+  /// API 키 초기화 (SharedPreferences 확인)
   Future<void> _initializeApiKey() async {
     final prefs = await SharedPreferences.getInstance();
     final savedKey = prefs.getString(_apiKeyPrefKey);
 
+    // 저장된 키가 있을 때만 덮어쓰기
     if (savedKey != null && savedKey.isNotEmpty) {
       _apiKey = savedKey;
-    } else {
-      _apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+      _initModel();
     }
-    _initModel();
   }
 
   /// 모델 초기화
@@ -651,8 +655,64 @@ Please start the interview in Korean.
       return InterviewResponse(message: responseText, isComplete: false);
     } catch (e) {
       debugPrint('Error sending interview message: $e');
+
+      // Handle the specific "Unhandled format for Content: {}" error
+      if (e.toString().contains('Unhandled format for Content')) {
+        return InterviewResponse(
+          message: '대화 내용 형식이 올바르지 않습니다. 인터뷰를 다시 시작해주세요.',
+          isComplete: false,
+          hasError: true,
+        );
+      }
+
       return InterviewResponse(
         message: '오류가 발생했습니다. 다시 시도해주세요.',
+        isComplete: false,
+        hasError: true,
+      );
+    }
+  }
+
+  /// 이미지와 함께 채팅 메시지 전송 (One-off or Session?)
+  /// 단순화를 위해 1회성 분석으로 처리하거나, 세션에 이미지를 포함시킬 수 있음.
+  /// google_generative_ai 패키지는 멀티턴 챗에서 이미지를 지원함.
+  Future<InterviewResponse> chatWithImage({
+    required String userMessage,
+    required File imageFile,
+    required UserProfile profile,
+  }) async {
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-3-flash-preview',
+        apiKey: _apiKey,
+        systemInstruction: Content.system(_analysisSystemInstruction),
+      );
+
+      final imageBytes = await imageFile.readAsBytes();
+      final prompt = Content.multi([
+        TextPart('''
+User Profile:
+- Age: ${profile.age}
+- Injury History: ${profile.injuryHistory}
+- Goal: ${profile.goal}
+- Experience Level: ${profile.experienceLevel}
+
+The user has uploaded an image related to their workout or physical condition.
+Analyze the image and the user's message providing professional fitness advice.
+User Message: "$userMessage"
+'''),
+        DataPart('image/jpeg', imageBytes), // Assuming JPEG or detecting mime?
+      ]);
+
+      final response = await model.generateContent([prompt]);
+      return InterviewResponse(
+        message: response.text ?? '죄송합니다. 사진을 분석할 수 없습니다.',
+        isComplete: false,
+      );
+    } catch (e) {
+      debugPrint('Error chatting with image: $e');
+      return InterviewResponse(
+        message: '사진 분석 중 오류가 발생했습니다: $e',
         isComplete: false,
         hasError: true,
       );
