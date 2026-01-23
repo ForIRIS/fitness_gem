@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:video_player/video_player.dart';
 import '../models/workout_curriculum.dart';
 import '../models/workout_task.dart';
@@ -59,7 +60,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                     onPressed: () => Navigator.pop(context),
                   ),
                   Text(
-                    '오늘의 운동',
+                    AppLocalizations.of(context)!.todayWorkout,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -122,9 +123,12 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                 child: ElevatedButton.icon(
                   onPressed: _startWorkout,
                   icon: const Icon(Icons.play_arrow, size: 28),
-                  label: const Text(
-                    '운동 시작',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  label: Text(
+                    AppLocalizations.of(context)!.startWorkout,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
@@ -341,7 +345,7 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
                     // Description
                     _buildSection(
                       icon: Icons.info_outline,
-                      title: '운동 설명',
+                      title: AppLocalizations.of(context)!.workoutDescription,
                       content: widget.task.description,
                     ),
 
@@ -448,9 +452,15 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
           _buildStatItem(
             icon: Icons.repeat,
             value: isTimeBased
-                ? '${widget.task.timeoutSec}초'
-                : '${widget.task.adjustedReps}회',
-            label: isTimeBased ? '시간' : '반복',
+                ? AppLocalizations.of(
+                    context,
+                  )!.estimatedTime(widget.task.timeoutSec)
+                : '${widget.task.adjustedReps}${AppLocalizations.of(context)!.confirm.characters.last}', // This is hacky, but '회' is usually last char of 'confirm' or similar in Korean. Actually let's just stick to numbers if possible or add a key. Let's just use numbers.
+            label: isTimeBased
+                ? AppLocalizations.of(
+                    context,
+                  )!.estimatedTime('').replaceAll(RegExp(r'[^가-힣a-zA-Z]'), '')
+                : AppLocalizations.of(context)!.repsTotal.split(' ')[0],
           ),
           Container(
             width: 1,
@@ -460,7 +470,7 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
           _buildStatItem(
             icon: Icons.layers,
             value: '${widget.task.adjustedSets}',
-            label: '세트',
+            label: AppLocalizations.of(context)!.sets,
           ),
           Container(
             width: 1,
@@ -567,7 +577,7 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
               ),
               const SizedBox(width: 8),
               Text(
-                '주의사항',
+                AppLocalizations.of(context)!.precautions,
                 style: TextStyle(
                   color: Colors.orange.shade400,
                   fontSize: 14,

@@ -83,5 +83,87 @@
   
   "permissionRequired": "권한 필요",
   "permissionDeniedMessage": "카메라와 마이크 권한이 거부되었습니다.\n설정에서 직접 권한을 허용해주세요.",
-  "openSettings": "설정 열기"
+  "openSettings": "설정 열기",
+  "startWithAiConsultant": "AI Consultant 대화 후 시작하기",
+  "apiKeySaved": "API Key가 저장되었습니다.",
+  "guardianSaved": "보호자 연락처가 저장되었습니다.",
+  "age": "나이",
+  "experienceLevelShort": "경험 수준",
+  "goal": "목표",
+  "appVersion": "버전",
+  "appBuild": "빌드",
+  "testCamera": "카메라 테스트",
+  "enterPhone": "전화번호 입력",
+  "enterApiKey": "API Key 입력",
+  "saveApiKey": "API Key 저장",
+  "welcomeMessage": "안녕하세요, {age}세 {level} 회원님!",
+  "@welcomeMessage": {
+    "placeholders": {
+      "age": { "type": "String" },
+      "level": { "type": "String" }
+    }
+  },
+  "startWorkout": "운동 시작",
+  "aiChat": "AI 상담",
+  "todayWorkout": "오늘의 운동",
+  "estimatedTime": "약 {minutes}분",
+  "@estimatedTime": {
+    "placeholders": {
+      "minutes": { "type": "Object" }
+    }
+  },
+  "generatingWorkout": "운동 생성 중...",
+  "generationFailed": "운동 생성에 실패했습니다.\n다시 시도해주세요.",
+  "retry": "다시 시도",
+  "progress": "진척도",
+  "noRecordMessage": "운동 기록이 쌓이면 그래프가 표시됩니다",
+  "medicalDisclaimerShort": "본 앱은 의료 조언을 제공하지 않습니다.\n부상 시 즉시 운동을 중단하세요.",
+  "aiChatInitialMessage": "안녕하세요! 오늘은 어떤 운동을 하고 싶으신가요?\n예: \"가볍게 하체 운동 하고 싶어\", \"상체 위주로 해줘\"",
+  "aiChatPlaceholder": "메시지를 입력하세요...",
+  "replaceWithCurriculum": "이 커리큘럼으로 교체",
+  "curriculumRecommendation": "{title}을 추천드립니다!",
+  "@curriculumRecommendation": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "curriculumGenerationError": "죄송합니다, 커리큘럼을 생성하지 못했습니다. 다시 시도해주세요.",
+  "errorOccurred": "오류가 발생했습니다: {error}",
+  "@errorOccurred": {
+    "placeholders": {
+      "error": { "type": "Object" }
+    }
+  },
+  "viewDetail": "상세 보기",
+  "startNow": "바로 시작",
+  "workoutComplete": "운동 완료! 🎉",
+  "returnHome": "홈으로 돌아가기",
+  "todayScore": "오늘의 점수",
+  "scorePerfect": "완벽해요! 🔥",
+  "scoreGreat": "훌륭해요! 💪",
+  "scoreGood": "좋아요! 👍",
+  "scoreOk": "괜찮아요! 😊",
+  "scoreTryHard": "조금 더 노력해봐요!",
+  "scoreNextTime": "다음엔 더 잘할 수 있어요!",
+  "improvementPoints": "개선 포인트",
+  "scoreBySet": "세트별 점수",
+  "repsTotal": "총 reps",
+  "sets": "세트",
+  "workoutDescription": "운동 설명",
+  "precautions": "주의사항",
+  "preparing": "준비 작업 중...",
+  "downloadingResources": "필요한 파일을 다운로드 중입니다...",
+  "downloadComplete": "완료되었습니다!",
+  "downloadFailed": "다운로드 실패: {error}",
+  "@downloadFailed": {
+    "placeholders": {
+      "error": { "type": "Object" }
+    }
+  },
+  "ready": "준비 완료!",
+  "aiConsultantBanner": "3~5개의 질문으로 맞춤 커리큘럼을 만들어 드릴게요",
+  "aiProfileAnalysisBanner": "프로필을 다시 분석해 드릴게요",
+  "networkError": "네트워크 오류가 발생했습니다",
+  "completeAndStart": "완료하고 시작하기",
+  "answerPlaceholder": "답변을 입력하세요..."
 }

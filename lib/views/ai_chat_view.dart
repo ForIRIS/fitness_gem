@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../models/user_profile.dart';
 import '../models/workout_curriculum.dart';
 import '../models/workout_task.dart';
@@ -96,7 +97,9 @@ class _AIChatViewState extends State<AIChatView>
         setState(() {
           _messages.add(
             ChatMessage(
-              text: '${curriculum.title}을 추천드립니다!',
+              text: AppLocalizations.of(
+                context,
+              )!.curriculumRecommendation(curriculum.title),
               isUser: false,
               curriculum: curriculum,
             ),
@@ -107,7 +110,7 @@ class _AIChatViewState extends State<AIChatView>
         setState(() {
           _messages.add(
             ChatMessage(
-              text: '죄송합니다, 커리큘럼을 생성하지 못했습니다. 다시 시도해주세요.',
+              text: AppLocalizations.of(context)!.curriculumGenerationError,
               isUser: false,
             ),
           );
@@ -116,7 +119,12 @@ class _AIChatViewState extends State<AIChatView>
       }
     } catch (e) {
       setState(() {
-        _messages.add(ChatMessage(text: '오류가 발생했습니다: $e', isUser: false));
+        _messages.add(
+          ChatMessage(
+            text: AppLocalizations.of(context)!.errorOccurred(e),
+            isUser: false,
+          ),
+        );
         _isLoading = false;
       });
     }
@@ -164,7 +172,10 @@ class _AIChatViewState extends State<AIChatView>
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('AI 상담', style: TextStyle(color: Colors.white)),
+        title: Text(
+          AppLocalizations.of(context)!.aiChat,
+          style: const TextStyle(color: Colors.white),
+        ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Column(
@@ -197,7 +208,9 @@ class _AIChatViewState extends State<AIChatView>
                         backgroundColor: Colors.deepPurple,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('이 커리큘럼으로 교체'),
+                      child: Text(
+                        AppLocalizations.of(context)!.replaceWithCurriculum,
+                      ),
                     ),
                   ),
                 ],
@@ -218,7 +231,7 @@ class _AIChatViewState extends State<AIChatView>
                     controller: _messageController,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: '메시지를 입력하세요...',
+                      hintText: AppLocalizations.of(context)!.aiChatPlaceholder,
                       hintStyle: const TextStyle(color: Colors.white38),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
@@ -311,9 +324,12 @@ class _AIChatViewState extends State<AIChatView>
                         size: 20,
                       ),
                       const SizedBox(width: 8),
-                      const Text(
-                        'AI 추천 커리큘럼',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      Text(
+                        AppLocalizations.of(context)!.aiConsultResult,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -362,7 +378,7 @@ class _AIChatViewState extends State<AIChatView>
                     child: OutlinedButton.icon(
                       onPressed: () => _viewCurriculumDetail(curriculum),
                       icon: const Icon(Icons.visibility, size: 18),
-                      label: const Text('상세 보기'),
+                      label: Text(AppLocalizations.of(context)!.viewDetail),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: const BorderSide(color: Colors.white38),
@@ -378,7 +394,7 @@ class _AIChatViewState extends State<AIChatView>
                     child: ElevatedButton.icon(
                       onPressed: () => _startWorkout(curriculum),
                       icon: const Icon(Icons.play_arrow, size: 20),
-                      label: const Text('바로 시작'),
+                      label: Text(AppLocalizations.of(context)!.startNow),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,

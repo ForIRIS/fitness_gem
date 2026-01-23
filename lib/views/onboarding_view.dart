@@ -1,5 +1,7 @@
+import '../widgets/ai_consultant_button.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/user_profile.dart';
 import 'home_view.dart';
@@ -170,7 +172,9 @@ class _OnboardingViewState extends State<OnboardingView> {
           ),
           const SizedBox(height: 24),
           Text(
-            isAllGranted ? "권한 확인 완료" : "권한 요청",
+            isAllGranted
+                ? AppLocalizations.of(context)!.permissionGrantedTitle
+                : AppLocalizations.of(context)!.permissionTitle,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 28,
@@ -180,8 +184,8 @@ class _OnboardingViewState extends State<OnboardingView> {
           const SizedBox(height: 16),
           Text(
             isAllGranted
-                ? "모든 권한이 허용되었습니다.\n다음 단계로 이동해주세요."
-                : "자세 분석을 위해 카메라와 마이크\n접근 권한이 필요합니다.",
+                ? AppLocalizations.of(context)!.permissionGrantedMessage
+                : AppLocalizations.of(context)!.permissionMessage,
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
@@ -230,14 +234,18 @@ class _OnboardingViewState extends State<OnboardingView> {
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: const Text('취소'),
+                                  child: Text(
+                                    AppLocalizations.of(context)!.cancel,
+                                  ),
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
                                     Navigator.pop(context);
                                     openAppSettings();
                                   },
-                                  child: const Text('설정 열기'),
+                                  child: Text(
+                                    AppLocalizations.of(context)!.openSettings,
+                                  ),
                                 ),
                               ],
                             ),
@@ -246,7 +254,11 @@ class _OnboardingViewState extends State<OnboardingView> {
                       }
                     },
               icon: Icon(isAllGranted ? Icons.arrow_forward : Icons.check),
-              label: Text(isAllGranted ? "다음" : "권한 허용"),
+              label: Text(
+                isAllGranted
+                    ? AppLocalizations.of(context)!.next
+                    : AppLocalizations.of(context)!.grantPermission,
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: isAllGranted
                     ? Colors.green
@@ -262,9 +274,9 @@ class _OnboardingViewState extends State<OnboardingView> {
               width: double.infinity,
               child: TextButton(
                 onPressed: _nextPage,
-                child: const Text(
-                  "건너뛰기 (기능 제한됨)",
-                  style: TextStyle(color: Colors.white54, fontSize: 14),
+                child: Text(
+                  AppLocalizations.of(context)!.skip,
+                  style: const TextStyle(color: Colors.white54, fontSize: 14),
                 ),
               ),
             ),
@@ -281,25 +293,25 @@ class _OnboardingViewState extends State<OnboardingView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "프로필 정보",
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.profileInfo,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            "맞춤 운동 추천을 위해 정보를 입력해주세요.",
-            style: TextStyle(color: Colors.white54, fontSize: 14),
+          Text(
+            AppLocalizations.of(context)!.profileDescription,
+            style: const TextStyle(color: Colors.white54, fontSize: 14),
           ),
           const SizedBox(height: 32),
 
           // 나이 범위 선택 (탭하면 Bottom Sheet)
-          const Text(
-            "나이대",
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+          Text(
+            AppLocalizations.of(context)!.ageRange,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 12),
           GestureDetector(
@@ -327,9 +339,9 @@ class _OnboardingViewState extends State<OnboardingView> {
           const SizedBox(height: 32),
 
           // 부상 이력 (Multi-Select)
-          const Text(
-            "부상 이력",
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+          Text(
+            AppLocalizations.of(context)!.injuryHistory,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -375,7 +387,7 @@ class _OnboardingViewState extends State<OnboardingView> {
               controller: _customInjuryController,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: '부상 부위를 입력하세요',
+                hintText: AppLocalizations.of(context)!.enterInjuryDetails,
                 hintStyle: const TextStyle(color: Colors.white38),
                 enabledBorder: OutlineInputBorder(
                   borderSide: const BorderSide(color: Colors.white24),
@@ -392,9 +404,9 @@ class _OnboardingViewState extends State<OnboardingView> {
           const SizedBox(height: 32),
 
           // 운동 목표 (Single Select)
-          const Text(
-            "운동 목표",
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+          Text(
+            AppLocalizations.of(context)!.fitnessGoal,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -430,7 +442,7 @@ class _OnboardingViewState extends State<OnboardingView> {
               controller: _customGoalController,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: '운동 목표를 입력하세요',
+                hintText: AppLocalizations.of(context)!.enterGoalDetails,
                 hintStyle: const TextStyle(color: Colors.white38),
                 enabledBorder: OutlineInputBorder(
                   borderSide: const BorderSide(color: Colors.white24),
@@ -447,9 +459,9 @@ class _OnboardingViewState extends State<OnboardingView> {
           const SizedBox(height: 32),
 
           // 운동 경험
-          const Text(
-            "운동 경험",
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+          Text(
+            AppLocalizations.of(context)!.experienceLevel,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 12),
           Container(
@@ -464,13 +476,19 @@ class _OnboardingViewState extends State<OnboardingView> {
               dropdownColor: Colors.grey[900],
               style: const TextStyle(color: Colors.white),
               underline: const SizedBox(),
-              items: const [
-                DropdownMenuItem(value: 'Beginner', child: Text('입문 (1년 미만)')),
+              items: [
+                DropdownMenuItem(
+                  value: 'Beginner',
+                  child: Text(AppLocalizations.of(context)!.beginner),
+                ),
                 DropdownMenuItem(
                   value: 'Intermediate',
-                  child: Text('중급 (1~3년)'),
+                  child: Text(AppLocalizations.of(context)!.intermediate),
                 ),
-                DropdownMenuItem(value: 'Advanced', child: Text('고급 (3년 이상)')),
+                DropdownMenuItem(
+                  value: 'Advanced',
+                  child: Text(AppLocalizations.of(context)!.advanced),
+                ),
               ],
               onChanged: (val) => setState(() => _experienceLevel = val!),
             ),
@@ -487,18 +505,18 @@ class _OnboardingViewState extends State<OnboardingView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
-            "타겟 운동",
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.targetExercise,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            "집중하고 싶은 운동 부위를 선택하세요.",
-            style: TextStyle(color: Colors.white54, fontSize: 14),
+          Text(
+            AppLocalizations.of(context)!.selectExercise,
+            style: const TextStyle(color: Colors.white54, fontSize: 14),
           ),
           const SizedBox(height: 32),
           Wrap(
@@ -544,19 +562,19 @@ class _OnboardingViewState extends State<OnboardingView> {
         children: [
           const Icon(Icons.emergency, size: 60, color: Colors.orange),
           const SizedBox(height: 24),
-          const Text(
-            "안전 설정",
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.safetySettings,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            "낙상 감지 및 비상 연락처를 설정합니다.",
+          Text(
+            AppLocalizations.of(context)!.safetyDescription,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white54, fontSize: 14),
+            style: const TextStyle(color: Colors.white54, fontSize: 14),
           ),
           const SizedBox(height: 32),
 
@@ -568,13 +586,13 @@ class _OnboardingViewState extends State<OnboardingView> {
               border: Border.all(color: Colors.white24),
             ),
             child: SwitchListTile(
-              title: const Text(
-                '낙상 감지 기능 사용',
-                style: TextStyle(color: Colors.white),
+              title: Text(
+                AppLocalizations.of(context)!.enableFallDetection,
+                style: const TextStyle(color: Colors.white),
               ),
-              subtitle: const Text(
-                '운동 중 넘어짐을 감지합니다.',
-                style: TextStyle(color: Colors.white54, fontSize: 12),
+              subtitle: Text(
+                AppLocalizations.of(context)!.fallDetectionDescription,
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
               value: _fallDetectionEnabled,
               onChanged: (val) => setState(() => _fallDetectionEnabled = val),
@@ -586,14 +604,14 @@ class _OnboardingViewState extends State<OnboardingView> {
 
           if (_fallDetectionEnabled) ...[
             _buildTextField(
-              "보호자 전화번호 (선택)",
+              AppLocalizations.of(context)!.guardianPhone,
               _guardianController,
               TextInputType.phone,
             ),
             const SizedBox(height: 8),
-            const Text(
-              "비상 시 SMS 알림을 보낼 번호입니다.",
-              style: TextStyle(color: Colors.white30, fontSize: 12),
+            Text(
+              AppLocalizations.of(context)!.guardianPhoneDescription,
+              style: const TextStyle(color: Colors.white30, fontSize: 12),
             ),
           ],
 
@@ -605,9 +623,9 @@ class _OnboardingViewState extends State<OnboardingView> {
               setState(() => _fallDetectionEnabled = false);
               _onNextPressed();
             },
-            child: const Text(
-              "나중에 설정할게요",
-              style: TextStyle(color: Colors.white54),
+            child: Text(
+              AppLocalizations.of(context)!.setUpLater,
+              style: const TextStyle(color: Colors.white54),
             ),
           ),
         ],
@@ -657,23 +675,30 @@ class _OnboardingViewState extends State<OnboardingView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextButton(
+                ElevatedButton(
                   onPressed: _previousPage,
-                  child: const Text(
-                    "이전",
-                    style: TextStyle(color: Colors.white54),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context)!.previous,
+                    style: const TextStyle(color: Colors.white54),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: _onNextPressed,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 14,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _onNextPressed,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 14,
+                      ),
                     ),
+                    child: Text(AppLocalizations.of(context)!.start),
                   ),
-                  child: const Text("시작하기"),
                 ),
               ],
             ),
@@ -681,24 +706,12 @@ class _OnboardingViewState extends State<OnboardingView> {
             // AI Consultant 버튼
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _startAIInterview,
-                icon: const Icon(Icons.auto_awesome, size: 20),
-                label: const Text("AI Consultant와 대화"),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.amber,
-                  side: const BorderSide(color: Colors.amber, width: 1.5),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
+              child: AIConsultantButton(onPressed: _startAIInterview),
             ),
             const SizedBox(height: 8),
-            const Text(
-              "더 정확한 맞춤 커리큘럼을 받을 수 있어요",
-              style: TextStyle(color: Colors.white38, fontSize: 12),
+            Text(
+              AppLocalizations.of(context)!.aiConsultantDescription,
+              style: const TextStyle(color: Colors.white38, fontSize: 12),
             ),
           ],
         ),
@@ -711,14 +724,16 @@ class _OnboardingViewState extends State<OnboardingView> {
       child: Row(
         children: [
           // 이전 버튼 (컴팩트)
-          OutlinedButton(
+          ElevatedButton(
             onPressed: _previousPage,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white54,
-              side: const BorderSide(color: Colors.white24),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.indigo,
+              padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: const Text("이전"),
+            child: Text(
+              AppLocalizations.of(context)!.previous,
+              style: const TextStyle(color: Colors.white54),
+            ),
           ),
           const SizedBox(width: 12),
           // 다음 버튼 (확장)
@@ -729,7 +744,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                 backgroundColor: Colors.deepPurple,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              child: const Text("다음"),
+              child: Text(AppLocalizations.of(context)!.next),
             ),
           ),
         ],
@@ -832,26 +847,24 @@ class _OnboardingViewState extends State<OnboardingView> {
             children: [
               const Icon(Icons.warning_amber, size: 60, color: Colors.white),
               const SizedBox(height: 16),
-              const Text(
-                "⚠️ 의료 조언 면책",
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.disclaimer,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                "본 앱은 의료 조언을 제공하지 않습니다.\n"
-                "운동 전 전문 의료진과 상담하세요.\n"
-                "부상이나 통증 발생 시 즉시 운동을 중단하세요.",
+              Text(
+                AppLocalizations.of(context)!.disclaimerContent,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 15),
+                style: const TextStyle(color: Colors.white, fontSize: 15),
               ),
               const SizedBox(height: 24),
-              const Text(
-                "3초 후 자동으로 넘어갑니다...",
-                style: TextStyle(color: Colors.white54, fontSize: 13),
+              Text(
+                AppLocalizations.of(context)!.autoRedirect,
+                style: const TextStyle(color: Colors.white54, fontSize: 13),
               ),
             ],
           ),

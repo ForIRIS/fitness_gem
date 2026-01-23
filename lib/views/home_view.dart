@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:async';
 import '../models/workout_curriculum.dart';
@@ -114,7 +115,7 @@ class _HomeViewState extends State<HomeView> {
       debugPrint('Error generating curriculum: $e');
       if (mounted) {
         setState(() {
-          _generationError = '운동 생성에 실패했습니다.\n다시 시도해주세요. (${e.toString()})';
+          _generationError = AppLocalizations.of(context)!.generationFailed;
         });
       }
     } finally {
@@ -145,7 +146,9 @@ class _HomeViewState extends State<HomeView> {
   void _startWorkout() async {
     if (_todayCurriculum == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('커리큘럼을 생성 중입니다. 잠시 후 다시 시도해주세요.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.generatingWorkout),
+        ),
       );
       return;
     }
@@ -224,9 +227,9 @@ class _HomeViewState extends State<HomeView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Fitness Gem',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.appTitle,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -240,7 +243,10 @@ class _HomeViewState extends State<HomeView> {
           ),
           const SizedBox(height: 8),
           Text(
-            '안녕하세요, ${_userProfile?.age ?? ''}세 ${_userProfile?.experienceLevel ?? ''} 회원님!',
+            AppLocalizations.of(context)!.welcomeMessage(
+              _userProfile?.age ?? '',
+              _userProfile?.experienceLevel ?? '',
+            ),
             style: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
 
@@ -264,7 +270,7 @@ class _HomeViewState extends State<HomeView> {
                 child: ElevatedButton.icon(
                   onPressed: _startWorkout,
                   icon: const Icon(Icons.play_arrow),
-                  label: const Text('운동 시작'),
+                  label: Text(AppLocalizations.of(context)!.startWorkout),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     foregroundColor: Colors.white,
@@ -280,7 +286,7 @@ class _HomeViewState extends State<HomeView> {
                 child: ElevatedButton.icon(
                   onPressed: _openAIChat,
                   icon: const Icon(Icons.chat),
-                  label: const Text('AI 상담'),
+                  label: Text(AppLocalizations.of(context)!.aiChat),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey[800],
                     foregroundColor: Colors.white,
@@ -332,9 +338,9 @@ class _HomeViewState extends State<HomeView> {
                   size: 20,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  '오늘의 운동',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                Text(
+                  AppLocalizations.of(context)!.todayWorkout,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const Spacer(),
                 const Icon(
@@ -350,7 +356,9 @@ class _HomeViewState extends State<HomeView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '생성 실패',
+                    AppLocalizations.of(
+                      context,
+                    )!.generationFailed.split('\n')[0],
                     style: const TextStyle(
                       color: Colors.redAccent,
                       fontSize: 22,
@@ -375,7 +383,11 @@ class _HomeViewState extends State<HomeView> {
                             ),
                           )
                         : const Icon(Icons.refresh, size: 16),
-                    label: Text(_isGenerating ? '생성 중...' : '다시 시도'),
+                    label: Text(
+                      _isGenerating
+                          ? AppLocalizations.of(context)!.generatingWorkout
+                          : AppLocalizations.of(context)!.retry,
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent.withOpacity(0.2),
                       foregroundColor: Colors.redAccent,
@@ -398,7 +410,7 @@ class _HomeViewState extends State<HomeView> {
               )
             else
               AnimatedLoadingText(
-                baseText: 'Generating workout',
+                baseText: AppLocalizations.of(context)!.generatingWorkout,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
@@ -408,7 +420,9 @@ class _HomeViewState extends State<HomeView> {
             const SizedBox(height: 8),
             Text(
               _todayCurriculum != null
-                  ? '약 ${_todayCurriculum!.estimatedMinutes}분'
+                  ? AppLocalizations.of(
+                      context,
+                    )!.estimatedTime(_todayCurriculum!.estimatedMinutes)
                   : '-',
               style: const TextStyle(color: Colors.white60, fontSize: 16),
             ),
@@ -453,9 +467,9 @@ class _HomeViewState extends State<HomeView> {
             children: [
               const Icon(Icons.show_chart, color: Colors.white70, size: 20),
               const SizedBox(width: 8),
-              const Text(
-                '진척도',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+              Text(
+                AppLocalizations.of(context)!.progress,
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
               ),
             ],
           ),
@@ -580,9 +594,9 @@ class _HomeViewState extends State<HomeView> {
               const Icon(Icons.warning_amber, color: Colors.white),
               const SizedBox(width: 12),
               Expanded(
-                child: const Text(
-                  '본 앱은 의료 조언을 제공하지 않습니다.\n부상 시 즉시 운동을 중단하세요.',
-                  style: TextStyle(color: Colors.white, fontSize: 13),
+                child: Text(
+                  AppLocalizations.of(context)!.medicalDisclaimerShort,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
                 ),
               ),
             ],

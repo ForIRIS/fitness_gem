@@ -216,4 +216,188 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openSettings => 'Open Settings';
+
+  @override
+  String get startWithAiConsultant => 'Start after talking with AI Consultant';
+
+  @override
+  String get apiKeySaved => 'API Key saved.';
+
+  @override
+  String get guardianSaved => 'Guardian contact saved.';
+
+  @override
+  String get age => 'Age';
+
+  @override
+  String get experienceLevelShort => 'Experience Level';
+
+  @override
+  String get goal => 'Goal';
+
+  @override
+  String get appVersion => 'Version';
+
+  @override
+  String get appBuild => 'Build';
+
+  @override
+  String get testCamera => 'Camera Test';
+
+  @override
+  String get enterPhone => 'Enter phone number';
+
+  @override
+  String get enterApiKey => 'Enter API Key';
+
+  @override
+  String get saveApiKey => 'Save API Key';
+
+  @override
+  String welcomeMessage(String age, String level) {
+    return 'Hello, $age-year-old $level member!';
+  }
+
+  @override
+  String get startWorkout => 'Start Workout';
+
+  @override
+  String get aiChat => 'AI Chat';
+
+  @override
+  String get todayWorkout => 'Today\'s Workout';
+
+  @override
+  String estimatedTime(Object minutes) {
+    return '~$minutes min';
+  }
+
+  @override
+  String get generatingWorkout => 'Generating workout.';
+
+  @override
+  String get generationFailed =>
+      'Failed to generate workout.\nPlease try again.';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get progress => 'Progress';
+
+  @override
+  String get noRecordMessage =>
+      'Graph will appear as you build exercise records';
+
+  @override
+  String get medicalDisclaimerShort =>
+      'This app does not provide medical advice.\nStop immediately if you experience pain.';
+
+  @override
+  String get aiChatInitialMessage =>
+      'Hello! What kind of workout would you like to do today?\nEx: \"I want a light lower body workout\", \"Focus on upper body\"';
+
+  @override
+  String get aiChatPlaceholder => 'Enter a message...';
+
+  @override
+  String get replaceWithCurriculum => 'Replace with this curriculum';
+
+  @override
+  String curriculumRecommendation(String title) {
+    return 'I recommend $title!';
+  }
+
+  @override
+  String get curriculumGenerationError =>
+      'Sorry, failed to generate curriculum. Please try again.';
+
+  @override
+  String errorOccurred(Object error) {
+    return 'An error occurred: $error';
+  }
+
+  @override
+  String get viewDetail => 'View Details';
+
+  @override
+  String get startNow => 'Start Now';
+
+  @override
+  String get workoutComplete => 'Workout Complete! 🎉';
+
+  @override
+  String get returnHome => 'Return to Home';
+
+  @override
+  String get todayScore => 'Today\'s Score';
+
+  @override
+  String get scorePerfect => 'Perfect! 🔥';
+
+  @override
+  String get scoreGreat => 'Great! 💪';
+
+  @override
+  String get scoreGood => 'Good! 👍';
+
+  @override
+  String get scoreOk => 'Okay! 😊';
+
+  @override
+  String get scoreTryHard => 'Try a bit harder!';
+
+  @override
+  String get scoreNextTime => 'You can do better next time!';
+
+  @override
+  String get improvementPoints => 'Improvement Points';
+
+  @override
+  String get scoreBySet => 'Score by Set';
+
+  @override
+  String get repsTotal => 'Total reps';
+
+  @override
+  String get sets => 'Sets';
+
+  @override
+  String get workoutDescription => 'Workout Description';
+
+  @override
+  String get precautions => 'Precautions';
+
+  @override
+  String get preparing => 'Preparing...';
+
+  @override
+  String get downloadingResources => 'Downloading required files...';
+
+  @override
+  String get downloadComplete => 'Complete!';
+
+  @override
+  String downloadFailed(Object error) {
+    return 'Download failed: $error';
+  }
+
+  @override
+  String get ready => 'Ready!';
+
+  @override
+  String get aiConsultantBanner =>
+      'I\'ll create a personalized curriculum with 3-5 questions';
+
+  @override
+  String get aiProfileAnalysisBanner => 'I\'ll analyze your profile again';
+
+  @override
+  String get networkError => 'Network error occurred';
+
+  @override
+  String get completeAndStart => 'Complete and Start';
+
+  @override
+  String get answerPlaceholder => 'Enter your answer...';
 }

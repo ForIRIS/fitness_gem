@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/session_analysis.dart';
 import '../models/workout_curriculum.dart';
@@ -51,7 +52,10 @@ class _ResultsViewState extends State<ResultsView> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('운동 완료! 🎉', style: TextStyle(color: Colors.white)),
+        title: Text(
+          AppLocalizations.of(context)!.workoutComplete,
+          style: const TextStyle(color: Colors.white),
+        ),
         automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
@@ -85,7 +89,10 @@ class _ResultsViewState extends State<ResultsView> {
                   backgroundColor: Colors.deepPurple,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text('홈으로 돌아가기', style: TextStyle(fontSize: 16)),
+                child: Text(
+                  AppLocalizations.of(context)!.returnHome,
+                  style: const TextStyle(fontSize: 16),
+                ),
               ),
             ),
           ],
@@ -110,9 +117,9 @@ class _ResultsViewState extends State<ResultsView> {
       ),
       child: Column(
         children: [
-          const Text(
-            '오늘의 점수',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
+          Text(
+            AppLocalizations.of(context)!.todayScore,
+            style: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(
@@ -132,9 +139,15 @@ class _ResultsViewState extends State<ResultsView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildStatItem('세트', '${widget.setAnalyses.length}'),
+              _buildStatItem(
+                AppLocalizations.of(context)!.sets,
+                '${widget.setAnalyses.length}',
+              ),
               const SizedBox(width: 32),
-              _buildStatItem('총 reps', '$_totalReps'),
+              _buildStatItem(
+                AppLocalizations.of(context)!.repsTotal,
+                '$_totalReps',
+              ),
             ],
           ),
         ],
@@ -175,9 +188,9 @@ class _ResultsViewState extends State<ResultsView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '세트별 점수',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.scoreBySet,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -280,9 +293,9 @@ class _ResultsViewState extends State<ResultsView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '개선 포인트',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.improvementPoints,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -327,11 +340,11 @@ class _ResultsViewState extends State<ResultsView> {
   }
 
   String _getScoreMessage(int score) {
-    if (score >= 90) return '완벽해요! 🔥';
-    if (score >= 80) return '훌륭해요! 💪';
-    if (score >= 70) return '좋아요! 👍';
-    if (score >= 60) return '괜찮아요! 😊';
-    if (score >= 50) return '조금 더 노력해봐요!';
-    return '다음엔 더 잘할 수 있어요!';
+    if (score >= 90) return AppLocalizations.of(context)!.scorePerfect;
+    if (score >= 80) return AppLocalizations.of(context)!.scoreGreat;
+    if (score >= 70) return AppLocalizations.of(context)!.scoreGood;
+    if (score >= 60) return AppLocalizations.of(context)!.scoreOk;
+    if (score >= 50) return AppLocalizations.of(context)!.scoreTryHard;
+    return AppLocalizations.of(context)!.scoreNextTime;
   }
 }

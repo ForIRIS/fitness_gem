@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../models/workout_curriculum.dart';
 import '../services/cache_service.dart';
 
@@ -13,7 +14,7 @@ class LoadingView extends StatefulWidget {
 }
 
 class _LoadingViewState extends State<LoadingView> {
-  String _statusMessage = '준비 작업 중...';
+  String _statusMessage = '...';
   int _completedCount = 0;
   int _totalCount = 0;
   String _currentItem = '';
@@ -21,9 +22,11 @@ class _LoadingViewState extends State<LoadingView> {
   bool _hasError = false;
 
   @override
-  void initState() {
-    super.initState();
-    _startCaching();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_statusMessage == '...') {
+      _statusMessage = AppLocalizations.of(context)!.preparing;
+    }
   }
 
   Future<void> _startCaching() async {
@@ -54,7 +57,7 @@ class _LoadingViewState extends State<LoadingView> {
     // 더미 데이터라 URL이 모두 비어있으면 바로 완료
     if (total == 0) {
       setState(() {
-        _statusMessage = '준비 완료!';
+        _statusMessage = AppLocalizations.of(context)!.ready;
         _isComplete = true;
       });
       await Future.delayed(const Duration(milliseconds: 500));
@@ -66,7 +69,7 @@ class _LoadingViewState extends State<LoadingView> {
 
     setState(() {
       _totalCount = total;
-      _statusMessage = '필요한 파일을 다운로드 중입니다...';
+      _statusMessage = AppLocalizations.of(context)!.downloadingResources;
     });
 
     try {
@@ -83,7 +86,7 @@ class _LoadingViewState extends State<LoadingView> {
       );
 
       setState(() {
-        _statusMessage = '완료되었습니다!';
+        _statusMessage = AppLocalizations.of(context)!.downloadComplete;
         _isComplete = true;
       });
 
@@ -92,16 +95,18 @@ class _LoadingViewState extends State<LoadingView> {
         Navigator.pop(context, true);
       }
     } catch (e) {
-      setState(() {
-        _statusMessage = '다운로드 실패: $e';
-        _hasError = true;
-      });
+      if (mounted) {
+        setState(() {
+          _statusMessage = AppLocalizations.of(context)!.downloadFailed(e);
+          _hasError = true;
+        });
+      }
     }
   }
 
   void _retry() {
     setState(() {
-      _statusMessage = '준비 작업 중...';
+      _statusMessage = AppLocalizations.of(context)!.preparing;
       _completedCount = 0;
       _totalCount = 0;
       _currentItem = '';
@@ -197,7 +202,7 @@ class _LoadingViewState extends State<LoadingView> {
                 ElevatedButton.icon(
                   onPressed: _retry,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('재시도'),
+                  label: Text(AppLocalizations.of(context)!.retry),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     padding: const EdgeInsets.symmetric(
@@ -211,9 +216,9 @@ class _LoadingViewState extends State<LoadingView> {
               if (!_isComplete)
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text(
-                    '취소',
-                    style: TextStyle(color: Colors.white54),
+                  child: Text(
+                    AppLocalizations.of(context)!.cancel,
+                    style: const TextStyle(color: Colors.white54),
                   ),
                 ),
             ],

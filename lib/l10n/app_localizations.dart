@@ -493,6 +493,342 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open Settings'**
   String get openSettings;
+
+  /// No description provided for @startWithAiConsultant.
+  ///
+  /// In en, this message translates to:
+  /// **'Start after talking with AI Consultant'**
+  String get startWithAiConsultant;
+
+  /// No description provided for @apiKeySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'API Key saved.'**
+  String get apiKeySaved;
+
+  /// No description provided for @guardianSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian contact saved.'**
+  String get guardianSaved;
+
+  /// No description provided for @age.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get age;
+
+  /// No description provided for @experienceLevelShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Experience Level'**
+  String get experienceLevelShort;
+
+  /// No description provided for @goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get goal;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get appVersion;
+
+  /// No description provided for @appBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Build'**
+  String get appBuild;
+
+  /// No description provided for @testCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera Test'**
+  String get testCamera;
+
+  /// No description provided for @enterPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter phone number'**
+  String get enterPhone;
+
+  /// No description provided for @enterApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter API Key'**
+  String get enterApiKey;
+
+  /// No description provided for @saveApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Save API Key'**
+  String get saveApiKey;
+
+  /// No description provided for @welcomeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, {age}-year-old {level} member!'**
+  String welcomeMessage(String age, String level);
+
+  /// No description provided for @startWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Workout'**
+  String get startWorkout;
+
+  /// No description provided for @aiChat.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Chat'**
+  String get aiChat;
+
+  /// No description provided for @todayWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Workout'**
+  String get todayWorkout;
+
+  /// No description provided for @estimatedTime.
+  ///
+  /// In en, this message translates to:
+  /// **'~{minutes} min'**
+  String estimatedTime(Object minutes);
+
+  /// No description provided for @generatingWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating workout...'**
+  String get generatingWorkout;
+
+  /// No description provided for @generationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to generate workout.\nPlease try again.'**
+  String get generationFailed;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get progress;
+
+  /// No description provided for @noRecordMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Graph will appear as you build exercise records'**
+  String get noRecordMessage;
+
+  /// No description provided for @medicalDisclaimerShort.
+  ///
+  /// In en, this message translates to:
+  /// **'This app does not provide medical advice.\nStop immediately if you experience pain.'**
+  String get medicalDisclaimerShort;
+
+  /// No description provided for @aiChatInitialMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello! What kind of workout would you like to do today?\nEx: \"I want a light lower body workout\", \"Focus on upper body\"'**
+  String get aiChatInitialMessage;
+
+  /// No description provided for @aiChatPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a message...'**
+  String get aiChatPlaceholder;
+
+  /// No description provided for @replaceWithCurriculum.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace with this curriculum'**
+  String get replaceWithCurriculum;
+
+  /// No description provided for @curriculumRecommendation.
+  ///
+  /// In en, this message translates to:
+  /// **'I recommend {title}!'**
+  String curriculumRecommendation(String title);
+
+  /// No description provided for @curriculumGenerationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorry, failed to generate curriculum. Please try again.'**
+  String get curriculumGenerationError;
+
+  /// No description provided for @errorOccurred.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred: {error}'**
+  String errorOccurred(Object error);
+
+  /// No description provided for @viewDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'View Details'**
+  String get viewDetail;
+
+  /// No description provided for @startNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Now'**
+  String get startNow;
+
+  /// No description provided for @workoutComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Complete! 🎉'**
+  String get workoutComplete;
+
+  /// No description provided for @returnHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to Home'**
+  String get returnHome;
+
+  /// No description provided for @todayScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Score'**
+  String get todayScore;
+
+  /// No description provided for @scorePerfect.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect! 🔥'**
+  String get scorePerfect;
+
+  /// No description provided for @scoreGreat.
+  ///
+  /// In en, this message translates to:
+  /// **'Great! 💪'**
+  String get scoreGreat;
+
+  /// No description provided for @scoreGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good! 👍'**
+  String get scoreGood;
+
+  /// No description provided for @scoreOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Okay! 😊'**
+  String get scoreOk;
+
+  /// No description provided for @scoreTryHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a bit harder!'**
+  String get scoreTryHard;
+
+  /// No description provided for @scoreNextTime.
+  ///
+  /// In en, this message translates to:
+  /// **'You can do better next time!'**
+  String get scoreNextTime;
+
+  /// No description provided for @improvementPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Improvement Points'**
+  String get improvementPoints;
+
+  /// No description provided for @scoreBySet.
+  ///
+  /// In en, this message translates to:
+  /// **'Score by Set'**
+  String get scoreBySet;
+
+  /// No description provided for @repsTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total reps'**
+  String get repsTotal;
+
+  /// No description provided for @sets.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets'**
+  String get sets;
+
+  /// No description provided for @workoutDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Description'**
+  String get workoutDescription;
+
+  /// No description provided for @precautions.
+  ///
+  /// In en, this message translates to:
+  /// **'Precautions'**
+  String get precautions;
+
+  /// No description provided for @preparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing...'**
+  String get preparing;
+
+  /// No description provided for @downloadingResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading required files...'**
+  String get downloadingResources;
+
+  /// No description provided for @downloadComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete!'**
+  String get downloadComplete;
+
+  /// No description provided for @downloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed: {error}'**
+  String downloadFailed(Object error);
+
+  /// No description provided for @ready.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready!'**
+  String get ready;
+
+  /// No description provided for @aiConsultantBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ll create a personalized curriculum with 3-5 questions'**
+  String get aiConsultantBanner;
+
+  /// No description provided for @aiProfileAnalysisBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ll analyze your profile again'**
+  String get aiProfileAnalysisBanner;
+
+  /// No description provided for @networkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error occurred'**
+  String get networkError;
+
+  /// No description provided for @completeAndStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete and Start'**
+  String get completeAndStart;
+
+  /// No description provided for @answerPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your answer...'**
+  String get answerPlaceholder;
 }
 
 class _AppLocalizationsDelegate

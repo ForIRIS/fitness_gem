@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../models/user_profile.dart';
 import '../services/gemini_service.dart';
 import 'camera_view.dart';
@@ -43,9 +44,9 @@ class _SettingsViewState extends State<SettingsView> {
     await geminiService.setApiKey(_apiKeyController.text);
 
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('API Key가 저장되었습니다.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.apiKeySaved)),
+      );
     }
   }
 
@@ -58,9 +59,9 @@ class _SettingsViewState extends State<SettingsView> {
     await UserProfile.save(_profile!);
 
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('보호자 연락처가 저장되었습니다.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.guardianSaved)),
+      );
     }
   }
 
@@ -70,7 +71,10 @@ class _SettingsViewState extends State<SettingsView> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('설정', style: TextStyle(color: Colors.white)),
+        title: Text(
+          AppLocalizations.of(context)!.settings,
+          style: const TextStyle(color: Colors.white),
+        ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoading
@@ -82,17 +86,29 @@ class _SettingsViewState extends State<SettingsView> {
                 children: [
                   // 프로필 정보
                   _buildSection(
-                    title: '프로필 정보',
+                    title: AppLocalizations.of(context)!.profileInfo,
                     child: Column(
                       children: [
-                        _buildInfoRow('나이', _profile?.age ?? '-'),
                         _buildInfoRow(
-                          '경험 수준',
+                          AppLocalizations.of(context)!.age,
+                          _profile?.age ?? '-',
+                        ),
+                        _buildInfoRow(
+                          AppLocalizations.of(context)!.experienceLevelShort,
                           _profile?.experienceLevel ?? '-',
                         ),
-                        _buildInfoRow('목표', _profile?.goal ?? '-'),
-                        _buildInfoRow('부상 이력', _profile?.injuryHistory ?? '-'),
-                        _buildInfoRow('타겟 운동', _profile?.targetExercise ?? '-'),
+                        _buildInfoRow(
+                          AppLocalizations.of(context)!.goal,
+                          _profile?.goal ?? '-',
+                        ),
+                        _buildInfoRow(
+                          AppLocalizations.of(context)!.injuryHistory,
+                          _profile?.injuryHistory ?? '-',
+                        ),
+                        _buildInfoRow(
+                          AppLocalizations.of(context)!.targetExercise,
+                          _profile?.targetExercise ?? '-',
+                        ),
                       ],
                     ),
                   ),
@@ -101,8 +117,10 @@ class _SettingsViewState extends State<SettingsView> {
 
                   // AI 컨설팅
                   _buildSection(
-                    title: 'AI 컨설팅',
-                    subtitle: '맞춤 커리큘럼을 위한 심층 상담',
+                    title: AppLocalizations.of(context)!.aiConsulting,
+                    subtitle: AppLocalizations.of(
+                      context,
+                    )!.aiConsultingSubtitle,
                     child: _buildReinterviewButton(),
                   ),
 
@@ -110,8 +128,10 @@ class _SettingsViewState extends State<SettingsView> {
 
                   // 보호자 연락처
                   _buildSection(
-                    title: '보호자 연락처 (선택)',
-                    subtitle: '낙상 감지 시 알림을 받을 연락처',
+                    title: AppLocalizations.of(context)!.guardianPhone,
+                    subtitle: AppLocalizations.of(
+                      context,
+                    )!.guardianPhoneDescription,
                     child: Column(
                       children: [
                         TextField(
@@ -119,7 +139,7 @@ class _SettingsViewState extends State<SettingsView> {
                           keyboardType: TextInputType.phone,
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
-                            hintText: '전화번호 입력',
+                            hintText: AppLocalizations.of(context)!.enterPhone,
                             hintStyle: const TextStyle(color: Colors.white38),
                             enabledBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
@@ -143,7 +163,7 @@ class _SettingsViewState extends State<SettingsView> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.grey[800],
                             ),
-                            child: const Text('저장'),
+                            child: Text(AppLocalizations.of(context)!.save),
                           ),
                         ),
                       ],
@@ -155,7 +175,7 @@ class _SettingsViewState extends State<SettingsView> {
                   // API Key 설정
                   _buildSection(
                     title: 'Gemini API Key',
-                    subtitle: '테스트용 API Key 변경',
+                    subtitle: AppLocalizations.of(context)!.testCamera,
                     child: Column(
                       children: [
                         TextField(
@@ -163,7 +183,7 @@ class _SettingsViewState extends State<SettingsView> {
                           obscureText: !_showApiKey,
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
-                            hintText: 'API Key 입력',
+                            hintText: AppLocalizations.of(context)!.enterApiKey,
                             hintStyle: const TextStyle(color: Colors.white38),
                             enabledBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
@@ -198,7 +218,9 @@ class _SettingsViewState extends State<SettingsView> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.deepPurple,
                             ),
-                            child: const Text('API Key 저장'),
+                            child: Text(
+                              AppLocalizations.of(context)!.saveApiKey,
+                            ),
                           ),
                         ),
                       ],
@@ -209,11 +231,17 @@ class _SettingsViewState extends State<SettingsView> {
 
                   // 앱 정보
                   _buildSection(
-                    title: '앱 정보',
+                    title: AppLocalizations.of(context)!.appVersion,
                     child: Column(
                       children: [
-                        _buildInfoRow('버전', '1.0.0'),
-                        _buildInfoRow('빌드', 'Hackathon Edition'),
+                        _buildInfoRow(
+                          AppLocalizations.of(context)!.appVersion,
+                          '1.0.0',
+                        ),
+                        _buildInfoRow(
+                          AppLocalizations.of(context)!.appBuild,
+                          'Hackathon Edition',
+                        ),
                       ],
                     ),
                   ),
@@ -222,16 +250,16 @@ class _SettingsViewState extends State<SettingsView> {
 
                   // 기능 테스트
                   _buildSection(
-                    title: '기능 테스트',
+                    title: AppLocalizations.of(context)!.testCamera,
                     child: ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(
                         Icons.camera_alt,
                         color: Colors.white,
                       ),
-                      title: const Text(
-                        '카메라 테스트',
-                        style: TextStyle(color: Colors.white),
+                      title: Text(
+                        AppLocalizations.of(context)!.testCamera,
+                        style: const TextStyle(color: Colors.white),
                       ),
                       trailing: const Icon(
                         Icons.arrow_forward_ios,
@@ -341,7 +369,13 @@ class _SettingsViewState extends State<SettingsView> {
           child: ElevatedButton.icon(
             onPressed: canReinterview ? _startReinterview : null,
             icon: const Icon(Icons.refresh, size: 18),
-            label: Text(canReinterview ? '다시 상담받기' : '$daysRemaining일 후 가능'),
+            label: Text(
+              canReinterview
+                  ? AppLocalizations.of(context)!.reconsult
+                  : AppLocalizations.of(
+                      context,
+                    )!.daysUntilReconsult(daysRemaining),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: canReinterview ? Colors.amber : Colors.grey[700],
               foregroundColor: canReinterview ? Colors.black : Colors.white54,
@@ -352,11 +386,11 @@ class _SettingsViewState extends State<SettingsView> {
           ),
         ),
         if (!canReinterview)
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
             child: Text(
-              '일주일에 한 번 상담을 받을 수 있어요',
-              style: TextStyle(color: Colors.white38, fontSize: 12),
+              AppLocalizations.of(context)!.weeklyLimitMessage,
+              style: const TextStyle(color: Colors.white38, fontSize: 12),
             ),
           ),
       ],
@@ -378,9 +412,11 @@ class _SettingsViewState extends State<SettingsView> {
     if (result == true) {
       await _loadData();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('상담 결과가 업데이트되었습니다.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.consultationUpdated),
+          ),
+        );
       }
     }
   }

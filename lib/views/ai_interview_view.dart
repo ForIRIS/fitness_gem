@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../models/user_profile.dart';
 import '../services/gemini_service.dart';
 
@@ -119,7 +120,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
             )
             .trim();
         if (displayMessage.isEmpty) {
-          displayMessage = '감사합니다! 프로필이 업데이트되었습니다.';
+          displayMessage = AppLocalizations.of(context)!.downloadComplete;
         }
       }
 
@@ -193,7 +194,10 @@ class _AIInterviewViewState extends State<AIInterviewView>
         actions: [
           TextButton(
             onPressed: _skipInterview,
-            child: const Text('건너뛰기', style: TextStyle(color: Colors.white54)),
+            child: Text(
+              AppLocalizations.of(context)!.skip,
+              style: const TextStyle(color: Colors.white54),
+            ),
           ),
         ],
       ),
@@ -211,8 +215,8 @@ class _AIInterviewViewState extends State<AIInterviewView>
                 Expanded(
                   child: Text(
                     widget.isFromOnboarding
-                        ? '3~5개의 질문으로 맞춤 커리큘럼을 만들어 드릴게요'
-                        : '프로필을 다시 분석해 드릴게요',
+                        ? AppLocalizations.of(context)!.aiConsultantBanner
+                        : AppLocalizations.of(context)!.aiProfileAnalysisBanner,
                     style: const TextStyle(color: Colors.amber, fontSize: 13),
                   ),
                 ),
@@ -238,9 +242,9 @@ class _AIInterviewViewState extends State<AIInterviewView>
                   ),
                   TextButton(
                     onPressed: _retryConnection,
-                    child: const Text(
-                      '재시도',
-                      style: TextStyle(color: Colors.red),
+                    child: Text(
+                      AppLocalizations.of(context)!.retry,
+                      style: const TextStyle(color: Colors.red),
                     ),
                   ),
                 ],
@@ -271,7 +275,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
                 child: ElevatedButton.icon(
                   onPressed: _completeInterview,
                   icon: const Icon(Icons.check_circle),
-                  label: const Text('완료하고 시작하기'),
+                  label: Text(AppLocalizations.of(context)!.completeAndStart),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
@@ -296,7 +300,9 @@ class _AIInterviewViewState extends State<AIInterviewView>
                       controller: _messageController,
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
-                        hintText: '답변을 입력하세요...',
+                        hintText: AppLocalizations.of(
+                          context,
+                        )!.answerPlaceholder,
                         hintStyle: const TextStyle(color: Colors.white38),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),

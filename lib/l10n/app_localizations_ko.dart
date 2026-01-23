@@ -209,4 +209,184 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get openSettings => '설정 열기';
+
+  @override
+  String get startWithAiConsultant => 'AI Consultant 대화 후 시작하기';
+
+  @override
+  String get apiKeySaved => 'API Key가 저장되었습니다.';
+
+  @override
+  String get guardianSaved => '보호자 연락처가 저장되었습니다.';
+
+  @override
+  String get age => '나이';
+
+  @override
+  String get experienceLevelShort => '경험 수준';
+
+  @override
+  String get goal => '목표';
+
+  @override
+  String get appVersion => '버전';
+
+  @override
+  String get appBuild => '빌드';
+
+  @override
+  String get testCamera => '카메라 테스트';
+
+  @override
+  String get enterPhone => '전화번호 입력';
+
+  @override
+  String get enterApiKey => 'API Key 입력';
+
+  @override
+  String get saveApiKey => 'API Key 저장';
+
+  @override
+  String welcomeMessage(String age, String level) {
+    return '안녕하세요, $age세 $level 회원님!';
+  }
+
+  @override
+  String get startWorkout => '운동 시작';
+
+  @override
+  String get aiChat => 'AI 상담';
+
+  @override
+  String get todayWorkout => '오늘의 운동';
+
+  @override
+  String estimatedTime(Object minutes) {
+    return '약 $minutes분';
+  }
+
+  @override
+  String get generatingWorkout => '운동 생성 중...';
+
+  @override
+  String get generationFailed => '운동 생성에 실패했습니다.\n다시 시도해주세요.';
+
+  @override
+  String get retry => '다시 시도';
+
+  @override
+  String get progress => '진척도';
+
+  @override
+  String get noRecordMessage => '운동 기록이 쌓이면 그래프가 표시됩니다';
+
+  @override
+  String get medicalDisclaimerShort =>
+      '본 앱은 의료 조언을 제공하지 않습니다.\n부상 시 즉시 운동을 중단하세요.';
+
+  @override
+  String get aiChatInitialMessage =>
+      '안녕하세요! 오늘은 어떤 운동을 하고 싶으신가요?\n예: \"가볍게 하체 운동 하고 싶어\", \"상체 위주로 해줘\"';
+
+  @override
+  String get aiChatPlaceholder => '메시지를 입력하세요...';
+
+  @override
+  String get replaceWithCurriculum => '이 커리큘럼으로 교체';
+
+  @override
+  String curriculumRecommendation(String title) {
+    return '$title을 추천드립니다!';
+  }
+
+  @override
+  String get curriculumGenerationError => '죄송합니다, 커리큘럼을 생성하지 못했습니다. 다시 시도해주세요.';
+
+  @override
+  String errorOccurred(Object error) {
+    return '오류가 발생했습니다: $error';
+  }
+
+  @override
+  String get viewDetail => '상세 보기';
+
+  @override
+  String get startNow => '바로 시작';
+
+  @override
+  String get workoutComplete => '운동 완료! 🎉';
+
+  @override
+  String get returnHome => '홈으로 돌아가기';
+
+  @override
+  String get todayScore => '오늘의 점수';
+
+  @override
+  String get scorePerfect => '완벽해요! 🔥';
+
+  @override
+  String get scoreGreat => '훌륭해요! 💪';
+
+  @override
+  String get scoreGood => '좋아요! 👍';
+
+  @override
+  String get scoreOk => '괜찮아요! 😊';
+
+  @override
+  String get scoreTryHard => '조금 더 노력해봐요!';
+
+  @override
+  String get scoreNextTime => '다음엔 더 잘할 수 있어요!';
+
+  @override
+  String get improvementPoints => '개선 포인트';
+
+  @override
+  String get scoreBySet => '세트별 점수';
+
+  @override
+  String get repsTotal => '총 reps';
+
+  @override
+  String get sets => '세트';
+
+  @override
+  String get workoutDescription => '운동 설명';
+
+  @override
+  String get precautions => '주의사항';
+
+  @override
+  String get preparing => '준비 작업 중...';
+
+  @override
+  String get downloadingResources => '필요한 파일을 다운로드 중입니다...';
+
+  @override
+  String get downloadComplete => '완료되었습니다!';
+
+  @override
+  String downloadFailed(Object error) {
+    return '다운로드 실패: $error';
+  }
+
+  @override
+  String get ready => '준비 완료!';
+
+  @override
+  String get aiConsultantBanner => '3~5개의 질문으로 맞춤 커리큘럼을 만들어 드릴게요';
+
+  @override
+  String get aiProfileAnalysisBanner => '프로필을 다시 분석해 드릴게요';
+
+  @override
+  String get networkError => '네트워크 오류가 발생했습니다';
+
+  @override
+  String get completeAndStart => '완료하고 시작하기';
+
+  @override
+  String get answerPlaceholder => '답변을 입력하세요...';
 }

@@ -83,5 +83,87 @@
   
   "permissionRequired": "Permission Required",
   "permissionDeniedMessage": "Camera and microphone permissions were denied.\nPlease enable them in Settings.",
-  "openSettings": "Open Settings"
+  "openSettings": "Open Settings",
+  "startWithAiConsultant": "Start after talking with AI Consultant",
+  "apiKeySaved": "API Key saved.",
+  "guardianSaved": "Guardian contact saved.",
+  "age": "Age",
+  "experienceLevelShort": "Experience Level",
+  "goal": "Goal",
+  "appVersion": "Version",
+  "appBuild": "Build",
+  "testCamera": "Camera Test",
+  "enterPhone": "Enter phone number",
+  "enterApiKey": "Enter API Key",
+  "saveApiKey": "Save API Key",
+  "welcomeMessage": "Hello, {age}-year-old {level} member!",
+  "@welcomeMessage": {
+    "placeholders": {
+      "age": { "type": "String" },
+      "level": { "type": "String" }
+    }
+  },
+  "startWorkout": "Start Workout",
+  "aiChat": "AI Chat",
+  "todayWorkout": "Today's Workout",
+  "estimatedTime": "~{minutes} min",
+  "@estimatedTime": {
+    "placeholders": {
+      "minutes": { "type": "Object" }
+    }
+  },
+  "generatingWorkout": "Generating workout.",
+  "generationFailed": "Failed to generate workout.\nPlease try again.",
+  "retry": "Retry",
+  "progress": "Progress",
+  "noRecordMessage": "Graph will appear as you build exercise records",
+  "medicalDisclaimerShort": "This app does not provide medical advice.\nStop immediately if you experience pain.",
+  "aiChatInitialMessage": "Hello! What kind of workout would you like to do today?\nEx: \"I want a light lower body workout\", \"Focus on upper body\"",
+  "aiChatPlaceholder": "Enter a message...",
+  "replaceWithCurriculum": "Replace with this curriculum",
+  "curriculumRecommendation": "I recommend {title}!",
+  "@curriculumRecommendation": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "curriculumGenerationError": "Sorry, failed to generate curriculum. Please try again.",
+  "errorOccurred": "An error occurred: {error}",
+  "@errorOccurred": {
+    "placeholders": {
+      "error": { "type": "Object" }
+    }
+  },
+  "viewDetail": "View Details",
+  "startNow": "Start Now",
+  "workoutComplete": "Workout Complete! 🎉",
+  "returnHome": "Return to Home",
+  "todayScore": "Today's Score",
+  "scorePerfect": "Perfect! 🔥",
+  "scoreGreat": "Great! 💪",
+  "scoreGood": "Good! 👍",
+  "scoreOk": "Okay! 😊",
+  "scoreTryHard": "Try a bit harder!",
+  "scoreNextTime": "You can do better next time!",
+  "improvementPoints": "Improvement Points",
+  "scoreBySet": "Score by Set",
+  "repsTotal": "Total reps",
+  "sets": "Sets",
+  "workoutDescription": "Workout Description",
+  "precautions": "Precautions",
+  "preparing": "Preparing...",
+  "downloadingResources": "Downloading required files...",
+  "downloadComplete": "Complete!",
+  "downloadFailed": "Download failed: {error}",
+  "@downloadFailed": {
+    "placeholders": {
+      "error": { "type": "Object" }
+    }
+  },
+  "ready": "Ready!",
+  "aiConsultantBanner": "I'll create a personalized curriculum with 3-5 questions",
+  "aiProfileAnalysisBanner": "I'll analyze your profile again",
+  "networkError": "Network error occurred",
+  "completeAndStart": "Complete and Start",
+  "answerPlaceholder": "Enter your answer..."
 }
