@@ -171,8 +171,24 @@ class _AIInterviewViewState extends State<AIInterviewView>
     setState(() {
       _hasError = false;
     });
+
+    // If empty, start fresh
     if (_messages.isEmpty) {
       _startInterview();
+      return;
+    }
+
+    // If last message was from user, retry sending it
+    if (_messages.isNotEmpty && _messages.last.isUser) {
+      final lastMessage = _messages.last.text;
+
+      // Remove the last message from UI to avoid duplication when _sendMessage adds it back
+      setState(() {
+        _messages.removeLast();
+        _messageController.text = lastMessage;
+      });
+
+      _sendMessage();
     }
   }
 

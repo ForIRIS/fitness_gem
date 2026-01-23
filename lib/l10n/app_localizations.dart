@@ -829,6 +829,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter your answer...'**
   String get answerPlaceholder;
+
+  /// No description provided for @enterApiKeyHackathon.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter API Key (Hackathon)'**
+  String get enterApiKeyHackathon;
+
+  /// No description provided for @apiKeyDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Gemini API Key'**
+  String get apiKeyDialogTitle;
+
+  /// No description provided for @apiKeyDialogDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'To avoid rate limits during the hackathon, please enter your own Gemini API Key.'**
+  String get apiKeyDialogDescription;
+
+  /// No description provided for @apiKeyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'API Key'**
+  String get apiKeyLabel;
+
+  /// No description provided for @exerciseSquat.
+  ///
+  /// In en, this message translates to:
+  /// **'Squat (Lower Body)'**
+  String get exerciseSquat;
+
+  /// No description provided for @exercisePushup.
+  ///
+  /// In en, this message translates to:
+  /// **'Push-up (Upper Body)'**
+  String get exercisePushup;
+
+  /// No description provided for @exerciseLunge.
+  ///
+  /// In en, this message translates to:
+  /// **'Lunge'**
+  String get exerciseLunge;
+
+  /// No description provided for @exercisePlank.
+  ///
+  /// In en, this message translates to:
+  /// **'Plank (Core)'**
+  String get exercisePlank;
 }
 
 class _AppLocalizationsDelegate

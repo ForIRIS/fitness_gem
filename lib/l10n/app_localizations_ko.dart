@@ -389,4 +389,29 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get answerPlaceholder => '답변을 입력하세요...';
+
+  @override
+  String get enterApiKeyHackathon => 'API 키 입력 (해커톤용)';
+
+  @override
+  String get apiKeyDialogTitle => 'Gemini API 키 입력';
+
+  @override
+  String get apiKeyDialogDescription =>
+      '해커톤 테스트 중 Rate Limit을 피하기 위해 본인의 API 키를 입력해주세요.';
+
+  @override
+  String get apiKeyLabel => 'API 키';
+
+  @override
+  String get exerciseSquat => '하체 (스쿼트)';
+
+  @override
+  String get exercisePushup => '상체 (푸시업)';
+
+  @override
+  String get exerciseLunge => '런지';
+
+  @override
+  String get exercisePlank => '코어 (플랭크)';
 }

@@ -165,5 +165,13 @@
   "aiProfileAnalysisBanner": "I'll analyze your profile again",
   "networkError": "Network error occurred",
   "completeAndStart": "Complete and Start",
-  "answerPlaceholder": "Enter your answer..."
+  "answerPlaceholder": "Enter your answer...",
+  "enterApiKeyHackathon": "Enter API Key (Hackathon)",
+  "apiKeyDialogTitle": "Enter Gemini API Key",
+  "apiKeyDialogDescription": "To avoid rate limits during the hackathon, please enter your own Gemini API Key.",
+  "apiKeyLabel": "API Key",
+  "exerciseSquat": "Squat (Lower Body)",
+  "exercisePushup": "Push-up (Upper Body)",
+  "exerciseLunge": "Lunge",
+  "exercisePlank": "Plank (Core)"
 }

@@ -400,4 +400,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get answerPlaceholder => 'Enter your answer...';
+
+  @override
+  String get enterApiKeyHackathon => 'Enter API Key (Hackathon)';
+
+  @override
+  String get apiKeyDialogTitle => 'Enter Gemini API Key';
+
+  @override
+  String get apiKeyDialogDescription =>
+      'To avoid rate limits during the hackathon, please enter your own Gemini API Key.';
+
+  @override
+  String get apiKeyLabel => 'API Key';
+
+  @override
+  String get exerciseSquat => 'Squat (Lower Body)';
+
+  @override
+  String get exercisePushup => 'Push-up (Upper Body)';
+
+  @override
+  String get exerciseLunge => 'Lunge';
+
+  @override
+  String get exercisePlank => 'Plank (Core)';
 }

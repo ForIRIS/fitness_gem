@@ -6,6 +6,8 @@ import 'package:permission_handler/permission_handler.dart';
 import '../models/user_profile.dart';
 import 'home_view.dart';
 import 'ai_interview_view.dart';
+import '../services/gemini_service.dart';
+import 'package:flutter/services.dart';
 
 /// OnboardingView - 온보딩 화면
 class OnboardingView extends StatefulWidget {
@@ -47,27 +49,29 @@ class _OnboardingViewState extends State<OnboardingView> {
   ];
 
   // 부상 이력 목록
-  static const List<String> _injuryOptions = [
-    '없음',
-    '목/어깨',
-    '허리',
-    '무릎',
-    '발목',
-    '손목',
-    '팔꿈치',
-    '고관절',
-    '기타',
+  // 부상 이력 목록 (Getter for Localization)
+  List<String> get _injuryOptions => [
+    AppLocalizations.of(context)!.none,
+    AppLocalizations.of(context)!.neckShoulder,
+    AppLocalizations.of(context)!.lowerBack,
+    AppLocalizations.of(context)!.knee,
+    AppLocalizations.of(context)!.ankle,
+    AppLocalizations.of(context)!.wrist,
+    AppLocalizations.of(context)!.elbow,
+    AppLocalizations.of(context)!.hip,
+    AppLocalizations.of(context)!.other,
   ];
 
   // 운동 목표 목록
-  static const List<String> _goalOptions = [
-    '근력 강화',
-    '체중 감량',
-    '체력 향상',
-    '유연성 향상',
-    '자세 교정',
-    '재활 운동',
-    '기타',
+  // 운동 목표 목록 (Getter for Localization)
+  List<String> get _goalOptions => [
+    AppLocalizations.of(context)!.strengthBuilding,
+    AppLocalizations.of(context)!.weightLoss,
+    AppLocalizations.of(context)!.endurance,
+    AppLocalizations.of(context)!.flexibility,
+    AppLocalizations.of(context)!.postureCorrection,
+    AppLocalizations.of(context)!.rehabilitation,
+    AppLocalizations.of(context)!.other,
   ];
 
   // 면책 팝업 표시 여부
@@ -281,6 +285,18 @@ class _OnboardingViewState extends State<OnboardingView> {
               ),
             ),
           ],
+
+          const Spacer(),
+
+          TextButton.icon(
+            onPressed: _showApiKeyDialog,
+            icon: const Icon(Icons.key, size: 16, color: Colors.white30),
+            label: Text(
+              AppLocalizations.of(context)!.enterApiKeyHackathon,
+              style: const TextStyle(color: Colors.white30, fontSize: 12),
+            ),
+          ),
+
           const SizedBox(height: 24),
         ],
       ),
@@ -349,7 +365,6 @@ class _OnboardingViewState extends State<OnboardingView> {
             runSpacing: 8,
             children: _injuryOptions.map((injury) {
               final isSelected = _selectedInjuries.contains(injury);
-              final isOther = injury == '기타';
               return FilterChip(
                 label: Text(injury),
                 selected: isSelected,
@@ -361,20 +376,24 @@ class _OnboardingViewState extends State<OnboardingView> {
                 ),
                 onSelected: (selected) {
                   setState(() {
-                    if (injury == '없음') {
+                    if (injury == AppLocalizations.of(context)!.none) {
                       // '없음' 선택 시 다른 모든 선택 해제
                       _selectedInjuries.clear();
                       if (selected) _selectedInjuries.add(injury);
                       _showCustomInjury = false;
                     } else {
                       // 다른 부상 선택 시 '없음' 해제
-                      _selectedInjuries.remove('없음');
+                      _selectedInjuries.remove(
+                        AppLocalizations.of(context)!.none,
+                      );
                       if (selected) {
                         _selectedInjuries.add(injury);
                       } else {
                         _selectedInjuries.remove(injury);
                       }
-                      _showCustomInjury = isOther && selected;
+                      _showCustomInjury = _selectedInjuries.contains(
+                        AppLocalizations.of(context)!.other,
+                      );
                     }
                   });
                 },
@@ -430,7 +449,9 @@ class _OnboardingViewState extends State<OnboardingView> {
                     } else {
                       _selectedGoals.remove(goal);
                     }
-                    _showCustomGoal = _selectedGoals.contains('기타');
+                    _showCustomGoal = _selectedGoals.contains(
+                      AppLocalizations.of(context)!.other,
+                    );
                   });
                 },
               );
@@ -525,10 +546,22 @@ class _OnboardingViewState extends State<OnboardingView> {
             alignment: WrapAlignment.center,
             children:
                 [
-                  {'name': '하체 (스쿼트)', 'value': 'Squat'},
-                  {'name': '상체 (푸시업)', 'value': 'Push-up'},
-                  {'name': '런지', 'value': 'Lunge'},
-                  {'name': '코어 (플랭크)', 'value': 'Plank'},
+                  {
+                    'name': AppLocalizations.of(context)!.exerciseSquat,
+                    'value': 'Squat',
+                  },
+                  {
+                    'name': AppLocalizations.of(context)!.exercisePushup,
+                    'value': 'Push-up',
+                  },
+                  {
+                    'name': AppLocalizations.of(context)!.exerciseLunge,
+                    'value': 'Lunge',
+                  },
+                  {
+                    'name': AppLocalizations.of(context)!.exercisePlank,
+                    'value': 'Plank',
+                  },
                 ].map((exercise) {
                   final isSelected =
                       _exerciseController.text == exercise['value'];
@@ -988,6 +1021,69 @@ class _OnboardingViewState extends State<OnboardingView> {
         MaterialPageRoute(builder: (context) => const HomeView()),
       );
     }
+  }
+
+  void _showApiKeyDialog() {
+    final TextEditingController keyController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Text(
+          AppLocalizations.of(context)!.apiKeyDialogTitle,
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              AppLocalizations.of(context)!.apiKeyDialogDescription,
+              style: const TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: keyController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.apiKeyLabel,
+                labelStyle: const TextStyle(color: Colors.white54),
+                enabledBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white24),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.deepPurple),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (keyController.text.trim().isNotEmpty) {
+                final geminiService = GeminiService();
+                await geminiService.setApiKey(keyController.text.trim());
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context)!.apiKeySaved),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  Navigator.pop(context);
+                }
+              }
+            },
+            child: Text(AppLocalizations.of(context)!.save),
+          ),
+        ],
+      ),
+    );
   }
 
   String _buildInjuryText() {
