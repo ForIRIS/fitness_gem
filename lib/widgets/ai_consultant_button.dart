@@ -52,7 +52,7 @@ class _AIConsultantButtonState extends State<AIConsultantButton>
               label: Shimmer.fromColors(
                 baseColor: Colors.black,
                 highlightColor: Colors.lightGreenAccent,
-                period: const Duration(seconds: 2),
+                period: const Duration(seconds: 6),
                 child: Text(
                   AppLocalizations.of(context)!.startWithAiConsultant,
                   style: const TextStyle(fontWeight: FontWeight.bold),

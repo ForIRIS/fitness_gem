@@ -8,6 +8,7 @@ import 'home_view.dart';
 import 'ai_interview_view.dart';
 import '../services/gemini_service.dart';
 import 'package:flutter/services.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 
 /// OnboardingView - 온보딩 화면
 class OnboardingView extends StatefulWidget {
@@ -32,6 +33,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   String _experienceLevel = 'Beginner';
   final TextEditingController _exerciseController = TextEditingController();
   final TextEditingController _guardianController = TextEditingController();
+  String? _completeGuardianPhone;
 
   // 나이 범위 목록
   static const List<String> _ageRanges = [
@@ -227,13 +229,17 @@ class _OnboardingViewState extends State<OnboardingView> {
                             context: context,
                             builder: (context) => AlertDialog(
                               backgroundColor: Colors.grey[900],
-                              title: const Text(
-                                '권한 필요',
-                                style: TextStyle(color: Colors.white),
+                              title: Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.permissionRequired,
+                                style: const TextStyle(color: Colors.white),
                               ),
-                              content: const Text(
-                                '카메라와 마이크 권한이 거부되었습니다.\n설정에서 직접 권한을 허용해주세요.',
-                                style: TextStyle(color: Colors.white70),
+                              content: Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.permissionDeniedMessage,
+                                style: const TextStyle(color: Colors.white70),
                               ),
                               actions: [
                                 TextButton(
@@ -636,10 +642,35 @@ class _OnboardingViewState extends State<OnboardingView> {
           const SizedBox(height: 24),
 
           if (_fallDetectionEnabled) ...[
-            _buildTextField(
-              AppLocalizations.of(context)!.guardianPhone,
-              _guardianController,
-              TextInputType.phone,
+            IntlPhoneField(
+              controller: _guardianController,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.guardianPhone,
+                labelStyle: const TextStyle(color: Colors.white54),
+                enabledBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white24),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.deepPurple),
+                ),
+                counterStyle: const TextStyle(color: Colors.white54),
+              ),
+              initialCountryCode:
+                  Localizations.localeOf(context).countryCode ?? 'KR',
+              style: const TextStyle(color: Colors.white),
+              dropdownTextStyle: const TextStyle(color: Colors.white),
+              dropdownIcon: const Icon(
+                Icons.arrow_drop_down,
+                color: Colors.white,
+              ),
+              onChanged: (phone) {
+                setState(() => _completeGuardianPhone = phone.completeNumber);
+              },
+              onCountryChanged: (country) {
+                // Country changed, but completeNumber updates in onChanged when text changes.
+                // If user changes country but keeps text, we might need to handle manual update?
+                // IntlPhoneField should handle the text update.
+              },
             ),
             const SizedBox(height: 8),
             Text(
@@ -662,33 +693,6 @@ class _OnboardingViewState extends State<OnboardingView> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTextField(
-    String label,
-    TextEditingController controller, [
-    TextInputType? type,
-  ]) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: TextField(
-        controller: controller,
-        keyboardType: type,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.white54),
-          enabledBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.white24),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.deepPurple),
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
       ),
     );
   }
@@ -839,7 +843,7 @@ class _OnboardingViewState extends State<OnboardingView> {
           : _exerciseController.text,
       guardianPhone: _guardianController.text.isEmpty
           ? null
-          : _guardianController.text,
+          : _completeGuardianPhone ?? _guardianController.text,
       fallDetectionEnabled: _fallDetectionEnabled,
     );
 
@@ -932,8 +936,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        '나이대 선택',
+                      Text(
+                        AppLocalizations.of(context)!.selectAgeRange,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
