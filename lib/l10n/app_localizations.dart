@@ -398,6 +398,24 @@ abstract class AppLocalizations {
   /// **'Set up later'**
   String get setUpLater;
 
+  /// No description provided for @disclaimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Disclaimer'**
+  String get disclaimerTitle;
+
+  /// No description provided for @disclaimerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This app provides AI-based workout analysis but is not a medical device. Please consult a doctor before starting any exercise program.'**
+  String get disclaimerMessage;
+
+  /// No description provided for @agreeAndStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Agree and Start'**
+  String get agreeAndStart;
+
   /// No description provided for @aiConsultant.
   ///
   /// In en, this message translates to:

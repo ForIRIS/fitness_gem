@@ -164,6 +164,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setUpLater => 'Set up later';
 
   @override
+  String get disclaimerTitle => 'Medical Disclaimer';
+
+  @override
+  String get disclaimerMessage =>
+      'This app provides AI-based workout analysis but is not a medical device. Please consult a doctor before starting any exercise program.';
+
+  @override
+  String get agreeAndStart => 'Agree and Start';
+
+  @override
   String get aiConsultant => 'Talk with AI Consultant';
 
   @override

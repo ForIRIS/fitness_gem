@@ -154,7 +154,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
     profile.interviewSummary = summaryText;
     profile.extractedDetails = extractedDetails;
     profile.lastInterviewDate = DateTime.now();
-    await UserProfile.save(profile);
+    await UserProfile.saveProfile(profile);
   }
 
   void _skipInterview() {

@@ -28,6 +28,9 @@ class UserProfile {
     this.lastInterviewDate,
   });
 
+  /// 인스턴스 저장 편의 메서드
+  Future<void> save() => UserProfile.saveProfile(this);
+
   /// 7일 경과 여부 체크 - 재인터뷰 가능 여부
   bool get canReinterview {
     if (lastInterviewDate == null) return true;
@@ -88,7 +91,7 @@ class UserProfile {
   // Persistence Methods
   static const _key = 'user_profile';
 
-  static Future<void> save(UserProfile profile) async {
+  static Future<void> saveProfile(UserProfile profile) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, profile.toJson());
   }

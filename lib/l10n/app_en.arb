@@ -57,6 +57,10 @@
   "guardianPhone": "Guardian Phone (Optional)",
   "guardianPhoneDescription": "Phone number for emergency SMS alerts.",
   "setUpLater": "Set up later",
+
+  "disclaimerTitle": "Medical Disclaimer",
+  "disclaimerMessage": "This app provides AI-based workout analysis but is not a medical device. Please consult a doctor before starting any exercise program.",
+  "agreeAndStart": "Agree and Start",
   
   "aiConsultant": "Talk with AI Consultant",
   "aiConsultantDescription": "Get a more accurate personalized curriculum",

@@ -159,6 +159,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get setUpLater => '나중에 설정할게요';
 
   @override
+  String get disclaimerTitle => '의료 면책 조항';
+
+  @override
+  String get disclaimerMessage =>
+      '이 앱은 AI 기반 운동 분석을 제공하지만 의료 기기가 아닙니다. 운동 프로그램을 시작하기 전에 의사와 상담하십시오.';
+
+  @override
+  String get agreeAndStart => '동의하고 시작하기';
+
+  @override
   String get aiConsultant => 'AI Consultant와 대화';
 
   @override

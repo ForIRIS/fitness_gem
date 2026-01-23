@@ -56,7 +56,7 @@ class _SettingsViewState extends State<SettingsView> {
     _profile!.guardianPhone = _guardianController.text.isEmpty
         ? null
         : _guardianController.text;
-    await UserProfile.save(_profile!);
+    await UserProfile.saveProfile(_profile!);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
