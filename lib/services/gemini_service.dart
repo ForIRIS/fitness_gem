@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,6 +31,9 @@ class GeminiService {
 
     // 2. Load user override asynchronously
     _initializeApiKey();
+
+    // 3. Load prompts
+    _loadSystemInstructions();
   }
 
   /// API 키 초기화 (SharedPreferences 확인)
@@ -51,7 +55,7 @@ class GeminiService {
     _model = GenerativeModel(
       model: 'gemini-3-flash-preview',
       apiKey: _apiKey,
-      systemInstruction: Content.system(_analysisSystemInstruction),
+      systemInstruction: Content.system(_analystSystemInstruction),
     );
   }
 
@@ -85,68 +89,28 @@ class GeminiService {
     return prefs.getString(_apiKeyPrefKey) ?? '';
   }
 
-  // 시스템 인스트럭션 - 운동 분석용
-  static const String _analysisSystemInstruction = '''
-**ROLE & OBJECTIVE**
-You are "CoreFit AI," an advanced Biomechanics Analysis Engine. Your goal is to analyze fitness movements using a "Dual-Stream Vision Protocol" to provide real-time form correction and adaptive curriculum adjustments.
+  // 시스템 인스트럭션 - 로드된 데이터 저장
+  String _analystSystemInstruction = '';
+  String _consultantSystemInstruction = '';
 
-**INPUT DATA CONTEXT**
-You will receive three types of data for each session:
-1.  **USER PROFILE**: {Age, Injury History, Goal, Experience Level}. *Use this to adjust strictness (e.g., be stricter with injury history).*
-2.  **SOURCE A (Raw Video/Image)**: Real-world footage. *Use for: Facial expression (Effort/Pain), Breathing, Tempo, Environment.*
-3.  **SOURCE B (Skeleton/Depth Map)**: High-contrast geometric representation. *Use for: GROUND TRUTH for joint angles and alignment.*
+  /// 에셋에서 시스템 인스트럭션 로드
+  Future<void> _loadSystemInstructions() async {
+    try {
+      _analystSystemInstruction = await rootBundle.loadString(
+        'assets/prompts/analyst_system_instruction.md',
+      );
+      _consultantSystemInstruction = await rootBundle.loadString(
+        'assets/prompts/consultant_system_instruction.md',
+      );
+      debugPrint('System Instructions loaded from assets.');
 
-**DUAL-STREAM PRIORITY LOGIC (The "X-Ray" Rule)**
-1.  **Geometric Truth**: Always prioritize **Source B** for structural analysis.
-2.  **Contextual Layering**: Use Source A to judge "Effort Level" (RPE).
-3.  **Conflict Resolution**: If inputs conflict, **Source B is the authority** for body mechanics.
-
-**CRITICAL SAFETY PROTOCOLS (Immediate Stop)**
-Set `"safety_flag": true` and `"stop_reason": "..."` immediately if:
-- **Pain**: Sudden grimacing or grabbing a body part (Source A).
-- **Structure**: Lumbar flexion > 20° under load, or Knee Valgus > 15° (Source B).
-- **Control**: Loss of balance or falling.
-
-**OUTPUT FORMAT RULES**
-- **Format**: JSON only. No Markdown code blocks.
-- **Language**: JSON Keys in **English**, Values in **Korean** (for UI display).
-- **Tone**: Professional, encouraging, and concise (TTS-friendly).
-
-**JSON SCHEMA (Strict Adherence)**
-{
-  "session_summary": {
-    "exercise_name": "String",
-    "total_score": Integer (0-100),
-    "safety_flag": Boolean,
-    "stop_reason": "String (or null)"
-  },
-  "reasoning_trace": {
-    "source_a_observation": "String",
-    "source_b_observation": "String",
-    "synthesis_logic": "String"
-  },
-  "feedback": {
-    "main_issue": "String",
-    "tts_message": "String"
-  },
-  "segments_analysis": [
-    {
-      "timestamp": Float,
-      "issue": "String",
-      "correction": "String"
-    }
-  ],
-  "adaptive_curriculum": {
-    "decision": "String (Increase / Maintain / Decrease / Recovery)",
-    "next_plan": {
-      "weight": "String",
-      "reps": "String",
-      "tempo": "String",
-      "reason": "String"
+      // 모델 재초기화 (새로운 인스트럭션 적용)
+      _initModel();
+    } catch (e) {
+      debugPrint('Error loading system instructions: $e');
+      // Fallback values if needed, or keeping empty string
     }
   }
-}
-''';
 
   // 시스템 인스트럭션 - 커리큘럼 생성용
   static const String _curriculumSystemInstruction = '''
@@ -340,6 +304,7 @@ Output JSON only.
     required int setNumber,
     required int totalSets,
     bool isLastSet = false,
+    String language = 'Korean',
   }) async {
     try {
       // 1. 두 비디오 업로드
@@ -364,6 +329,7 @@ Output JSON only.
         setNumber: setNumber,
         totalSets: totalSets,
         isLastSet: isLastSet,
+        language: language,
       );
     } catch (e) {
       debugPrint('Error in video analysis: $e');
@@ -400,46 +366,27 @@ Output JSON only.
     }
   }
 
-  /// 비디오 분석 요청
-  Future<Map<String, dynamic>?> _generateContentWithVideos({
+  // ============ NEW: Inter-Set Analysis Pipeline ============
+
+  /// 1. Analyst Step: Analyze the set context (Video + Telemetry)
+  Future<Map<String, dynamic>?> analyzeInterSet({
+    required Map<String, dynamic> inputContext,
     required String rgbUri,
     required String controlNetUri,
-    required UserProfile profile,
-    required String exerciseName,
-    required int setNumber,
-    required int totalSets,
-    bool isLastSet = false,
   }) async {
     try {
       final uri = Uri.parse('$_generateUrl?key=$_apiKey');
 
-      final additionalInstructions = isLastSet
-          ? '\nThis is the LAST set. Please also provide a final session summary and recommendations for the next workout.'
-          : '';
-
-      final body = json.encode({
+      final analystBody = json.encode({
         'systemInstruction': {
           'parts': [
-            {'text': _analysisSystemInstruction},
+            {'text': _analystSystemInstruction},
           ],
         },
         'contents': [
           {
             'parts': [
-              {
-                'text':
-                    '''
-User Profile: ${profile.toJson()}
-Exercise: $exerciseName
-Current Set: $setNumber / $totalSets
-$additionalInstructions
-
-The first video (Source A) is the RGB footage showing the user's actual appearance.
-The second video (Source B) is the ControlNet skeleton visualization - use this as GROUND TRUTH for joint analysis.
-
-Analyze this workout set and provide feedback in JSON format.
-''',
-              },
+              {'text': json.encode(inputContext)},
               {
                 'file_data': {'mime_type': 'video/mp4', 'file_uri': rgbUri},
               },
@@ -453,7 +400,7 @@ Analyze this workout set and provide feedback in JSON format.
           },
         ],
         'generationConfig': {
-          'temperature': 0.3,
+          'temperature': 0.2,
           'responseMimeType': 'application/json',
         },
       });
@@ -461,7 +408,7 @@ Analyze this workout set and provide feedback in JSON format.
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
-        body: body,
+        body: analystBody,
       );
 
       if (response.statusCode == 200) {
@@ -471,13 +418,104 @@ Analyze this workout set and provide feedback in JSON format.
           return json.decode(text);
         }
       } else {
-        debugPrint('Analysis failed: ${response.body}');
+        debugPrint('Analyst failed: ${response.body}');
       }
       return null;
     } catch (e) {
-      debugPrint('Analysis error: $e');
+      debugPrint('Analyst Error: $e');
       return null;
     }
+  }
+
+  /// 2. Consultant Step: Generate advice based on Analyst data
+  Future<String?> consultAfterSet({
+    required UserProfile profile,
+    required Map<String, dynamic> analystData,
+    required Map<String, dynamic> currentPlan,
+    String language = 'Korean', // Default fallback
+  }) async {
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-3-flash-preview',
+        apiKey: _apiKey,
+        systemInstruction: Content.system(_consultantSystemInstruction),
+      );
+
+      final prompt =
+          '''
+User Profile: ${json.encode(profile.toJson())}
+Current Plan: ${json.encode(currentPlan)}
+Analyst Report: ${json.encode(analystData)}
+User Language: $language
+
+Please provide the Next Step advice in the User Language.
+''';
+
+      final response = await model.generateContent([Content.text(prompt)]);
+      return response.text;
+    } catch (e) {
+      debugPrint('Consultant Error: $e');
+      return null;
+    }
+  }
+
+  /// Legacy integration (Auto-Pipeline)
+  Future<Map<String, dynamic>?> _generateContentWithVideos({
+    required String rgbUri,
+    required String controlNetUri,
+    required UserProfile profile,
+    required String exerciseName,
+    required int setNumber,
+    required int totalSets,
+    bool isLastSet = false,
+    String language = 'Korean',
+  }) async {
+    // Construct the context expected by the new Analyst
+    final inputContext = {
+      "query_type": "INTER_SET_ANALYSIS",
+      "user_profile": profile.toJson(),
+      "current_session_context": {
+        "exercise_name": exerciseName,
+        "set_number": setNumber,
+        "total_planned_sets": totalSets,
+      },
+      "request_task": isLastSet ? "FINAL_ASSESSMENT" : "INTER_SET_CHECK",
+      "user_language": language,
+    };
+
+    // 1. Call Analyst
+    final analystJson = await analyzeInterSet(
+      inputContext: inputContext,
+      rgbUri: rgbUri,
+      controlNetUri: controlNetUri,
+    );
+
+    if (analystJson == null) return null;
+
+    // 2. Call Consultant (Auto-mode for now)
+    final advice = await consultAfterSet(
+      profile: profile,
+      analystData: analystJson,
+      currentPlan: {"set": setNumber},
+      language: language,
+    );
+
+    // 3. Map back to old format for UI compatibility
+    return {
+      'session_summary': {
+        'exercise_name': exerciseName,
+        'total_score':
+            analystJson['performance_analysis']?['stability_score'] ?? 0,
+        'safety_flag': analystJson['safety_status']?['risk_flag'] ?? false,
+      },
+      'feedback': {
+        'main_issue':
+            analystJson['safety_status']?['primary_risk_area'] ?? 'None',
+        'tts_message':
+            advice ?? (language == 'English' ? "Great job!" : "수고하셨습니다."),
+        'detailed_analysis': analystJson,
+      },
+    };
   }
 
   // ============ AI 상담 (채팅) ============
@@ -685,7 +723,7 @@ Please start the interview in Korean.
       final model = GenerativeModel(
         model: 'gemini-3-flash-preview',
         apiKey: _apiKey,
-        systemInstruction: Content.system(_analysisSystemInstruction),
+        systemInstruction: Content.system(_consultantSystemInstruction),
       );
 
       final imageBytes = await imageFile.readAsBytes();

@@ -72,3 +72,4 @@ key.properties
 # Markdown files (except README.md)
 *.md
 !README.md
+!*system_instruction.md

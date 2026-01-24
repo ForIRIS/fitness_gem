@@ -310,6 +310,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         exerciseName: _currentTask!.title,
         setNumber: _currentSet,
         totalSets: _currentTask!.adjustedSets,
+        language: Localizations.localeOf(context).languageCode,
       );
 
       if (analysisResult != null) {
