@@ -50,6 +50,8 @@ class _AIInterviewViewState extends State<AIInterviewView>
         widget.userProfile,
       );
 
+      if (!mounted) return;
+
       if (response != null) {
         setState(() {
           _messages.add(_ChatMessage(text: response, isUser: false));
@@ -96,6 +98,8 @@ class _AIInterviewViewState extends State<AIInterviewView>
 
     try {
       final response = await _geminiService.sendInterviewMessage(message);
+
+      if (!mounted) return;
 
       if (response.hasError) {
         setState(() {

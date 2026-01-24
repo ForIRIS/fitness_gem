@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import '../models/user_profile.dart';
 import '../services/gemini_service.dart';
 import 'camera_view.dart';
 import 'ai_interview_view.dart';
+import 'settings/edit_profile_view.dart';
 
 /// SettingsView - 설정 화면
 class SettingsView extends StatefulWidget {
@@ -19,7 +21,9 @@ class _SettingsViewState extends State<SettingsView> {
 
   final TextEditingController _apiKeyController = TextEditingController();
   final TextEditingController _guardianController = TextEditingController();
+  String? _completeGuardianPhone;
   bool _showApiKey = false;
+  bool _fallDetectionEnabled = false;
 
   @override
   void initState() {
@@ -35,6 +39,7 @@ class _SettingsViewState extends State<SettingsView> {
     final apiKey = await geminiService.getUserApiKey();
     _apiKeyController.text = apiKey;
     _guardianController.text = _profile?.guardianPhone ?? '';
+    _fallDetectionEnabled = _profile?.fallDetectionEnabled ?? false;
 
     setState(() => _isLoading = false);
   }
@@ -53,9 +58,24 @@ class _SettingsViewState extends State<SettingsView> {
   Future<void> _saveGuardianPhone() async {
     if (_profile == null) return;
 
-    _profile!.guardianPhone = _guardianController.text.isEmpty
-        ? null
-        : _guardianController.text;
+    _profile!.fallDetectionEnabled = _fallDetectionEnabled;
+    if (_fallDetectionEnabled) {
+      // If toggled on, ensure we save the phone number
+      // If user hasn't typed anything new, _completeGuardianPhone might be null,
+      // so fallback to existing text if needed, or handle validation.
+      // For now, simple fallback or validation.
+      if (_completeGuardianPhone != null) {
+        _profile!.guardianPhone = _completeGuardianPhone;
+      } else if (_guardianController.text.isNotEmpty) {
+        // Fallback for existing number if not modified
+        // This is tricky with IntlPhoneField controller vs completeNumber.
+        // Assuming _completeGuardianPhone captures updates.
+        // If it's existing data loaded into controller, completeNumber logic usually triggers on change.
+      }
+    } else {
+      _profile!.guardianPhone = null;
+    }
+
     await UserProfile.saveProfile(_profile!);
 
     if (mounted) {
@@ -87,6 +107,27 @@ class _SettingsViewState extends State<SettingsView> {
                   // 프로필 정보
                   _buildSection(
                     title: AppLocalizations.of(context)!.profileInfo,
+                    trailing: IconButton(
+                      icon: const Icon(
+                        Icons.edit,
+                        color: Colors.white54,
+                        size: 20,
+                      ),
+                      onPressed: () async {
+                        if (_profile != null) {
+                          final changed = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  EditProfileView(profile: _profile!),
+                            ),
+                          );
+                          if (changed == true) {
+                            _loadData(); // Reload to show updates
+                          }
+                        }
+                      },
+                    ),
                     child: Column(
                       children: [
                         _buildInfoRow(
@@ -132,42 +173,83 @@ class _SettingsViewState extends State<SettingsView> {
                     subtitle: AppLocalizations.of(
                       context,
                     )!.guardianPhoneDescription,
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _guardianController,
-                          keyboardType: TextInputType.phone,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            hintText: AppLocalizations.of(context)!.enterPhone,
-                            hintStyle: const TextStyle(color: Colors.white38),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: Colors.white24,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: Colors.deepPurple,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _saveGuardianPhone,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey[800],
-                            ),
-                            child: Text(AppLocalizations.of(context)!.save),
-                          ),
-                        ),
-                      ],
+                    trailing: Switch(
+                      value: _fallDetectionEnabled,
+                      onChanged: (val) {
+                        setState(() {
+                          _fallDetectionEnabled = val;
+                          if (!val) {
+                            // If turned off, just clear state visually if desired,
+                            // or keep it to restore if toggled back.
+                            // User request: Default is not entering.
+                          } else {
+                            // If there is existing phone in profile, ensure controller has it?
+                            // It is already loaded in initState.
+                          }
+                        });
+                      },
+                      activeColor: Colors.deepPurple,
                     ),
+                    child: _fallDetectionEnabled
+                        ? Column(
+                            children: [
+                              const SizedBox(height: 12),
+                              IntlPhoneField(
+                                controller: _guardianController,
+                                decoration: InputDecoration(
+                                  labelText: AppLocalizations.of(
+                                    context,
+                                  )!.guardianPhone,
+                                  labelStyle: const TextStyle(
+                                    color: Colors.white54,
+                                  ),
+                                  enabledBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: Colors.white24,
+                                    ),
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: Colors.deepPurple,
+                                    ),
+                                  ),
+                                  counterStyle: const TextStyle(
+                                    color: Colors.white54,
+                                  ),
+                                ),
+                                initialCountryCode:
+                                    Localizations.localeOf(
+                                      context,
+                                    ).countryCode ??
+                                    'KR',
+                                style: const TextStyle(color: Colors.white),
+                                dropdownTextStyle: const TextStyle(
+                                  color: Colors.white,
+                                ),
+                                dropdownIcon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.white,
+                                ),
+                                onChanged: (phone) {
+                                  _completeGuardianPhone = phone.completeNumber;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _saveGuardianPhone,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.grey[800],
+                                  ),
+                                  child: Text(
+                                    AppLocalizations.of(context)!.save,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : const SizedBox.shrink(),
                   ),
 
                   const SizedBox(height: 24),
@@ -287,6 +369,7 @@ class _SettingsViewState extends State<SettingsView> {
   Widget _buildSection({
     required String title,
     String? subtitle,
+    Widget? trailing,
     required Widget child,
   }) {
     return Container(
@@ -298,21 +381,37 @@ class _SettingsViewState extends State<SettingsView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (trailing != null) trailing,
+            ],
           ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(color: Colors.white54, fontSize: 13),
-            ),
-          ],
           const SizedBox(height: 16),
           child,
         ],

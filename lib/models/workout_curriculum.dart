@@ -135,10 +135,10 @@ class WorkoutCurriculum {
     final jsonString = prefs.getString(_key);
     if (jsonString != null) {
       final curriculum = WorkoutCurriculum.fromJson(jsonString);
-      // 오늘 생성된 커리큘럼만 반환
-      if (_isSameDay(curriculum.createdAt, DateTime.now())) {
-        return curriculum;
-      }
+      // 사용자 요청: 한번 생성된 내용은 계속 유지 (토큰 절약)
+      // if (_isSameDay(curriculum.createdAt, DateTime.now())) {
+      return curriculum;
+      // }
     }
     return null;
   }
