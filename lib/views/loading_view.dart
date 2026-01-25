@@ -143,110 +143,145 @@ class _LoadingViewState extends State<LoadingView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Icon
-              Icon(
-                _isComplete
-                    ? Icons.check_circle
-                    : _hasError
-                    ? Icons.error
-                    : Icons.downloading,
-                size: 80,
-                color: _isComplete
-                    ? Colors.green
-                    : _hasError
-                    ? Colors.red
-                    : Colors.deepPurple,
-              ),
-
-              const SizedBox(height: 32),
-
-              // Status Message
-              Text(
-                _statusMessage,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/fitness_bg.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  Container(color: Colors.black),
+            ),
+          ),
+          // Gradient Overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withValues(alpha: 0.7),
+                    Colors.black.withValues(alpha: 0.5),
+                    Colors.black.withValues(alpha: 0.8),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-                textAlign: TextAlign.center,
               ),
+            ),
+          ),
+          // Content
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Icon
+                  Icon(
+                    _isComplete
+                        ? Icons.check_circle
+                        : _hasError
+                        ? Icons.error
+                        : Icons.downloading,
+                    size: 80,
+                    color: _isComplete
+                        ? Colors.green
+                        : _hasError
+                        ? Colors.red
+                        : Colors.deepPurple,
+                  ),
 
-              const SizedBox(height: 16),
+                  const SizedBox(height: 32),
 
-              // Current downloading file
-              if (_currentItem.isNotEmpty && !_isComplete && !_hasError)
-                Text(
-                  _currentItem,
-                  style: const TextStyle(color: Colors.white54, fontSize: 14),
-                ),
-
-              const SizedBox(height: 24),
-
-              // Progress Bar
-              if (_totalCount > 0 && !_isComplete && !_hasError)
-                Column(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: _completedCount / _totalCount,
-                        backgroundColor: Colors.grey[800],
-                        valueColor: const AlwaysStoppedAnimation(
-                          Colors.deepPurple,
-                        ),
-                        minHeight: 8,
-                      ),
+                  // Status Message
+                  Text(
+                    _statusMessage,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(height: 8),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Current downloading file
+                  if (_currentItem.isNotEmpty && !_isComplete && !_hasError)
                     Text(
-                      '$_completedCount / $_totalCount',
+                      _currentItem,
                       style: const TextStyle(
-                        color: Colors.white70,
+                        color: Colors.white54,
                         fontSize: 14,
                       ),
                     ),
-                  ],
-                ),
 
-              // Indeterminate Loading (When no URLs)
-              if (_totalCount == 0 && !_isComplete && !_hasError)
-                const CircularProgressIndicator(color: Colors.deepPurple),
+                  const SizedBox(height: 24),
 
-              const SizedBox(height: 32),
-
-              // Retry Button on Error
-              if (_hasError)
-                ElevatedButton.icon(
-                  onPressed: _retry,
-                  icon: const Icon(Icons.refresh),
-                  label: Text(AppLocalizations.of(context)!.retry),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
+                  // Progress Bar
+                  if (_totalCount > 0 && !_isComplete && !_hasError)
+                    Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            value: _completedCount / _totalCount,
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.1,
+                            ),
+                            valueColor: const AlwaysStoppedAnimation(
+                              Colors.deepPurple,
+                            ),
+                            minHeight: 8,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '$_completedCount / $_totalCount',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
 
-              // Cancel Button
-              if (!_isComplete)
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(
-                    AppLocalizations.of(context)!.cancel,
-                    style: const TextStyle(color: Colors.white54),
-                  ),
-                ),
-            ],
+                  // Indeterminate Loading (When no URLs)
+                  if (_totalCount == 0 && !_isComplete && !_hasError)
+                    const CircularProgressIndicator(color: Colors.deepPurple),
+
+                  const SizedBox(height: 32),
+
+                  // Retry Button on Error
+                  if (_hasError)
+                    ElevatedButton.icon(
+                      onPressed: _retry,
+                      icon: const Icon(Icons.refresh),
+                      label: Text(AppLocalizations.of(context)!.retry),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+
+                  // Cancel Button
+                  if (!_isComplete)
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(
+                        AppLocalizations.of(context)!.cancel,
+                        style: const TextStyle(color: Colors.white54),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -3,12 +3,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'firebase_options.dart';
+import 'dart:ui'; // For PointerDeviceKind
+import 'package:fitness_gem/theme/app_theme.dart';
 import 'views/home_view.dart';
 import 'views/onboarding_view.dart';
 import 'models/user_profile.dart';
 import 'services/firebase_service.dart';
 import 'views/external_dashboard_view.dart';
-
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
@@ -53,37 +54,16 @@ class MainApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: Colors.deepPurple,
-        colorScheme: ColorScheme.dark(
-          primary: Colors.deepPurple,
-          secondary: Colors.deepPurpleAccent,
-          surface: Colors.grey[900]!,
-        ),
-        scaffoldBackgroundColor: Colors.black,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.deepPurple,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        cardTheme: const CardThemeData(
-          color: Color(0xFF1A1A1A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(12)),
-          ),
-        ),
-        useMaterial3: true,
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.touch,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.unknown,
+        },
       ),
+
+      theme: AppTheme.darkTheme,
       home: showOnboarding ? const OnboardingView() : const HomeView(),
       routes: {
         'external_dashboard': (context) => const ExternalDashboardView(),

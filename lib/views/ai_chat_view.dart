@@ -208,144 +208,185 @@ class _AIChatViewState extends State<AIChatView>
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // Chat Message List
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length + (_isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (_isLoading && index == _messages.length) {
-                  return _buildShimmerCurriculumCard();
-                }
-                return _buildMessageBubble(_messages[index]);
-              },
+          // Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/fitness_bg.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  Container(color: Colors.black),
+            ),
+          ),
+          // Gradient Overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withValues(alpha: 0.7),
+                    Colors.black.withValues(alpha: 0.5),
+                    Colors.black.withValues(alpha: 0.8),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
             ),
           ),
 
-          // Confirm Button (When Curriculum Suggested)
-          if (_suggestedCurriculum != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _confirmCurriculum,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: Text(
-                        AppLocalizations.of(context)!.replaceWithCurriculum,
-                      ),
-                    ),
-                  ),
-                ],
+          Column(
+            children: [
+              // Chat Message List
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _messages.length + (_isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (_isLoading && index == _messages.length) {
+                      return _buildShimmerCurriculumCard();
+                    }
+                    return _buildMessageBubble(_messages[index]);
+                  },
+                ),
               ),
-            ),
 
-          // Input Field
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey[900],
-              border: Border(top: BorderSide(color: Colors.grey[800]!)),
-            ),
-            child: Column(
-              children: [
-                if (_selectedImage != null)
-                  Container(
-                    height: 100,
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Stack(
+              // Confirm Button (When Curriculum Suggested)
+              if (_suggestedCurriculum != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _confirmCurriculum,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: Text(
+                            AppLocalizations.of(context)!.replaceWithCurriculum,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Input Field
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05), // Glassmorphism
+                  border: Border(
+                    top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    if (_selectedImage != null)
+                      Container(
+                        height: 100,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.file(
-                                _selectedImage!,
-                                height: 100,
-                                width: 100,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            Positioned(
-                              top: 4,
-                              right: 4,
-                              child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _selectedImage = null),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.black54,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.close,
-                                    size: 16,
-                                    color: Colors.white,
+                            Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    _selectedImage!,
+                                    height: 100,
+                                    width: 100,
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
-                              ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: GestureDetector(
+                                    onTap: () =>
+                                        setState(() => _selectedImage = null),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.black54,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.photo_library, color: Colors.grey),
-                      onPressed: _pickImage,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: _messageController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          hintText: AppLocalizations.of(
-                            context,
-                          )!.aiChatPlaceholder,
-                          hintStyle: const TextStyle(color: Colors.white38),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
+                      ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.photo_library,
+                            color: Colors.grey,
                           ),
-                          filled: true,
-                          fillColor: Colors.grey[850],
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
+                          onPressed: _pickImage,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _messageController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              hintText: AppLocalizations.of(
+                                context,
+                              )!.aiChatPlaceholder,
+                              hintStyle: const TextStyle(color: Colors.white38),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey[850],
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                            // Allow empty text when image is selected
+                            onSubmitted: (_) {
+                              if (_messageController.text.trim().isNotEmpty ||
+                                  _selectedImage != null) {
+                                _sendMessage();
+                              }
+                            },
                           ),
                         ),
-                        // Allow empty text when image is selected
-                        onSubmitted: (_) {
-                          if (_messageController.text.trim().isNotEmpty ||
-                              _selectedImage != null) {
-                            _sendMessage();
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    IconButton(
-                      onPressed: _isLoading ? null : _sendMessage,
-                      icon: const Icon(Icons.send),
-                      color: Colors.deepPurple,
-                      iconSize: 28,
+                        const SizedBox(width: 12),
+                        IconButton(
+                          onPressed: _isLoading ? null : _sendMessage,
+                          icon: const Icon(Icons.send),
+                          color: Colors.deepPurple,
+                          iconSize: 28,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -367,8 +408,13 @@ class _AIChatViewState extends State<AIChatView>
           maxWidth: MediaQuery.of(context).size.width * 0.8,
         ),
         decoration: BoxDecoration(
-          color: message.isUser ? Colors.deepPurple : Colors.grey[850],
+          color: message.isUser
+              ? Colors.deepPurple
+              : Colors.white.withValues(alpha: 0.1), // Glassmorphism for AI
           borderRadius: BorderRadius.circular(16),
+          border: message.isUser
+              ? null
+              : Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

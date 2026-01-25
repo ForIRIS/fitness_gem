@@ -221,136 +221,192 @@ class _AIInterviewViewState extends State<AIInterviewView>
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // 안내 배너
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: Colors.amber.withValues(alpha: 0.15),
-            child: Row(
-              children: [
-                const Icon(Icons.auto_awesome, color: Colors.amber, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    widget.isFromOnboarding
-                        ? AppLocalizations.of(context)!.aiConsultantBanner
-                        : AppLocalizations.of(context)!.aiProfileAnalysisBanner,
-                    style: const TextStyle(color: Colors.amber, fontSize: 13),
-                  ),
-                ),
-              ],
+          // Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/fitness_bg.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  Container(color: Colors.black),
             ),
           ),
-
-          // 에러 배너
-          if (_hasError)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              color: Colors.red.withValues(alpha: 0.2),
-              child: Row(
-                children: [
-                  const Icon(Icons.wifi_off, color: Colors.red, size: 20),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      '네트워크 오류가 발생했습니다',
-                      style: TextStyle(color: Colors.red, fontSize: 13),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _retryConnection,
-                    child: Text(
-                      AppLocalizations.of(context)!.retry,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          // 채팅 메시지 리스트
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length + (_isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (_isLoading && index == _messages.length) {
-                  return _buildLoadingBubble();
-                }
-                return _buildMessageBubble(_messages[index]);
-              },
-            ),
-          ),
-
-          // 완료 버튼 (인터뷰 완료 시)
-          if (_isInterviewComplete)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _completeInterview,
-                  icon: const Icon(Icons.check_circle),
-                  label: Text(AppLocalizations.of(context)!.completeAndStart),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              ),
-            ),
-
-          // 입력 필드
-          if (!_isInterviewComplete)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          // Gradient Overlay
+          Positioned.fill(
+            child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withValues(alpha: 0.7),
+                    Colors.black.withValues(alpha: 0.5),
+                    Colors.black.withValues(alpha: 0.8),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-                border: Border(top: BorderSide(color: Colors.grey[800]!)),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: AppLocalizations.of(
-                          context,
-                        )!.answerPlaceholder,
-                        hintStyle: const TextStyle(color: Colors.white38),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[850],
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+            ),
+          ),
+
+          Column(
+            children: [
+              // 안내 배너
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                color: Colors.amber.withValues(alpha: 0.15),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: Colors.amber,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        widget.isFromOnboarding
+                            ? AppLocalizations.of(context)!.aiConsultantBanner
+                            : AppLocalizations.of(
+                                context,
+                              )!.aiProfileAnalysisBanner,
+                        style: const TextStyle(
+                          color: Colors.amber,
+                          fontSize: 13,
                         ),
                       ),
-                      onSubmitted: (_) => _sendMessage(),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 에러 배너
+              if (_hasError)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  color: Colors.red.withValues(alpha: 0.2),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.wifi_off, color: Colors.red, size: 20),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          '네트워크 오류가 발생했습니다',
+                          style: TextStyle(color: Colors.red, fontSize: 13),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _retryConnection,
+                        child: Text(
+                          AppLocalizations.of(context)!.retry,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // 채팅 메시지 리스트
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _messages.length + (_isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (_isLoading && index == _messages.length) {
+                      return _buildLoadingBubble();
+                    }
+                    return _buildMessageBubble(_messages[index]);
+                  },
+                ),
+              ),
+
+              // 완료 버튼 (인터뷰 완료 시)
+              if (_isInterviewComplete)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _completeInterview,
+                      icon: const Icon(Icons.check_circle),
+                      label: Text(
+                        AppLocalizations.of(context)!.completeAndStart,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  IconButton(
-                    onPressed: _isLoading ? null : _sendMessage,
-                    icon: const Icon(Icons.send),
-                    color: Colors.amber,
-                    iconSize: 28,
+                ),
+
+              // 입력 필드
+              if (!_isInterviewComplete)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
-                ],
-              ),
-            ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(
+                      alpha: 0.05,
+                    ), // Glassmorphism
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: AppLocalizations.of(
+                              context,
+                            )!.answerPlaceholder,
+                            hintStyle: const TextStyle(color: Colors.white38),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[850],
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          onSubmitted: (_) => _sendMessage(),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      IconButton(
+                        onPressed: _isLoading ? null : _sendMessage,
+                        icon: const Icon(Icons.send),
+                        color: Colors.amber,
+                        iconSize: 28,
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -366,8 +422,13 @@ class _AIInterviewViewState extends State<AIInterviewView>
           maxWidth: MediaQuery.of(context).size.width * 0.8,
         ),
         decoration: BoxDecoration(
-          color: message.isUser ? Colors.deepPurple : Colors.grey[850],
+          color: message.isUser
+              ? Colors.deepPurple
+              : Colors.white.withValues(alpha: 0.1), // Glassmorphism for AI
           borderRadius: BorderRadius.circular(16),
+          border: message.isUser
+              ? null
+              : Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Text(
           message.text,

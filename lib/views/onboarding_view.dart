@@ -66,75 +66,106 @@ class _OnboardingViewState extends State<OnboardingView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                // 진행 표시기
-                _buildProgressIndicator(),
-
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    physics: const NeverScrollableScrollPhysics(),
-                    onPageChanged: (page) =>
-                        setState(() => _currentPage = page),
-                    children: [
-                      // 1. Permissions Page
-                      OnboardingPermissionsPage(
-                        onNext: _nextPage,
-                        onShowApiKeyDialog: _showApiKeyDialog,
-                      ),
-
-                      // 2. Profile Page
-                      OnboardingProfilePage(
-                        selectedAgeRange: _selectedAgeRange,
-                        onAgePickerTap: _showAgePickerBottomSheet,
-                        nicknameController: _nicknameController,
-                        selectedInjuries: _selectedInjuries,
-                        onInjurySelected: _onInjurySelected,
-                        showCustomInjury: _showCustomInjury,
-                        customInjuryController: _customInjuryController,
-                        selectedGoals: _selectedGoals,
-                        onGoalSelected: _onGoalSelected,
-                        showCustomGoal: _showCustomGoal,
-                        customGoalController: _customGoalController,
-                        experienceLevel: _experienceLevel,
-                        onExperienceLevelChanged: (val) =>
-                            setState(() => _experienceLevel = val),
-                      ),
-
-                      // 3. Exercise Page
-                      OnboardingExercisePage(
-                        exerciseController: _exerciseController,
-                      ),
-
-                      // 4. Guardian Page
-                      OnboardingGuardianPage(
-                        fallDetectionEnabled: _fallDetectionEnabled,
-                        onFallDetectionChanged: (val) =>
-                            setState(() => _fallDetectionEnabled = val),
-                        guardianController: _guardianController,
-                        onPhoneChanged: (phone) =>
-                            setState(() => _completeGuardianPhone = phone),
-                        onSkip: () {
-                          _guardianController.clear();
-                          setState(() => _fallDetectionEnabled = false);
-                          _onNextPressed();
-                        },
-                      ),
-                    ],
-                  ),
+      body: Stack(
+        children: [
+          // 1. Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/fitness_bg.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  Container(color: Colors.black),
+            ),
+          ),
+          // 2. Gradient Overlay for readability
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withValues(alpha: 0.7),
+                    Colors.black.withValues(alpha: 0.5),
+                    Colors.black.withValues(alpha: 0.8),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-                _buildBottomControls(),
+              ),
+            ),
+          ),
+
+          // 3. Content
+          SafeArea(
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    // 진행 표시기
+                    _buildProgressIndicator(),
+
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        onPageChanged: (page) =>
+                            setState(() => _currentPage = page),
+                        children: [
+                          // 1. Permissions Page
+                          OnboardingPermissionsPage(
+                            onNext: _nextPage,
+                            onShowApiKeyDialog: _showApiKeyDialog,
+                          ),
+
+                          // 2. Profile Page
+                          OnboardingProfilePage(
+                            selectedAgeRange: _selectedAgeRange,
+                            onAgePickerTap: _showAgePickerBottomSheet,
+                            nicknameController: _nicknameController,
+                            selectedInjuries: _selectedInjuries,
+                            onInjurySelected: _onInjurySelected,
+                            showCustomInjury: _showCustomInjury,
+                            customInjuryController: _customInjuryController,
+                            selectedGoals: _selectedGoals,
+                            onGoalSelected: _onGoalSelected,
+                            showCustomGoal: _showCustomGoal,
+                            customGoalController: _customGoalController,
+                            experienceLevel: _experienceLevel,
+                            onExperienceLevelChanged: (val) =>
+                                setState(() => _experienceLevel = val),
+                          ),
+
+                          // 3. Exercise Page
+                          OnboardingExercisePage(
+                            exerciseController: _exerciseController,
+                          ),
+
+                          // 4. Guardian Page
+                          OnboardingGuardianPage(
+                            fallDetectionEnabled: _fallDetectionEnabled,
+                            onFallDetectionChanged: (val) =>
+                                setState(() => _fallDetectionEnabled = val),
+                            guardianController: _guardianController,
+                            onPhoneChanged: (phone) =>
+                                setState(() => _completeGuardianPhone = phone),
+                            onSkip: () {
+                              _guardianController.clear();
+                              setState(() => _fallDetectionEnabled = false);
+                              _onNextPressed();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    _buildBottomControls(),
+                  ],
+                ),
+
+                // 면책 팝업
+                if (_showDisclaimer) _buildDisclaimerOverlay(),
               ],
             ),
-
-            // 면책 팝업
-            if (_showDisclaimer) _buildDisclaimerOverlay(),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

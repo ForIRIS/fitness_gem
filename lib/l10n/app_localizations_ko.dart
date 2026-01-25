@@ -310,7 +310,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get progress => '진척도';
 
   @override
-  String get noRecordMessage => '운동 기록이 쌓이면 그래프가 표시됩니다';
+  String get emptyProgressTitle => '아직 기록이 없어요';
+
+  @override
+  String get noRecordMessage => '운동을 시작하고 데이터를 쌓아보세요';
 
   @override
   String get medicalDisclaimerShort =>
@@ -446,4 +449,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get exercisePlank => '코어 (플랭크)';
+
+  @override
+  String get geminiApiKeyTitle => 'Gemini API Key';
+
+  @override
+  String get hackathonEdition => '해커톤 에디션';
+
+  @override
+  String get downloadAndStart => '다운로드 후 시작';
+
+  @override
+  String get createWorkout => '운동 생성하기';
 }

@@ -319,8 +319,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progress => 'Progress';
 
   @override
-  String get noRecordMessage =>
-      'Graph will appear as you build exercise records';
+  String get emptyProgressTitle => 'No Records Yet';
+
+  @override
+  String get noRecordMessage => 'Start your first workout to see stats';
 
   @override
   String get medicalDisclaimerShort =>
@@ -458,4 +460,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exercisePlank => 'Plank (Core)';
+
+  @override
+  String get geminiApiKeyTitle => 'Gemini API Key';
+
+  @override
+  String get hackathonEdition => 'Hackathon Edition';
+
+  @override
+  String get downloadAndStart => 'Download & Start';
+
+  @override
+  String get createWorkout => 'Create Workout';
 }

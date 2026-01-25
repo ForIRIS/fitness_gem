@@ -138,7 +138,8 @@
   "generationFailed": "Failed to generate workout.\nPlease try again.",
   "retry": "Retry",
   "progress": "Progress",
-  "noRecordMessage": "Graph will appear as you build exercise records",
+  "emptyProgressTitle": "No Records Yet",
+  "noRecordMessage": "Start your first workout to see stats",
   "medicalDisclaimerShort": "This app does not provide medical advice.\nStop immediately if you experience pain.",
   "aiChatInitialMessage": "Hello! What kind of workout would you like to do today?\nEx: \"I want a light lower body workout\", \"Focus on upper body\"",
   "aiChatPlaceholder": "Enter a message...",
@@ -195,5 +196,9 @@
   "exerciseSquat": "Squat (Lower Body)",
   "exercisePushup": "Push-up (Upper Body)",
   "exerciseLunge": "Lunge",
-  "exercisePlank": "Plank (Core)"
+  "exercisePlank": "Plank (Core)",
+  "geminiApiKeyTitle": "Gemini API Key",
+  "hackathonEdition": "Hackathon Edition",
+  "downloadAndStart": "Download & Start",
+  "createWorkout": "Create Workout"
 }

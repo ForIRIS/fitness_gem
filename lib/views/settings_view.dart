@@ -88,7 +88,7 @@ class _SettingsViewState extends State<SettingsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(
@@ -97,296 +97,345 @@ class _SettingsViewState extends State<SettingsView> {
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Profile Info
-                  _buildSection(
-                    title: AppLocalizations.of(context)!.profileInfo,
-                    trailing: IconButton(
-                      icon: const Icon(
-                        Icons.edit,
-                        color: Colors.white54,
-                        size: 20,
-                      ),
-                      onPressed: () async {
-                        if (_profile != null) {
-                          final changed = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  EditProfileView(profile: _profile!),
-                            ),
-                          );
-                          if (changed == true) {
-                            _loadData(); // Reload to show updates
-                          }
-                        }
-                      },
-                    ),
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/fitness_bg.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  Container(color: Colors.black),
+            ),
+          ),
+          // Gradient Overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withValues(alpha: 0.8),
+                    Colors.black.withValues(alpha: 0.6),
+                    Colors.black.withValues(alpha: 0.9),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ),
+          // Content
+          SafeArea(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildInfoRow(
-                          AppLocalizations.of(context)!.age,
-                          _profile?.age ?? '-',
-                        ),
-                        _buildInfoRow(
-                          AppLocalizations.of(context)!.experienceLevelShort,
-                          _profile?.experienceLevel ?? '-',
-                        ),
-                        _buildInfoRow(
-                          AppLocalizations.of(context)!.goal,
-                          _profile?.goal ?? '-',
-                        ),
-                        _buildInfoRow(
-                          AppLocalizations.of(context)!.injuryHistory,
-                          _profile?.injuryHistory ?? '-',
-                        ),
-                        _buildInfoRow(
-                          AppLocalizations.of(context)!.targetExercise,
-                          _profile?.targetExercise ?? '-',
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // AI Consulting
-                  _buildSection(
-                    title: AppLocalizations.of(context)!.aiConsulting,
-                    subtitle: AppLocalizations.of(
-                      context,
-                    )!.aiConsultingSubtitle,
-                    child: _buildReinterviewButton(),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Guardian Contact
-                  _buildSection(
-                    title: AppLocalizations.of(context)!.guardianPhone,
-                    subtitle: AppLocalizations.of(
-                      context,
-                    )!.guardianPhoneDescription,
-                    trailing: Switch(
-                      value: _fallDetectionEnabled,
-                      onChanged: (val) {
-                        setState(() {
-                          _fallDetectionEnabled = val;
-                          if (!val) {
-                            // If turned off, just clear state visually if desired,
-                            // or keep it to restore if toggled back.
-                            // User request: Default is not entering.
-                          } else {
-                            // If there is existing phone in profile, ensure controller has it?
-                            // It is already loaded in initState.
-                          }
-                        });
-                      },
-                      activeColor: Colors.deepPurple,
-                    ),
-                    child: _fallDetectionEnabled
-                        ? Column(
-                            children: [
-                              const SizedBox(height: 12),
-                              IntlPhoneField(
-                                controller: _guardianController,
-                                decoration: InputDecoration(
-                                  labelText: AppLocalizations.of(
-                                    context,
-                                  )!.guardianPhone,
-                                  labelStyle: const TextStyle(
-                                    color: Colors.white54,
+                        // Profile Info
+                        _buildSection(
+                          title: AppLocalizations.of(context)!.profileInfo,
+                          trailing: IconButton(
+                            icon: const Icon(
+                              Icons.edit,
+                              color: Colors.white54,
+                              size: 20,
+                            ),
+                            onPressed: () async {
+                              if (_profile != null) {
+                                final changed = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        EditProfileView(profile: _profile!),
                                   ),
-                                  enabledBorder: const OutlineInputBorder(
-                                    borderSide: BorderSide(
+                                );
+                                if (changed == true) {
+                                  _loadData(); // Reload to show updates
+                                }
+                              }
+                            },
+                          ),
+                          child: Column(
+                            children: [
+                              _buildInfoRow(
+                                AppLocalizations.of(context)!.age,
+                                _profile?.age ?? '-',
+                              ),
+                              _buildInfoRow(
+                                AppLocalizations.of(
+                                  context,
+                                )!.experienceLevelShort,
+                                _profile?.experienceLevel ?? '-',
+                              ),
+                              _buildInfoRow(
+                                AppLocalizations.of(context)!.goal,
+                                _profile?.goal ?? '-',
+                              ),
+                              _buildInfoRow(
+                                AppLocalizations.of(context)!.injuryHistory,
+                                _profile?.injuryHistory ?? '-',
+                              ),
+                              _buildInfoRow(
+                                AppLocalizations.of(context)!.targetExercise,
+                                _profile?.targetExercise ?? '-',
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // AI Consulting
+                        _buildSection(
+                          title: AppLocalizations.of(context)!.aiConsulting,
+                          subtitle: AppLocalizations.of(
+                            context,
+                          )!.aiConsultingSubtitle,
+                          child: _buildReinterviewButton(),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Guardian Contact
+                        _buildSection(
+                          title: AppLocalizations.of(context)!.guardianPhone,
+                          subtitle: AppLocalizations.of(
+                            context,
+                          )!.guardianPhoneDescription,
+                          trailing: Switch(
+                            value: _fallDetectionEnabled,
+                            onChanged: (val) {
+                              setState(() {
+                                _fallDetectionEnabled = val;
+                                if (!val) {
+                                  // If turned off, just clear state visually if desired,
+                                  // or keep it to restore if toggled back.
+                                  // User request: Default is not entering.
+                                } else {
+                                  // If there is existing phone in profile, ensure controller has it?
+                                  // It is already loaded in initState.
+                                }
+                              });
+                            },
+                            activeColor: Theme.of(context).primaryColor,
+                          ),
+                          child: _fallDetectionEnabled
+                              ? Column(
+                                  children: [
+                                    const SizedBox(height: 12),
+                                    IntlPhoneField(
+                                      controller: _guardianController,
+                                      decoration: InputDecoration(
+                                        labelText: AppLocalizations.of(
+                                          context,
+                                        )!.guardianPhone,
+                                        labelStyle: const TextStyle(
+                                          color: Colors.white54,
+                                        ),
+                                        enabledBorder: const OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: Colors.white24,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: Theme.of(
+                                              context,
+                                            ).primaryColor,
+                                          ),
+                                        ),
+                                        counterStyle: const TextStyle(
+                                          color: Colors.white54,
+                                        ),
+                                      ),
+                                      initialCountryCode:
+                                          Localizations.localeOf(
+                                            context,
+                                          ).countryCode ??
+                                          'KR',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                      dropdownTextStyle: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                      dropdownIcon: const Icon(
+                                        Icons.arrow_drop_down,
+                                        color: Colors.white,
+                                      ),
+                                      onChanged: (phone) {
+                                        _completeGuardianPhone =
+                                            phone.completeNumber;
+                                      },
+                                    ),
+                                    const SizedBox(height: 12),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        onPressed: _saveGuardianPhone,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.grey[800],
+                                        ),
+                                        child: Text(
+                                          AppLocalizations.of(context)!.save,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.verified_user_outlined,
+                                          color: Colors.greenAccent,
+                                          size: 14,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            AppLocalizations.of(
+                                              context,
+                                            )!.guardianStorageNotice,
+                                            style: const TextStyle(
+                                              color: Colors.greenAccent,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // API Key Settings
+                        _buildSection(
+                          title: AppLocalizations.of(
+                            context,
+                          )!.geminiApiKeyTitle,
+                          subtitle: AppLocalizations.of(
+                            context,
+                          )!.apiKeyDialogDescription,
+                          child: Column(
+                            children: [
+                              TextField(
+                                controller: _apiKeyController,
+                                obscureText: !_showApiKey,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  hintText: AppLocalizations.of(
+                                    context,
+                                  )!.enterApiKey,
+                                  hintStyle: const TextStyle(
+                                    color: Colors.white38,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(
                                       color: Colors.white24,
                                     ),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  focusedBorder: const OutlineInputBorder(
+                                  focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                      color: Colors.deepPurple,
+                                      color: Theme.of(context).primaryColor,
                                     ),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  counterStyle: const TextStyle(
-                                    color: Colors.white54,
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _showApiKey
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      color: Colors.white54,
+                                    ),
+                                    onPressed: () {
+                                      setState(
+                                        () => _showApiKey = !_showApiKey,
+                                      );
+                                    },
                                   ),
                                 ),
-                                initialCountryCode:
-                                    Localizations.localeOf(
-                                      context,
-                                    ).countryCode ??
-                                    'KR',
-                                style: const TextStyle(color: Colors.white),
-                                dropdownTextStyle: const TextStyle(
-                                  color: Colors.white,
-                                ),
-                                dropdownIcon: const Icon(
-                                  Icons.arrow_drop_down,
-                                  color: Colors.white,
-                                ),
-                                onChanged: (phone) {
-                                  _completeGuardianPhone = phone.completeNumber;
-                                },
                               ),
                               const SizedBox(height: 12),
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
-                                  onPressed: _saveGuardianPhone,
+                                  onPressed: _saveApiKey,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey[800],
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).primaryColor,
                                   ),
                                   child: Text(
-                                    AppLocalizations.of(context)!.save,
+                                    AppLocalizations.of(context)!.saveApiKey,
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.verified_user_outlined,
-                                    color: Colors.greenAccent,
-                                    size: 14,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      AppLocalizations.of(
-                                        context,
-                                      )!.guardianStorageNotice,
-                                      style: const TextStyle(
-                                        color: Colors.greenAccent,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // App Info
+                        _buildSection(
+                          title: AppLocalizations.of(context)!.appVersion,
+                          child: Column(
+                            children: [
+                              _buildInfoRow(
+                                AppLocalizations.of(context)!.appVersion,
+                                '1.0.0',
+                              ),
+                              _buildInfoRow(
+                                AppLocalizations.of(context)!.appBuild,
+                                AppLocalizations.of(context)!.hackathonEdition,
                               ),
                             ],
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // API Key Settings
-                  _buildSection(
-                    title: 'Gemini API Key',
-                    subtitle: AppLocalizations.of(
-                      context,
-                    )!.apiKeyDialogDescription,
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _apiKeyController,
-                          obscureText: !_showApiKey,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            hintText: AppLocalizations.of(context)!.enterApiKey,
-                            hintStyle: const TextStyle(color: Colors.white38),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: Colors.white24,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: Colors.deepPurple,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _showApiKey
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                                color: Colors.white54,
-                              ),
-                              onPressed: () {
-                                setState(() => _showApiKey = !_showApiKey);
-                              },
-                            ),
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _saveApiKey,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurple,
+
+                        const SizedBox(height: 24),
+
+                        // Feature Tests
+                        _buildSection(
+                          title: AppLocalizations.of(context)!.testCamera,
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
                             ),
-                            child: Text(
-                              AppLocalizations.of(context)!.saveApiKey,
+                            title: Text(
+                              AppLocalizations.of(context)!.testCamera,
+                              style: const TextStyle(color: Colors.white),
                             ),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.white54,
+                              size: 16,
+                            ),
+                            onTap: () {
+                              // Launch Camera View without curriculum (Test Mode)
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CameraView(curriculum: null),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // App Info
-                  _buildSection(
-                    title: AppLocalizations.of(context)!.appVersion,
-                    child: Column(
-                      children: [
-                        _buildInfoRow(
-                          AppLocalizations.of(context)!.appVersion,
-                          '1.0.0',
-                        ),
-                        _buildInfoRow(
-                          AppLocalizations.of(context)!.appBuild,
-                          'Hackathon Edition',
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Feature Tests
-                  _buildSection(
-                    title: AppLocalizations.of(context)!.testCamera,
-                    child: ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.white,
-                      ),
-                      title: Text(
-                        AppLocalizations.of(context)!.testCamera,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      trailing: const Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white54,
-                        size: 16,
-                      ),
-                      onTap: () {
-                        // Launch Camera View without curriculum (Test Mode)
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const CameraView(curriculum: null),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -399,8 +448,9 @@ class _SettingsViewState extends State<SettingsView> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white.withValues(alpha: 0.05), // Glassmorphism
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,12 +513,12 @@ class _SettingsViewState extends State<SettingsView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
                     Icon(Icons.auto_awesome, color: Colors.amber, size: 16),
                     SizedBox(width: 6),
                     Text(
-                      'AI 상담 결과',
+                      AppLocalizations.of(context)!.aiConsultResult,
                       style: TextStyle(
                         color: Colors.amber,
                         fontWeight: FontWeight.bold,

@@ -674,10 +674,16 @@ abstract class AppLocalizations {
   /// **'Progress'**
   String get progress;
 
+  /// No description provided for @emptyProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Records Yet'**
+  String get emptyProgressTitle;
+
   /// No description provided for @noRecordMessage.
   ///
   /// In en, this message translates to:
-  /// **'Graph will appear as you build exercise records'**
+  /// **'Start your first workout to see stats'**
   String get noRecordMessage;
 
   /// No description provided for @medicalDisclaimerShort.
@@ -931,6 +937,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plank (Core)'**
   String get exercisePlank;
+
+  /// No description provided for @geminiApiKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini API Key'**
+  String get geminiApiKeyTitle;
+
+  /// No description provided for @hackathonEdition.
+  ///
+  /// In en, this message translates to:
+  /// **'Hackathon Edition'**
+  String get hackathonEdition;
+
+  /// No description provided for @downloadAndStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Download & Start'**
+  String get downloadAndStart;
+
+  /// No description provided for @createWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Workout'**
+  String get createWorkout;
 }
 
 class _AppLocalizationsDelegate
