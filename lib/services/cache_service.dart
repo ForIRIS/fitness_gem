@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import '../models/workout_curriculum.dart';
+import '../models/workout_task.dart';
 
 /// CacheService - 리소스 캐싱 서비스
 /// 가이드 영상, 이미지, 오디오 다운로드 및 로컬 저장
@@ -160,6 +161,25 @@ class CacheService {
         return false;
       if (!await isCached(task.configureUrl) && task.configureUrl.isNotEmpty)
         return false;
+    }
+    return true;
+  }
+
+  /// 특정 운동의 리소스가 모두 캐시되어 있는지 확인
+  Future<bool> isTaskCached(WorkoutTask task) async {
+    if (!await isCached(task.exampleVideoUrl) &&
+        task.exampleVideoUrl.isNotEmpty) {
+      return false;
+    }
+    if (!await isCached(task.readyPoseImageUrl) &&
+        task.readyPoseImageUrl.isNotEmpty) {
+      return false;
+    }
+    if (!await isCached(task.guideAudioUrl) && task.guideAudioUrl.isNotEmpty) {
+      return false;
+    }
+    if (!await isCached(task.configureUrl) && task.configureUrl.isNotEmpty) {
+      return false;
     }
     return true;
   }

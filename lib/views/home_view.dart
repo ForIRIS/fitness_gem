@@ -33,6 +33,8 @@ class _HomeViewState extends State<HomeView> {
   String? _generationError;
   bool _isGenerating = false;
 
+  Map<String, bool>? _taskCacheStatus; // 각 태스크의 캐시 상태 (Nullable for safety)
+
   @override
   void initState() {
     super.initState();
@@ -58,6 +60,9 @@ class _HomeViewState extends State<HomeView> {
 
       if (_todayCurriculum == null && _userProfile != null) {
         await _generateTodayCurriculum();
+      } else if (_todayCurriculum != null) {
+        // 이미 로드된 경우 상태 확인
+        _updateCacheStatus();
       }
     } catch (e) {
       debugPrint('Error loading data: $e');
@@ -111,6 +116,7 @@ class _HomeViewState extends State<HomeView> {
 
       if (_todayCurriculum != null) {
         await WorkoutCurriculum.save(_todayCurriculum!);
+        _updateCacheStatus(); // 생성 직후 상태 업데이트
       }
     } catch (e) {
       debugPrint('Error generating curriculum: $e');
@@ -187,6 +193,7 @@ class _HomeViewState extends State<HomeView> {
 
     // 캐싱 완료 시 운동 화면으로 이동
     if (result == true && mounted) {
+      _updateCacheStatus(); // 돌아오면 상태 업데이트
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -209,6 +216,22 @@ class _HomeViewState extends State<HomeView> {
         _todayCurriculum = newCurriculum;
       });
       await WorkoutCurriculum.save(newCurriculum);
+      _updateCacheStatus();
+    }
+  }
+
+  Future<void> _updateCacheStatus() async {
+    if (_todayCurriculum == null) return;
+
+    final cacheService = CacheService();
+    final newStatus = <String, bool>{};
+
+    for (final task in _todayCurriculum!.workoutTaskList) {
+      newStatus[task.id] = await cacheService.isTaskCached(task);
+    }
+
+    if (mounted) {
+      setState(() => _taskCacheStatus = newStatus);
     }
   }
 
@@ -219,6 +242,29 @@ class _HomeViewState extends State<HomeView> {
     );
     // 설정에서 돌아오면 데이터 다시 로드
     _loadData();
+  }
+
+  void _downloadAllResources() async {
+    if (_todayCurriculum == null) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoadingView(curriculum: _todayCurriculum!),
+      ),
+    );
+
+    // 다운로드가 완료되면 (result == true), UI 업데이트
+    if (result == true && mounted) {
+      _updateCacheStatus();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.downloadComplete),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -365,6 +411,20 @@ class _HomeViewState extends State<HomeView> {
                   style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const Spacer(),
+                // Show Download Button if there are non-cached items
+                if (_todayCurriculum != null &&
+                    _taskCacheStatus != null &&
+                    _taskCacheStatus!.containsValue(false))
+                  IconButton(
+                    onPressed: _downloadAllResources,
+                    icon: const Icon(
+                      Icons.download_for_offline,
+                      color: Colors.white,
+                    ),
+                    tooltip: 'Download All',
+                    constraints: const BoxConstraints(),
+                    padding: const EdgeInsets.only(right: 8),
+                  ),
                 const Icon(
                   Icons.arrow_forward_ios,
                   color: Colors.white38,
@@ -373,6 +433,7 @@ class _HomeViewState extends State<HomeView> {
               ],
             ),
             const SizedBox(height: 12),
+            if (_generationError != null) const SizedBox(height: 12),
             if (_generationError != null)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -473,18 +534,41 @@ class _HomeViewState extends State<HomeView> {
               const SizedBox(height: 16),
               Wrap(
                 spacing: 8,
-                children: _todayCurriculum!.workoutTaskList
-                    .map(
-                      (task) => Chip(
-                        label: Text(
-                          task.title,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        backgroundColor: Colors.white24,
-                        labelStyle: const TextStyle(color: Colors.white),
+                runSpacing: 4,
+                children: _todayCurriculum!.workoutTaskList.map((task) {
+                  final isCached = (_taskCacheStatus ?? {})[task.id] ?? false;
+                  return Chip(
+                    label: Text(
+                      task.title,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isCached ? Colors.black87 : Colors.white,
+                        fontWeight: isCached
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
-                    )
-                    .toList(),
+                    ),
+                    // Cached: White Filled, Not Cached: Transparent with White Border
+                    backgroundColor: isCached
+                        ? Colors.white
+                        : Colors.transparent,
+                    shape: StadiumBorder(
+                      side: BorderSide(
+                        color: Colors.white,
+                        width: isCached ? 0 : 1.0,
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    // Optional: Add download icon for non-cached
+                    avatar: isCached
+                        ? null
+                        : const Icon(
+                            Icons.download,
+                            size: 14,
+                            color: Colors.white70,
+                          ),
+                  );
+                }).toList(),
               ),
             ],
           ],
