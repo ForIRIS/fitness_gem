@@ -201,7 +201,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Deep consultation for personalized curriculum';
 
   @override
-  String get reconsult => 'Reconsult';
+  String get reconsult => 'Re-consult with AI Consultant';
 
   @override
   String daysUntilReconsult(int days) {

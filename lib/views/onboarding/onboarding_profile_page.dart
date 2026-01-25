@@ -4,6 +4,7 @@ import 'package:fitness_gem/l10n/app_localizations.dart';
 class OnboardingProfilePage extends StatefulWidget {
   final String selectedAgeRange;
   final VoidCallback onAgePickerTap;
+  final TextEditingController nicknameController;
   final Set<String> selectedInjuries;
   final Function(String, bool) onInjurySelected;
   final bool showCustomInjury;
@@ -19,6 +20,7 @@ class OnboardingProfilePage extends StatefulWidget {
     super.key,
     required this.selectedAgeRange,
     required this.onAgePickerTap,
+    required this.nicknameController,
     required this.selectedInjuries,
     required this.onInjurySelected,
     required this.showCustomInjury,
@@ -81,7 +83,35 @@ class _OnboardingProfilePageState extends State<OnboardingProfilePage> {
           ),
           const SizedBox(height: 32),
 
-          // 나이 범위 선택 (탭하면 Bottom Sheet)
+          // Nickname Input
+          Text(
+            AppLocalizations.of(context)!.nickname,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: widget.nicknameController,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: AppLocalizations.of(context)!.enterNickname,
+              hintStyle: const TextStyle(color: Colors.white38),
+              enabledBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.white24),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.deepPurple),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // Age Range Selection (Show Bottom Sheet on Tap)
           Text(
             AppLocalizations.of(context)!.ageRange,
             style: const TextStyle(color: Colors.white70, fontSize: 14),
@@ -111,7 +141,7 @@ class _OnboardingProfilePageState extends State<OnboardingProfilePage> {
 
           const SizedBox(height: 32),
 
-          // 부상 이력 (Multi-Select)
+          // Injury History (Multi-Select)
           Text(
             AppLocalizations.of(context)!.injuryHistory,
             style: const TextStyle(color: Colors.white70, fontSize: 14),
@@ -158,7 +188,7 @@ class _OnboardingProfilePageState extends State<OnboardingProfilePage> {
 
           const SizedBox(height: 32),
 
-          // 운동 목표 (Single Select)
+          // Fitness Goal (Single Select)
           Text(
             AppLocalizations.of(context)!.fitnessGoal,
             style: const TextStyle(color: Colors.white70, fontSize: 14),
@@ -204,7 +234,7 @@ class _OnboardingProfilePageState extends State<OnboardingProfilePage> {
 
           const SizedBox(height: 32),
 
-          // 운동 경험
+          // Experience Level
           Text(
             AppLocalizations.of(context)!.experienceLevel,
             style: const TextStyle(color: Colors.white70, fontSize: 14),

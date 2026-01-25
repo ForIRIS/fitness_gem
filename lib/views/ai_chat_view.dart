@@ -11,7 +11,7 @@ import 'workout_detail_view.dart';
 import 'loading_view.dart';
 import 'camera_view.dart';
 
-/// AIChatView - AI 상담 채팅 화면
+/// AIChatView - AI Consultation Chat Screen
 class AIChatView extends StatefulWidget {
   final UserProfile userProfile;
 
@@ -36,13 +36,13 @@ class _AIChatViewState extends State<AIChatView>
   @override
   void initState() {
     super.initState();
-    // Shimmer 애니메이션 컨트롤러 (무한 반복)
+    // Shimmer Animation Controller (Infinite Loop)
     _shimmerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat();
 
-    // 초기 메시지
+    // Initial Message
     _messages.add(
       ChatMessage(
         text:
@@ -177,7 +177,7 @@ class _AIChatViewState extends State<AIChatView>
   }
 
   void _startWorkout(WorkoutCurriculum curriculum) async {
-    // 리소스 캐싱 화면으로 이동
+    // Navigate to Resource Caching Screen
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -185,7 +185,7 @@ class _AIChatViewState extends State<AIChatView>
       ),
     );
 
-    // 캐싱 완료 시 운동 화면으로 이동
+    // Navigate to Workout Screen upon caching completion
     if (result == true && mounted) {
       Navigator.pushReplacement(
         context,
@@ -210,7 +210,7 @@ class _AIChatViewState extends State<AIChatView>
       ),
       body: Column(
         children: [
-          // 채팅 메시지 리스트
+          // Chat Message List
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -225,7 +225,7 @@ class _AIChatViewState extends State<AIChatView>
             ),
           ),
 
-          // 확인 버튼 (커리큘럼 제안 시)
+          // Confirm Button (When Curriculum Suggested)
           if (_suggestedCurriculum != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -247,7 +247,7 @@ class _AIChatViewState extends State<AIChatView>
               ),
             ),
 
-          // 입력 필드
+          // Input Field
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -353,7 +353,7 @@ class _AIChatViewState extends State<AIChatView>
   }
 
   Widget _buildMessageBubble(ChatMessage message) {
-    // 커리큘럼이 포함된 메시지인 경우 카드 형태로 표시
+    // Display as Card if message contains curriculum
     if (message.curriculum != null) {
       return _buildCurriculumCard(message);
     }
@@ -574,7 +574,7 @@ class _AIChatViewState extends State<AIChatView>
     );
   }
 
-  /// Shimmer 효과의 커리큘럼 로딩 카드
+  /// Shimmer Effect Curriculum Loading Card
   Widget _buildShimmerCurriculumCard() {
     return Align(
       alignment: Alignment.centerLeft,
@@ -642,12 +642,12 @@ class _AIChatViewState extends State<AIChatView>
     return AnimatedBuilder(
       animation: _shimmerController,
       builder: (context, child) {
-        // 0.0 ~ 1.0 값을 이용해 그라디언트 이동 효과 생성
-        // value가 0 -> 1로 변할 때 그라디언트의 stops도 이동
+        // Create gradient movement effect using 0.0 ~ 1.0 value
+        // When value changes 0 -> 1, gradient stops also move
         final value = _shimmerController.value;
-        const double range = 0.5; // 그라디언트 폭
+        const double range = 0.5; // Gradient width
 
-        // 이동 범위: -range ~ 1.0 + range
+        // Move range: -range ~ 1.0 + range
         final offset = (value * (1 + range * 2)) - range;
 
         return Container(
@@ -660,7 +660,7 @@ class _AIChatViewState extends State<AIChatView>
               end: Alignment.bottomRight,
               colors: [
                 Colors.grey.shade800,
-                Colors.grey.shade600, // 밝은 부분
+                Colors.grey.shade600, // Bright part
                 Colors.grey.shade800,
               ],
               stops: [

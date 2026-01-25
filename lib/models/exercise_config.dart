@@ -146,4 +146,18 @@ class ExerciseConfig {
       turnThreshold: 90.0,
     );
   }
+
+  /// 기본 플랭크 설정 (테스트용)
+  static ExerciseConfig defaultPlank() {
+    return ExerciseConfig(
+      id: 'plank_default',
+      landmarks: [
+        PoseLandmarkType.leftShoulder,
+        PoseLandmarkType.leftHip,
+        PoseLandmarkType.leftAnkle,
+      ],
+      startThreshold: 170.0, // 일직선
+      turnThreshold: 0.0, // 사용 안함 (시간 기반)
+    );
+  }
 }

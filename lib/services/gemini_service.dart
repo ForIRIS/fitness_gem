@@ -10,7 +10,7 @@ import '../models/user_profile.dart';
 import '../models/workout_task.dart';
 import '../models/workout_curriculum.dart';
 
-/// GeminiService - Gemini AI 통합 서비스
+/// GeminiService - Gemini AI Integration Service
 class GeminiService {
   static const String _apiKeyPrefKey = 'gemini_api_key';
 
@@ -36,19 +36,19 @@ class GeminiService {
     _loadSystemInstructions();
   }
 
-  /// API 키 초기화 (SharedPreferences 확인)
+  /// Initialize API Key (Check SharedPreferences)
   Future<void> _initializeApiKey() async {
     final prefs = await SharedPreferences.getInstance();
     final savedKey = prefs.getString(_apiKeyPrefKey);
 
-    // 저장된 키가 있을 때만 덮어쓰기
+    // Overwrite only if saved key exists
     if (savedKey != null && savedKey.isNotEmpty) {
       _apiKey = savedKey;
       _initModel();
     }
   }
 
-  /// 모델 초기화
+  /// Initialize Model
   void _initModel() {
     if (_apiKey.isEmpty) return;
 
@@ -59,7 +59,7 @@ class GeminiService {
     );
   }
 
-  /// API 키 변경
+  /// Change API Key
   Future<void> setApiKey(String newKey) async {
     final prefs = await SharedPreferences.getInstance();
     if (newKey.isEmpty) {
@@ -72,28 +72,28 @@ class GeminiService {
     _initModel();
   }
 
-  /// 현재 유효한 API 키 조회 (내부 사용용)
+  /// Get current valid API Key (Internal use)
   Future<String> getApiKey() async {
     if (_apiKey.isNotEmpty) return _apiKey;
 
-    // 재확인
+    // Re-check
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_apiKeyPrefKey) ??
         dotenv.env['GEMINI_API_KEY'] ??
         '';
   }
 
-  /// UI 표시용 사용자 설정 키 조회 (설정 화면용)
+  /// Get user configured API Key for UI display (Settings screen)
   Future<String> getUserApiKey() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_apiKeyPrefKey) ?? '';
   }
 
-  // 시스템 인스트럭션 - 로드된 데이터 저장
+  // System Instructions - Store loaded data
   String _analystSystemInstruction = '';
   String _consultantSystemInstruction = '';
 
-  /// 에셋에서 시스템 인스트럭션 로드
+  /// Load System Instructions from assets
   Future<void> _loadSystemInstructions() async {
     try {
       _analystSystemInstruction = await rootBundle.loadString(
@@ -104,7 +104,7 @@ class GeminiService {
       );
       debugPrint('System Instructions loaded from assets.');
 
-      // 모델 재초기화 (새로운 인스트럭션 적용)
+      // Re-initialize model (Apply new instructions)
       _initModel();
     } catch (e) {
       debugPrint('Error loading system instructions: $e');
@@ -112,7 +112,7 @@ class GeminiService {
     }
   }
 
-  // 시스템 인스트럭션 - 커리큘럼 생성용
+  // System Instructions - For Curriculum Generation
   static const String _curriculumSystemInstruction = '''
 **ROLE & OBJECTIVE**
 You are "CoreFit AI Curriculum Planner." Your task is to create personalized workout curricula based on user profiles and available exercises.
@@ -143,7 +143,7 @@ You are "CoreFit AI Curriculum Planner." Your task is to create personalized wor
 }
 ''';
 
-  // 시스템 인스트럭션 - AI 인터뷰용
+  // System Instructions - For AI Interview
   static const String _interviewSystemInstruction = '''
 **MODE: DEEP INTERVIEWER**
 You are a professional fitness consultant conducting a deep interview to understand the user better.
@@ -191,16 +191,16 @@ Say "감사합니다! 프로필이 업데이트되었습니다." followed by JSO
 - If the user wants to skip or says they don't want to answer, respect that and conclude early.
 ''';
 
-  // ============ 커리큘럼 생성 ============
+  // ============ Curriculum Generation ============
 
-  /// 커리큘럼 생성
+  /// Generate Curriculum
   Future<WorkoutCurriculum?> generateCurriculum({
     required UserProfile profile,
     required String category,
     required List<WorkoutTask> availableWorkouts,
   }) async {
     try {
-      // Gemini에 전달할 운동 목록 텍스트 생성
+      // Create workout list text to send to Gemini
       final workoutListText = _buildWorkoutListText(availableWorkouts);
 
       final prompt =
@@ -236,7 +236,7 @@ Output JSON only.
 
       final jsonData = json.decode(jsonText) as Map<String, dynamic>;
 
-      // 선택된 운동 ID로 WorkoutTask 찾기
+      // Find WorkoutTask by selected ID
       final workoutIds =
           (jsonData['workout_ids'] as List<dynamic>?)
               ?.map((e) => e.toString())
@@ -253,7 +253,7 @@ Output JSON only.
           orElse: () => availableWorkouts.first,
         );
 
-        // Gemini가 조정한 reps/sets 적용
+        // Apply reps/sets adjustments from Gemini
         if (adjustments.containsKey(id)) {
           final adj = adjustments[id] as Map<String, dynamic>;
           task.applyAdjustment(
@@ -293,9 +293,9 @@ Output JSON only.
     return buffer.toString();
   }
 
-  // ============ 영상 분석 (HTTP 파일 업로드 방식) ============
+  // ============ Video Analysis (HTTP File Upload) ============
 
-  /// 비디오 분석 (Source A: RGB, Source B: ControlNet)
+  /// Analyze Video (Source A: RGB, Source B: ControlNet)
   Future<Map<String, dynamic>?> analyzeVideoSession({
     required File rgbVideoFile,
     required File controlNetVideoFile,
@@ -307,7 +307,7 @@ Output JSON only.
     String language = 'Korean',
   }) async {
     try {
-      // 1. 두 비디오 업로드
+      // 1. Upload both videos
       debugPrint('Uploading RGB video...');
       final rgbUri = await _uploadFile(rgbVideoFile);
       if (rgbUri == null) return null;
@@ -316,10 +316,10 @@ Output JSON only.
       final controlNetUri = await _uploadFile(controlNetVideoFile);
       if (controlNetUri == null) return null;
 
-      // 2. 비디오 처리 대기
+      // 2. Wait for video processing
       await Future.delayed(const Duration(seconds: 3));
 
-      // 3. 분석 요청
+      // 3. Request analysis
       debugPrint('Requesting analysis...');
       return await _generateContentWithVideos(
         rgbUri: rgbUri,
@@ -337,7 +337,7 @@ Output JSON only.
     }
   }
 
-  /// 파일 업로드
+  /// Upload File
   Future<String?> _uploadFile(File file) async {
     try {
       final uri = Uri.parse('$_uploadUrl?key=$_apiKey');
@@ -518,9 +518,9 @@ Please provide the Next Step advice in the User Language.
     };
   }
 
-  // ============ AI 상담 (채팅) ============
+  // ============ AI Consultation (Chat) ============
 
-  /// AI 상담으로 커리큘럼 변경 요청
+  /// Request Curriculum Change via AI Chat
   Future<WorkoutCurriculum?> chatForCurriculum({
     required String userMessage,
     required UserProfile profile,
@@ -606,11 +606,11 @@ Output JSON only.
     }
   }
 
-  // ============ AI 인터뷰 ============
+  // ============ AI Interview ============
 
   ChatSession? _interviewSession;
 
-  /// 인터뷰 세션 시작
+  /// Start Interview Session
   Future<String?> startInterviewChat(UserProfile profile) async {
     try {
       final model = GenerativeModel(
@@ -621,7 +621,7 @@ Output JSON only.
 
       _interviewSession = model.startChat();
 
-      // 초기 프롬프트로 사용자 정보 전달
+      // Send user info via initial prompt
       final initialPrompt =
           '''
 TASK: START_INTERVIEW
@@ -647,7 +647,7 @@ Please start the interview in Korean.
     }
   }
 
-  /// 인터뷰 메시지 전송 및 응답 받기
+  /// Send Interview Message and Receive Response
   Future<InterviewResponse> sendInterviewMessage(String userMessage) async {
     if (_interviewSession == null) {
       return InterviewResponse(message: '인터뷰 세션이 없습니다.', isComplete: false);
@@ -660,10 +660,10 @@ Please start the interview in Korean.
 
       final responseText = response.text ?? '';
 
-      // JSON 포함 여부 확인 (인터뷰 완료 시)
+      // Check for JSON inclusion (When interview complete)
       if (responseText.contains('"interview_complete": true') ||
           responseText.contains('"interview_complete":true')) {
-        // JSON 추출
+        // Extract JSON
         final jsonMatch = RegExp(
           r'\{[\s\S]*"interview_complete"[\s\S]*\}',
         ).firstMatch(responseText);
@@ -711,9 +711,9 @@ Please start the interview in Korean.
     }
   }
 
-  /// 이미지와 함께 채팅 메시지 전송 (One-off or Session?)
-  /// 단순화를 위해 1회성 분석으로 처리하거나, 세션에 이미지를 포함시킬 수 있음.
-  /// google_generative_ai 패키지는 멀티턴 챗에서 이미지를 지원함.
+  /// Send Chat Message with Image (One-off or Session?)
+  /// Treated as one-off analysis for simplicity, or can be included in session.
+  /// google_generative_ai package supports images in multi-turn chat.
   Future<InterviewResponse> chatWithImage({
     required String userMessage,
     required File imageFile,
@@ -757,14 +757,14 @@ User Message: "$userMessage"
     }
   }
 
-  /// 인터뷰 세션 종료
+  /// End Interview Session
   void endInterviewSession() {
     _interviewSession = null;
   }
 
-  // ============ 낙상 감지 분석 ============
+  // ============ Fall Detection Analysis ============
 
-  /// 낙상 상황 분석
+  /// Analyze Fall Detection
   Future<bool> analyzeFallDetection({
     required File videoFile,
     required UserProfile profile,

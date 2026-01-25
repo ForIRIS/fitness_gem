@@ -73,14 +73,14 @@ class _OnboardingPermissionsPageState extends State<OnboardingPermissionsPage> {
             style: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
           const Spacer(),
-          // 메인 버튼 - 전체 너비
+          // Main Button - Full Width
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: isAllGranted
                   ? widget.onNext
                   : () async {
-                      // 권한 요청
+                      // Request Permissions
                       final statuses = await [
                         Permission.camera,
                         Permission.microphone,
@@ -93,7 +93,7 @@ class _OnboardingPermissionsPageState extends State<OnboardingPermissionsPage> {
                       if (_isCameraGranted && _isMicGranted) {
                         widget.onNext();
                       } else {
-                        // 권한이 영구 거부된 경우 설정으로 이동
+                        // Navigate to settings if permission is permanently denied
                         final cameraPermanentlyDenied =
                             await Permission.camera.isPermanentlyDenied;
                         final micPermanentlyDenied =

@@ -25,7 +25,7 @@ import '../models/session_analysis.dart';
 import '../services/exercise_service.dart';
 import '../viewmodels/display_viewmodel.dart';
 
-/// CameraView - 운동 화면 (카메라 + 스켈레톤 오버레이 + UI)
+/// CameraView - Workout Screen (Camera + Skeleton Overlay + UI)
 class CameraView extends StatefulWidget {
   final WorkoutCurriculum? curriculum;
 
@@ -36,7 +36,7 @@ class CameraView extends StatefulWidget {
 }
 
 class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
-  // 카메라 관련
+  // Camera Related
   CameraController? _controller;
   VideoPlayerController? _guideVideoController;
   final PoseDetector _poseDetector = PoseDetector(
@@ -52,7 +52,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   final Map<PoseLandmarkType, OneEuroFilterSimple> _xFilters = {};
   final Map<PoseLandmarkType, OneEuroFilterSimple> _yFilters = {};
 
-  // 운동 상태
+  // Workout State
   WorkoutCurriculum? _curriculum;
   WorkoutTask? _currentTask;
   int _currentRep = 0;
@@ -60,49 +60,49 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   bool _isResting = false;
   bool _isPaused = false;
 
-  // 타이머
+  // Timer
   Timer? _workoutTimer;
   int _elapsedSeconds = 0;
   int _timeoutSeconds = 60;
 
-  // 서비스
+  // Services
   final TTSService _ttsService = TTSService();
   final GeminiService _geminiService = GeminiService();
   final VideoRecorder _videoRecorder = VideoRecorder();
 
-  // Rep 카운팅
+  // Rep Counting
   RepCounter? _repCounter;
   ExerciseConfig? _exerciseConfig;
 
-  // 사용자 프로필
+  // User Profile
   UserProfile? _userProfile;
 
-  // 분석 결과
+  // Analysis Results
   final List<SetAnalysis> _setAnalyses = [];
 
-  // 녹화 상태
+  // Recording State
   bool _isRecording = false;
 
-  // 낙상 감지
+  // Fall Detection
   final FallDetectionService _fallDetectionService = FallDetectionService();
   final bool _showFallConfirmDialog = false;
 
-  // Ready Pose 감지
+  // Ready Pose Detection
   List<Point3D>? _readyPoseReference;
   final double _poseSimilarity = 0.0;
   static const double _readyPoseThreshold = 0.8; // 80% 유사도
 
-  // 신체 가시성 및 준비자세 카운트다운
+  // Body Visibility and Countdown
   bool _isFullBodyVisible = false;
   bool _isWaitingForReadyPose = true;
   int _countdownSeconds = 0;
   Timer? _countdownTimer;
   DateTime? _lastBodyNotVisibleTTS;
 
-  // 실시간 자세 피드백
+  // Real-time Form Feedback
   final FormRuleChecker _formRuleChecker = FormRuleChecker();
 
-  // 가이드 비디오
+  // Guide Video
   final String _dummyGuideVideoUrl =
       'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4';
 
@@ -115,7 +115,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // 외부 디스플레이 뷰모델 초기화
+    // Initialize External Display ViewModel
     _displayViewModel = DisplayViewModel();
     _displayViewModel.addListener(() {
       if (mounted) setState(() {});
@@ -145,7 +145,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       _currentTask = _curriculum!.currentTask;
       _timeoutSeconds = _currentTask?.timeoutSec ?? 60;
 
-      // ExerciseConfig 로드 (더미 또는 실제 데이터)
+      // Load ExerciseConfig (Mock or Real)
       _loadExerciseConfig();
     }
   }
@@ -153,9 +153,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   Future<void> _loadExerciseConfig() async {
     if (_currentTask == null) return;
 
-    // TODO: 나중에 useMock: false로 변경하여 실제 데이터를 사용하세요.
+    // TODO: Change to useMock: false later to use real data.
     final config = await _exerciseService.getExerciseConfig(
-      _currentTask!.title,
+      _currentTask!,
       useMock: true,
     );
 
@@ -166,13 +166,13 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       });
     }
 
-    // 실시간 자세 피드백 설정
+    // Set Real-time Form Feedback
     _formRuleChecker.setExercise(_currentTask?.title ?? 'squat');
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // 백그라운드 전환 시 일시정지
+    // Pause when going to background
     if (state == AppLifecycleState.paused) {
       _pauseWorkout();
     } else if (state == AppLifecycleState.resumed) {
@@ -251,7 +251,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       debugPrint("No cameras found. Running in Simulator Mode.");
     }
 
-    // 가이드 비디오 초기화
+    // Initialize Guide Video
     final videoUrl = _currentTask?.exampleVideoUrl.isNotEmpty == true
         ? _currentTask!.exampleVideoUrl
         : _dummyGuideVideoUrl;
@@ -264,18 +264,18 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
             _guideVideoController!.play();
           });
 
-    // TTS 초기화
+    // Initialize TTS
     await _ttsService.initialize();
 
-    // 사용자 프로필 로드
+    // Load User Profile
     _userProfile = await UserProfile.load();
 
-    // 첫 세트 가이드 오디오
+    // First Set Guide Audio
     if (_currentTask != null) {
       await _ttsService.speakWorkoutStart(_currentTask!.title);
     }
 
-    // 준비자세 대기 모드로 시작 (타이머/녹화는 카운트다운 후 시작)
+    // Start in Ready Pose Waiting Mode (Timer/Recording starts after countdown)
     if (mounted) {
       setState(() {
         _isCameraInitialized = true;
@@ -300,7 +300,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     _isRecording = false;
 
     if (result != null && _userProfile != null && _currentTask != null) {
-      // Gemini 분석 요청
+      // Request Gemini Analysis
       await _ttsService.speakAnalyzing();
 
       final analysisResult = await _geminiService.analyzeVideoSession(
@@ -314,14 +314,14 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       );
 
       if (analysisResult != null) {
-        // 분석 결과 저장
+        // Save Analysis Result
         final setAnalysis = SetAnalysis.fromGeminiResponse(
           _currentSet,
           analysisResult,
         );
         _setAnalyses.add(setAnalysis);
 
-        // TTS 피드백 재생
+        // Play TTS Feedback
         final ttsMessage = analysisResult['feedback']?['tts_message'];
         if (ttsMessage != null && ttsMessage.isNotEmpty) {
           await _ttsService.speak(ttsMessage);
@@ -337,7 +337,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         setState(() {
           _elapsedSeconds++;
           if (_elapsedSeconds >= _timeoutSeconds) {
-            // 타임아웃 - 세트 종료
+            // Timeout - Set Complete
             _onSetComplete();
           }
         });
@@ -376,7 +376,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         });
       }
 
-      // 신체 가시성 체크 및 카운트다운 로직
+      // Body Visibility Check and Countdown Logic
       if (smoothedPoses.isNotEmpty) {
         final pose = smoothedPoses.first;
         final bodyVisible = _checkBodyVisibility(pose);
@@ -388,26 +388,26 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         // 준비자세 대기 중일 때
         if (_isWaitingForReadyPose) {
           if (bodyVisible) {
-            // 신체가 보이면 카운트다운 시작
+            // Start Countdown if body is visible
             if (_countdownSeconds == 0 && _countdownTimer == null) {
               _startCountdown();
             }
           } else {
-            // 신체가 안 보이면 카운트다운 취소 및 TTS 안내
+            // Cancel Countdown and Warn if body is not visible
             _cancelCountdown();
             _speakBodyNotVisibleThrottled();
           }
-          return; // 준비자세 대기 중에는 아래 로직 실행 안 함
+          return; // Skip logic below while waiting for ready pose
         }
 
-        // 운동 중 신체가 안 보이면 안내
+        // Warn if body is not visible during workout
         if (!bodyVisible && !_isResting) {
           _speakBodyNotVisibleThrottled();
         }
 
-        _videoRecorder.updatePose(pose); // ControlNet 프레임용
+        _videoRecorder.updatePose(pose); // For ControlNet Frame
 
-        // Rep 카운팅
+        // Rep Counting
         if (_repCounter != null && !_isResting) {
           final newRep = _repCounter!.processFrame(pose);
           if (newRep && mounted) {
@@ -415,14 +415,14 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           }
         }
 
-        // 실시간 자세 피드백
+        // Real-time Form Feedback
         if (!_isResting) {
           final formFeedback = _formRuleChecker.checkForm(pose);
           if (formFeedback != null) {
             _ttsService.speakFormCorrection(formFeedback);
           }
 
-          // 외부 디스플레이 데이터 전송
+          // Send Data to External Display
           _displayViewModel.updateSessionData(
             exerciseName: _currentTask?.title ?? 'Ready',
             reps: _currentRep,
@@ -431,7 +431,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           );
         }
       } else {
-        // 포즈가 감지되지 않음
+        // Pose Not Detected
         if (mounted) {
           setState(() => _isFullBodyVisible = false);
         }
@@ -477,7 +477,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     return [Pose(landmarks: smoothedLandmarks)];
   }
 
-  /// 신체 가시성 체크 - 주요 랜드마크가 충분히 감지되는지 확인
+  /// Body Visibility Check - Check if key landmarks are sufficiently detected
   bool _checkBodyVisibility(Pose pose) {
     final requiredLandmarks = [
       PoseLandmarkType.leftShoulder,
@@ -500,11 +500,11 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       }
     }
 
-    // 8개 중 6개 이상 보이면 OK
+    // OK if 6 or more out of 8 are visible
     return visibleCount >= 6;
   }
 
-  /// 카운트다운 시작 (3초)
+  /// Start Countdown (3 seconds)
   void _startCountdown() {
     _countdownTimer?.cancel();
     setState(() => _countdownSeconds = 3);
@@ -524,7 +524,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       if (_countdownSeconds > 0) {
         _ttsService.speakCountdown(_countdownSeconds);
       } else {
-        // 카운트다운 완료 - 운동 시작!
+        // Countdown Complete - Workout Start!
         timer.cancel();
         _countdownTimer = null;
         _ttsService.speakCountdown(0); // "시작!"
@@ -533,7 +533,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     });
   }
 
-  /// 카운트다운 취소
+  /// Cancel Countdown
   void _cancelCountdown() {
     if (_countdownTimer != null) {
       _countdownTimer?.cancel();
@@ -544,7 +544,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     }
   }
 
-  /// TTS 안내 (5초에 한 번만)
+  /// TTS Warning (Throttled to once every 5 seconds)
   void _speakBodyNotVisibleThrottled() {
     final now = DateTime.now();
     if (_lastBodyNotVisibleTTS == null ||
@@ -554,18 +554,18 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     }
   }
 
-  /// 카운트다운 완료 후 운동 시작
+  /// Start Workout after Countdown Complete
   Future<void> _onCountdownComplete() async {
     setState(() {
       _isWaitingForReadyPose = false;
     });
 
-    // 녹화 시작
+    // Start Recording
     if (_controller != null) {
       await _startRecording();
     }
 
-    // 타이머 시작
+    // Start Timer
     _startWorkoutTimer();
   }
 
@@ -584,48 +584,48 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     setState(() => _isResting = true);
     _workoutTimer?.cancel();
 
-    // 녹화 중지 및 분석 요청
+    // Stop Recording and Request Analysis
     await _stopRecordingAndAnalyze();
 
-    // 휴식 안내
+    // Rest Guide
     await _ttsService.speakRestStart(10);
 
-    // 다음 세트/운동 준비
+    // Prepare Next Set/Example
     _currentSet++;
     final maxSets = _currentTask?.adjustedSets ?? 3;
 
     if (_currentSet > maxSets) {
-      // 다음 운동으로 이동
+      // Move to Next Exercise
       _curriculum?.moveToNextSet();
       _currentTask = _curriculum?.currentTask;
       _currentSet = 1;
 
-      // ExerciseConfig 재로드
+      // Reload ExerciseConfig
       _loadExerciseConfig();
       _repCounter?.reset();
 
       if (_currentTask == null || _curriculum?.isCompleted == true) {
-        // 모든 운동 완료
+        // All Workouts Complete
         await _ttsService.speakWorkoutComplete();
         _showCompletionDialog();
         return;
       }
     }
 
-    // 휴식 후 다음 세트
+    // Next Set after Rest
     _currentRep = 0;
     _elapsedSeconds = 0;
     _timeoutSeconds = _currentTask?.timeoutSec ?? 60;
     _repCounter?.reset();
 
-    // 휴식 시간 (10초 후 자세 준비 안내)
+    // Rest Time (Guide Pose Prep after 10s)
     await Future.delayed(const Duration(seconds: 10));
 
     if (mounted) {
       await _ttsService.speakReadyPose();
       setState(() => _isResting = false);
 
-      // 다음 세트 녹화 시작
+      // Start Next Set Recording
       await _startRecording();
       _startWorkoutTimer();
     }
@@ -669,7 +669,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. 카메라 프리뷰
+          // 1. Camera Preview
           if (_controller != null && _controller!.value.isInitialized)
             SizedBox.expand(
               child: FittedBox(
@@ -689,7 +689,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               ),
             ),
 
-          // 2. 스켈레톤 오버레이
+          // 2. Skeleton Overlay
           if (_poses.isNotEmpty && _controller != null)
             Transform.scale(
               scaleX: -1,
@@ -707,7 +707,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               ),
             ),
 
-          // 3. 상단 UI - 뒤로가기 + 상태 정보 (Top Right)
+          // 3. Top UI - Back + Status Info (Top Right)
           Positioned(
             top: MediaQuery.of(context).padding.top + 10,
             left: 16,
@@ -716,7 +716,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 뒤로가기 버튼
+                // Back Button
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -738,7 +738,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                   ],
                 ),
 
-                // 우측 정보 (다음 운동)
+                // Right Info (Next Exercise)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [_buildCurrentTaskInfo()],
@@ -747,20 +747,20 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
             ),
           ),
 
-          // 5. 가이드 비디오 (우측 하단) - 사용자 요청: 버튼 대신 영상 표시
+          // 5. Guide Video (Bottom Right) - User request: Show video instead of button
           Positioned(right: 16, bottom: 40, child: _buildGuidePIP()),
 
-          // 6. 하단 UI - 타이머 (좌측)
+          // 6. Bottom UI - Timer (Left)
           if (!_isWaitingForReadyPose)
             Positioned(bottom: 40, left: 16, child: _buildCircularTimer()),
 
-          // 7. 준비자세 대기 오버레이
+          // 7. Ready Pose Waiting Overlay
           if (_isWaitingForReadyPose) _buildReadyPoseOverlay(),
 
-          // 8. 휴식 오버레이
+          // 8. Rest Overlay
           if (_isResting) _buildRestOverlay(),
 
-          // 9. 일시정지 오버레이
+          // 9. Pause Overlay
           if (_isPaused) _buildPauseOverlay(),
         ],
       ),

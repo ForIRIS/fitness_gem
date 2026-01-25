@@ -26,7 +26,7 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      // 키보드 문제 방지
+      // Prevent keyboard overlap issues
       padding: const EdgeInsets.all(24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -49,7 +49,7 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
           ),
           const SizedBox(height: 32),
 
-          // 낙상 감지 토글
+          // Fall Detection Toggle
           Container(
             decoration: BoxDecoration(
               color: Colors.grey[900],

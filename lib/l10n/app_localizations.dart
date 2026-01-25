@@ -467,7 +467,7 @@ abstract class AppLocalizations {
   /// No description provided for @reconsult.
   ///
   /// In en, this message translates to:
-  /// **'Reconsult'**
+  /// **'Re-consult with AI Consultant'**
   String get reconsult;
 
   /// No description provided for @daysUntilReconsult.

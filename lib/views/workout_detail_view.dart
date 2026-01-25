@@ -3,6 +3,7 @@ import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:video_player/video_player.dart';
 import '../models/workout_curriculum.dart';
 import '../models/workout_task.dart';
+import '../services/cache_service.dart';
 import 'loading_view.dart';
 import 'camera_view.dart';
 
@@ -148,7 +149,26 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
   }
 
   void _startWorkout() async {
-    // 리소스 캐싱 화면으로 이동
+    // Check for cached resources first
+    final cacheService = CacheService();
+    final isCached = await cacheService.areAllCurriculumResourcesCached(
+      widget.curriculum,
+    );
+
+    if (isCached && mounted) {
+      // Skip download screen and go straight to workout
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CameraView(curriculum: widget.curriculum),
+        ),
+      );
+      return;
+    }
+
+    // Navigate to Resource Caching Screen
+    if (!mounted) return;
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -156,7 +176,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
       ),
     );
 
-    // 캐싱 완료 시 운동 화면으로 이동
+    // Navigate to Workout Screen upon caching completion
     if (result == true && mounted) {
       Navigator.pushReplacement(
         context,
@@ -168,7 +188,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
   }
 }
 
-/// 개별 운동 상세 카드 위젯
+/// Individual Workout Detail Card Widget
 class WorkoutDetailCard extends StatefulWidget {
   final WorkoutTask task;
   final int index;
@@ -199,7 +219,7 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
   @override
   void didUpdateWidget(WorkoutDetailCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 활성화 상태에 따라 비디오 재생/일시정지
+    // Play/Pause video based on active state
     if (widget.isActive && _isVideoInitialized) {
       _videoController?.play();
     } else {
@@ -216,7 +236,7 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
       );
       await _videoController!.initialize();
       _videoController!.setLooping(true);
-      _videoController!.setVolume(0); // 음소거
+      _videoController!.setVolume(0); // Mute
 
       if (widget.isActive) {
         _videoController!.play();

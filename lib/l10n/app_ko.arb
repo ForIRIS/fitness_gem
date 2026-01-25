@@ -62,7 +62,7 @@
   "disclaimerMessage": "이 앱은 AI 기반 운동 분석을 제공하지만 의료 기기가 아닙니다. 운동 프로그램을 시작하기 전에 의사와 상담하십시오.",
   "agreeAndStart": "동의하고 시작하기",
   
-  "aiConsultant": "AI Consultant와 대화",
+  "aiConsultant": "AI 컨설턴트와 상담하기",
   "aiConsultantDescription": "더 정확한 맞춤 커리큘럼을 받을 수 있어요",
   
   "disclaimer": "⚠️ 의료 조언 면책",
@@ -72,7 +72,7 @@
   "settings": "설정",
   "aiConsulting": "AI 컨설팅",
   "aiConsultingSubtitle": "맞춤 커리큘럼을 위한 심층 상담",
-  "reconsult": "다시 상담받기",
+  "reconsult": "AI 컨설턴트와 다시 상담받기",
   "daysUntilReconsult": "{days}일 후 가능",
   "@daysUntilReconsult": {
     "placeholders": {
@@ -100,7 +100,24 @@
   "enterPhone": "전화번호 입력",
   "enterApiKey": "API Key 입력",
   "saveApiKey": "API Key 저장",
+  "saveApiKey": "API Key 저장",
   "welcomeMessage": "안녕하세요, {age}세 {level} 회원님!",
+  "welcomeTrainee": "안녕하세요, 연습생님!",
+  "welcomeUser": "안녕하세요, {name}님!",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "welcomeUserTier": "안녕하세요, {tier} 멤버 {name}님!",
+  "@welcomeUserTier": {
+    "placeholders": {
+      "tier": { "type": "String" },
+      "name": { "type": "String" }
+    }
+  },
+  "nickname": "닉네임 (선택)",
+  "enterNickname": "닉네임을 입력하세요",
   "@welcomeMessage": {
     "placeholders": {
       "age": { "type": "String" },

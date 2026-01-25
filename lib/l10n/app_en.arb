@@ -72,7 +72,7 @@
   "settings": "Settings",
   "aiConsulting": "AI Consulting",
   "aiConsultingSubtitle": "Deep consultation for personalized curriculum",
-  "reconsult": "Reconsult",
+  "reconsult": "Re-consult with AI Consultant",
   "daysUntilReconsult": "{days} days until available",
   "@daysUntilReconsult": {
     "placeholders": {
@@ -100,7 +100,24 @@
   "enterPhone": "Enter phone number",
   "enterApiKey": "Enter API Key",
   "saveApiKey": "Save API Key",
+  "saveApiKey": "Save API Key",
   "welcomeMessage": "Hello, {age}-year-old {level} member!",
+  "welcomeTrainee": "Hello Trainee",
+  "welcomeUser": "Hello {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "welcomeUserTier": "Hello {tier} Member {name}",
+  "@welcomeUserTier": {
+    "placeholders": {
+      "tier": { "type": "String" },
+      "name": { "type": "String" }
+    }
+  },
+  "nickname": "Nickname (Optional)",
+  "enterNickname": "Enter your nickname",
   "@welcomeMessage": {
     "placeholders": {
       "age": { "type": "String" },

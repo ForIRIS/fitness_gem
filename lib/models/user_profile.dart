@@ -7,6 +7,8 @@ class UserProfile {
   String goal;
   String experienceLevel;
   String targetExercise; // e.g., "Squat"
+  String? nickname; // 닉네임 (선택)
+  String userTier; // 'free', 'basic', 'premium' (기본: 'free')
   String? guardianPhone; // 보호자 연락처 (선택)
   bool fallDetectionEnabled; // 낙상 감지 사용 여부
 
@@ -21,6 +23,8 @@ class UserProfile {
     required this.goal,
     required this.experienceLevel,
     required this.targetExercise,
+    this.nickname,
+    this.userTier = 'free',
     this.guardianPhone,
     this.fallDetectionEnabled = true, // 기본값 활성화
     this.interviewSummary,
@@ -49,6 +53,13 @@ class UserProfile {
     return (7 - daysSinceInterview).clamp(0, 7);
   }
 
+  /// 표시 이름 (닉네임이 없으면 'Trainee')
+  String get displayName =>
+      (nickname != null && nickname!.isNotEmpty) ? nickname! : 'Trainee';
+
+  /// 티어 표시용 (UI)
+  String get displayTier => userTier.toUpperCase();
+
   Map<String, dynamic> toMap() {
     return {
       'age': age,
@@ -56,6 +67,8 @@ class UserProfile {
       'goal': goal,
       'experienceLevel': experienceLevel,
       'targetExercise': targetExercise,
+      'nickname': nickname,
+      'userTier': userTier,
       'guardianPhone': guardianPhone,
       'fallDetectionEnabled': fallDetectionEnabled,
       'interviewSummary': interviewSummary,
@@ -71,6 +84,8 @@ class UserProfile {
       goal: map['goal'] ?? '',
       experienceLevel: map['experienceLevel'] ?? '',
       targetExercise: map['targetExercise'] ?? '',
+      nickname: map['nickname'],
+      userTier: map['userTier'] ?? 'free',
       guardianPhone: map['guardianPhone'],
       fallDetectionEnabled: map['fallDetectionEnabled'] ?? true,
       interviewSummary: map['interviewSummary'],

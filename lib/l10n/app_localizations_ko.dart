@@ -169,7 +169,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get agreeAndStart => '동의하고 시작하기';
 
   @override
-  String get aiConsultant => 'AI Consultant와 대화';
+  String get aiConsultant => 'AI 컨설턴트와 상담하기';
 
   @override
   String get aiConsultantDescription => '더 정확한 맞춤 커리큘럼을 받을 수 있어요';
@@ -194,7 +194,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiConsultingSubtitle => '맞춤 커리큘럼을 위한 심층 상담';
 
   @override
-  String get reconsult => '다시 상담받기';
+  String get reconsult => 'AI 컨설턴트와 다시 상담받기';
 
   @override
   String daysUntilReconsult(int days) {

@@ -12,6 +12,7 @@ import 'onboarding/onboarding_permissions_page.dart';
 import 'onboarding/onboarding_profile_page.dart';
 import 'onboarding/onboarding_exercise_page.dart';
 import 'onboarding/onboarding_guardian_page.dart';
+import 'home_view.dart';
 
 /// OnboardingView - 온보딩 화면
 class OnboardingView extends StatefulWidget {
@@ -26,6 +27,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   int _currentPage = 0;
 
   // Form Controllers
+  final TextEditingController _nicknameController = TextEditingController();
   String _selectedAgeRange = '25~29';
   final Set<String> _selectedInjuries = {};
   final TextEditingController _customInjuryController = TextEditingController();
@@ -55,6 +57,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   // 면책 팝업 표시 여부
   bool _showDisclaimer = false;
+  bool _pendingAIStart = false; // 면책 동의 후 AI로 갈지 여부
 
   // 기능 설정
   bool _fallDetectionEnabled = true;
@@ -88,6 +91,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                       OnboardingProfilePage(
                         selectedAgeRange: _selectedAgeRange,
                         onAgePickerTap: _showAgePickerBottomSheet,
+                        nicknameController: _nicknameController,
                         selectedInjuries: _selectedInjuries,
                         onInjurySelected: _onInjurySelected,
                         showCustomInjury: _showCustomInjury,
@@ -245,7 +249,9 @@ class _OnboardingViewState extends State<OnboardingView> {
             // AI Consultant 버튼
             SizedBox(
               width: double.infinity,
-              child: AIConsultantButton(onPressed: _startAIInterview),
+              child: AIConsultantButton(
+                onPressed: () => _finishOnboarding(startAI: true),
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -309,22 +315,21 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   void _onNextPressed() {
-    // 마지막 페이지에서는 시작 로직 실행
+    // 마지막 페이지에서는 시작 로직 실행 (AI 스킵)
     if (_currentPage == 3) {
-      _finishOnboarding();
+      _finishOnboarding(startAI: false);
     } else {
       _nextPage();
     }
   }
 
-  Future<void> _finishOnboarding() async {
-    // 프로필 저장 및 홈 이동 로직 (기존 로직 유지)
-    // 여기서는 면책 팝업 표시
-    _showDisclaimerPopup();
-  }
-
-  void _showDisclaimerPopup() {
-    setState(() => _showDisclaimer = true);
+  Future<void> _finishOnboarding({required bool startAI}) async {
+    // 저장 로직은 _completeOnboardingAndNavigate 에서 수행
+    // 먼저 면책 팝업 표시 및 경로 설정
+    setState(() {
+      _pendingAIStart = startAI;
+      _showDisclaimer = true;
+    });
   }
 
   Widget _buildDisclaimerOverlay() {
@@ -354,7 +359,7 @@ class _OnboardingViewState extends State<OnboardingView> {
               ElevatedButton(
                 onPressed: () {
                   setState(() => _showDisclaimer = false);
-                  _startAIInterview(); // 사실상 시작
+                  _completeOnboardingAndNavigate();
                 },
                 child: Text(AppLocalizations.of(context)!.agreeAndStart),
               ),
@@ -365,9 +370,12 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  Future<void> _startAIInterview() async {
-    // UserProfile 생성
+  Future<void> _completeOnboardingAndNavigate() async {
+    // UserProfile 생성 & 저장
     final profile = UserProfile(
+      nickname: _nicknameController.text.trim().isEmpty
+          ? null
+          : _nicknameController.text.trim(),
       age: _selectedAgeRange,
       injuryHistory: _showCustomInjury
           ? _customInjuryController.text
@@ -385,16 +393,36 @@ class _OnboardingViewState extends State<OnboardingView> {
       fallDetectionEnabled: _fallDetectionEnabled,
     );
 
-    // Save Profile
     await profile.save();
 
     if (!mounted) return;
 
-    // Go to AI Interview
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => AIInterviewView(userProfile: profile)),
-    );
+    if (_pendingAIStart) {
+      // Go to AI Interview
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AIInterviewView(userProfile: profile),
+        ),
+      );
+    } else {
+      // Go to Home
+      Navigator.pushReplacementNamed(
+        context,
+        '/',
+      ); // MainApp handles routes or just pop?
+      // MainApp widget switches on 'showOnboarding' flag, but since we are replacing route,
+      // it's safer to restart app or push HomeView directly.
+      // Since 'home' is conditional, creating a fresh HomeView is fine.
+      // Ideally, use a named route or pushReplacement.
+
+      // Since OnboardingView is the 'home' of MaterialApp when showOnboarding is true,
+      // replacing it with HomeView is correct.
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomeView()),
+        (route) => false,
+      );
+    }
   }
 
   // --- Bottom Sheet for Age Picker ---

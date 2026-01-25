@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../firebase_options.dart';
 import '../models/workout_task.dart';
 
@@ -11,6 +12,7 @@ class FirebaseService {
   FirebaseService._internal();
 
   bool _initialized = false;
+  bool _isOffline = false; // Auth 실패 시 오프라인 모드로 동작
 
   /// Firebase 초기화
   Future<void> initialize() async {
@@ -36,6 +38,7 @@ class FirebaseService {
       }
     } catch (e) {
       debugPrint('Anonymous sign in failed: $e');
+      _isOffline = true; // 실패 시 오프라인 모드 활성화
     }
   }
 
@@ -46,26 +49,129 @@ class FirebaseService {
 
   /// 모든 운동 목록 조회
   Future<List<WorkoutTask>> fetchWorkoutAllList() async {
-    // TODO: Firestore 연동 시 실제 데이터로 교체
-    return _dummyWorkoutTasks;
+    if (_isOffline) return _dummyWorkoutTasks;
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('workouts')
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        // 데이터가 없으면 더미 데이터 업로드 (개발 편의성)
+        await uploadDummyData();
+        return _dummyWorkoutTasks;
+      }
+
+      return snapshot.docs
+          .map((doc) => WorkoutTask.fromMap(doc.data()))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching workouts: $e');
+      // 에러 발생 시 더미 데이터 반환 (오프라인 등)
+      return _dummyWorkoutTasks;
+    }
   }
 
   /// 카테고리별 운동 검색
   Future<List<WorkoutTask>> searchWorkoutParts(String category) async {
-    // TODO: Firestore 연동 시 실제 쿼리로 교체
-    return _dummyWorkoutTasks
-        .where((task) => task.category.toLowerCase() == category.toLowerCase())
-        .toList();
+    if (_isOffline) {
+      return _dummyWorkoutTasks
+          .where(
+            (task) => task.category.toLowerCase() == category.toLowerCase(),
+          )
+          .toList();
+    }
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('workouts')
+          .where('category', isEqualTo: category.toLowerCase())
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        // Firestore에 없으면 더미에서 검색
+        return _dummyWorkoutTasks
+            .where(
+              (task) => task.category.toLowerCase() == category.toLowerCase(),
+            )
+            .toList();
+      }
+
+      return snapshot.docs
+          .map((doc) => WorkoutTask.fromMap(doc.data()))
+          .toList();
+    } catch (e) {
+      debugPrint('Error searching workouts: $e');
+      return _dummyWorkoutTasks
+          .where(
+            (task) => task.category.toLowerCase() == category.toLowerCase(),
+          )
+          .toList();
+    }
   }
 
   /// 특정 운동 조회
   Future<List<WorkoutTask>> fetchWorkoutTask(
     List<String> workoutTaskIds,
   ) async {
-    // TODO: Firestore 연동 시 실제 쿼리로 교체
-    return _dummyWorkoutTasks
-        .where((task) => workoutTaskIds.contains(task.id))
-        .toList();
+    if (workoutTaskIds.isEmpty) return [];
+    if (_isOffline) {
+      return _dummyWorkoutTasks
+          .where((task) => workoutTaskIds.contains(task.id))
+          .toList();
+    }
+
+    try {
+      // whereIn은 최대 10개까지만 가능하므로 10개씩 끊어서 요청 (여기서는 간단히 처리)
+      if (workoutTaskIds.length > 10) {
+        // 단순화를 위해 10개 이상은 개별 쿼리 병렬 처리 or 그냥 fetchAll 후 필터링
+        // MVP: Fetch All and Filter (데이터가 적으므로)
+        final all = await fetchWorkoutAllList();
+        return all.where((t) => workoutTaskIds.contains(t.id)).toList();
+      }
+
+      final snapshot = await FirebaseFirestore.instance
+          .collection('workouts')
+          .where('id', whereIn: workoutTaskIds)
+          .get();
+
+      final fetched = snapshot.docs
+          .map((doc) => WorkoutTask.fromMap(doc.data()))
+          .toList();
+
+      // 만약 Firestore에서 못 찾은 게 있으면 더미에서 찾기 (Mixed scenarios)
+      if (fetched.length < workoutTaskIds.length) {
+        final foundIds = fetched.map((e) => e.id).toSet();
+        final missingIds = workoutTaskIds.where((id) => !foundIds.contains(id));
+
+        final dummyFound = _dummyWorkoutTasks
+            .where((task) => missingIds.contains(task.id))
+            .toList();
+
+        fetched.addAll(dummyFound);
+      }
+
+      return fetched;
+    } catch (e) {
+      debugPrint('Error fetching workout tasks: $e');
+      return _dummyWorkoutTasks
+          .where((task) => workoutTaskIds.contains(task.id))
+          .toList();
+    }
+  }
+
+  /// 더미 데이터 업로드 (개발용)
+  Future<void> uploadDummyData() async {
+    final batch = FirebaseFirestore.instance.batch();
+    final collection = FirebaseFirestore.instance.collection('workouts');
+
+    for (final task in _dummyWorkoutTasks) {
+      final docRef = collection.doc(task.id);
+      batch.set(docRef, task.toMap());
+    }
+
+    await batch.commit();
+    debugPrint('Uploaded dummy data to Firestore');
   }
 
   /// Gemini에 전달할 운동 목록 텍스트

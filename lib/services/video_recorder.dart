@@ -9,36 +9,36 @@ import 'package:path_provider/path_provider.dart';
 // import 'package:ffmpeg_kit_flutter_video/ffmpeg_kit.dart';
 // import 'package:ffmpeg_kit_flutter_video/return_code.dart';
 
-/// VideoRecorder - Dual-stream 영상 녹화 서비스
-/// RGB 영상과 ControlNet(스켈레톤) 영상을 동시에 녹화
+/// VideoRecorder - Dual-stream Video Recording Service
+/// Records RGB video and ControlNet (Skeleton) video simultaneously
 class VideoRecorder {
-  // 설정
+  // Configuration
   static const int targetFps = 15;
   static const int targetWidth = 640;
   static const int targetHeight = 480;
 
-  // 상태
+  // State
   bool _isRecording = false;
   String? _sessionId;
   Directory? _tempDir;
 
-  // RGB 녹화
+  // RGB Recording
   CameraController? _cameraController;
   String? _rgbVideoPath;
 
-  // ControlNet 프레임 캡처
+  // ControlNet Frame Capture
   final List<String> _controlNetFramePaths = [];
   int _frameCount = 0;
   Timer? _frameTimer;
   Pose? _currentPose;
 
-  // 콜백
+  // Callbacks
   void Function(Pose?)? onPoseUpdate;
 
   bool get isRecording => _isRecording;
   String? get sessionId => _sessionId;
 
-  /// 녹화 시작
+  /// Start Recording
   Future<bool> startRecording(CameraController cameraController) async {
     if (_isRecording) return false;
 
@@ -46,18 +46,18 @@ class VideoRecorder {
       _cameraController = cameraController;
       _sessionId = DateTime.now().millisecondsSinceEpoch.toString();
 
-      // 임시 디렉토리 생성
+      // Create Temporary Directory
       final appDir = await getApplicationDocumentsDirectory();
       _tempDir = Directory('${appDir.path}/recordings/$_sessionId');
       if (!await _tempDir!.exists()) {
         await _tempDir!.create(recursive: true);
       }
 
-      // RGB 녹화 시작
+      // Start RGB Recording
       _rgbVideoPath = '${_tempDir!.path}/rgb_video.mp4';
       await _cameraController!.startVideoRecording();
 
-      // ControlNet 프레임 캡처 타이머 시작
+      // Start ControlNet Frame Capture Timer
       _frameCount = 0;
       _controlNetFramePaths.clear();
       _startControlNetCapture();
@@ -70,16 +70,16 @@ class VideoRecorder {
     }
   }
 
-  /// ControlNet 프레임 캡처 시작
+  /// Start ControlNet Frame Capture
   void _startControlNetCapture() {
-    // 15fps = 약 66ms 간격
+    // 15fps = approx 66ms interval
     _frameTimer = Timer.periodic(
       Duration(milliseconds: (1000 / targetFps).round()),
       (_) => _captureControlNetFrame(),
     );
   }
 
-  /// ControlNet 프레임 캡처
+  /// Capture ControlNet Frame
   Future<void> _captureControlNetFrame() async {
     if (!_isRecording || _currentPose == null || _tempDir == null) return;
 
@@ -87,7 +87,7 @@ class VideoRecorder {
       final framePath =
           '${_tempDir!.path}/frame_${_frameCount.toString().padLeft(5, '0')}.png';
 
-      // 스켈레톤 이미지 생성
+      // Generate Skeleton Image
       final imageBytes = await _generateSkeletonImage(_currentPose!);
       if (imageBytes != null) {
         await File(framePath).writeAsBytes(imageBytes);
@@ -99,20 +99,20 @@ class VideoRecorder {
     }
   }
 
-  /// 스켈레톤 이미지 생성 (검정 배경 + 흰색 스켈레톤)
+  /// Generate Skeleton Image (Black Background + White Skeleton)
   Future<Uint8List?> _generateSkeletonImage(Pose pose) async {
     try {
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
 
-      // 검정 배경
+      // Black Background
       final bgPaint = Paint()..color = const ui.Color(0xFF000000);
       canvas.drawRect(
         Rect.fromLTWH(0, 0, targetWidth.toDouble(), targetHeight.toDouble()),
         bgPaint,
       );
 
-      // 스켈레톤 그리기
+      // Draw Skeleton
       final paint = Paint()
         ..color = const ui.Color(0xFFFFFFFF)
         ..strokeWidth = 3.0
@@ -123,39 +123,39 @@ class VideoRecorder {
         ..strokeWidth = 8.0
         ..strokeCap = StrokeCap.round;
 
-      // 연결선 정의
+      // Define Connections
       final connections = [
-        // 얼굴
+        // Face
         [PoseLandmarkType.leftEar, PoseLandmarkType.leftEye],
         [PoseLandmarkType.leftEye, PoseLandmarkType.nose],
         [PoseLandmarkType.nose, PoseLandmarkType.rightEye],
         [PoseLandmarkType.rightEye, PoseLandmarkType.rightEar],
-        // 몸통
+        // Body
         [PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder],
         [PoseLandmarkType.leftShoulder, PoseLandmarkType.leftHip],
         [PoseLandmarkType.rightShoulder, PoseLandmarkType.rightHip],
         [PoseLandmarkType.leftHip, PoseLandmarkType.rightHip],
-        // 왼팔
+        // Left Arm
         [PoseLandmarkType.leftShoulder, PoseLandmarkType.leftElbow],
         [PoseLandmarkType.leftElbow, PoseLandmarkType.leftWrist],
-        // 오른팔
+        // Right Arm
         [PoseLandmarkType.rightShoulder, PoseLandmarkType.rightElbow],
         [PoseLandmarkType.rightElbow, PoseLandmarkType.rightWrist],
-        // 왼다리
+        // Left Leg
         [PoseLandmarkType.leftHip, PoseLandmarkType.leftKnee],
         [PoseLandmarkType.leftKnee, PoseLandmarkType.leftAnkle],
-        // 오른다리
+        // Right Leg
         [PoseLandmarkType.rightHip, PoseLandmarkType.rightKnee],
         [PoseLandmarkType.rightKnee, PoseLandmarkType.rightAnkle],
       ];
 
-      // 연결선 그리기
+      // Draw Connections
       for (final connection in connections) {
         final p1 = pose.landmarks[connection[0]];
         final p2 = pose.landmarks[connection[1]];
 
         if (p1 != null && p2 != null) {
-          // 좌표 정규화 (카메라 해상도 → 출력 해상도)
+          // Normalize Coordinates (Camera Resolution -> Output Resolution)
           final x1 =
               p1.x / _cameraController!.value.previewSize!.height * targetWidth;
           final y1 =
@@ -169,7 +169,7 @@ class VideoRecorder {
         }
       }
 
-      // 관절 포인트 그리기
+      // Draw Joint Points
       for (final landmark in pose.landmarks.values) {
         final x =
             landmark.x /
@@ -182,7 +182,7 @@ class VideoRecorder {
         canvas.drawPoints(ui.PointMode.points, [Offset(x, y)], pointPaint);
       }
 
-      // 이미지로 변환
+      // Convert to Image
       final picture = recorder.endRecording();
       final image = await picture.toImage(targetWidth, targetHeight);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -194,12 +194,12 @@ class VideoRecorder {
     }
   }
 
-  /// 현재 포즈 업데이트 (매 프레임 호출)
+  /// Update Current Pose (Called every frame)
   void updatePose(Pose? pose) {
     _currentPose = pose;
   }
 
-  /// 녹화 중지 및 파일 반환
+  /// Stop Recording and Return File
   Future<RecordingResult?> stopRecording() async {
     if (!_isRecording) return null;
 
@@ -207,21 +207,21 @@ class VideoRecorder {
     _frameTimer?.cancel();
 
     try {
-      // RGB 녹화 중지
+      // Stop RGB Recording
       final rgbFile = await _cameraController!.stopVideoRecording();
 
-      // RGB 파일을 원하는 위치로 이동
+      // Move RGB file to desired location
       final rgbDestPath = '${_tempDir!.path}/rgb_video.mp4';
       await File(rgbFile.path).copy(rgbDestPath);
       await File(rgbFile.path).delete();
 
-      // ControlNet 프레임들을 영상으로 변환
+      // Convert ControlNet frames to video
       String? controlNetPath;
       if (_controlNetFramePaths.isNotEmpty) {
         controlNetPath = await _convertFramesToVideo();
       }
 
-      // 프레임 파일들 정리
+      // Clean up frame files
       for (final path in _controlNetFramePaths) {
         try {
           await File(path).delete();
@@ -240,7 +240,7 @@ class VideoRecorder {
     }
   }
 
-  /// 프레임을 비디오로 변환 (FFmpeg 사용)
+  /// Convert Frames to Video (Using FFmpeg)
   Future<String?> _convertFramesToVideo() async {
     // FFmpeg dependency failed (404), disabling video conversion temporarily.
     debugPrint('Video conversion skipped due to missing FFmpeg library.');
@@ -257,7 +257,7 @@ class VideoRecorder {
     */
   }
 
-  /// 녹화 취소
+  /// Cancel Recording
   Future<void> cancelRecording() async {
     if (!_isRecording) return;
 
@@ -268,7 +268,7 @@ class VideoRecorder {
       await _cameraController?.stopVideoRecording();
     } catch (_) {}
 
-    // 임시 파일들 정리
+    // Clean up temporary files
     if (_tempDir != null && await _tempDir!.exists()) {
       await _tempDir!.delete(recursive: true);
     }
@@ -276,14 +276,14 @@ class VideoRecorder {
     _controlNetFramePaths.clear();
   }
 
-  /// 리소스 해제
+  /// Dispose Resources
   void dispose() {
     _frameTimer?.cancel();
     _controlNetFramePaths.clear();
   }
 }
 
-/// 녹화 결과
+/// Recording Result
 class RecordingResult {
   final String sessionId;
   final String rgbVideoPath;
@@ -295,10 +295,10 @@ class RecordingResult {
     this.controlNetVideoPath,
   });
 
-  /// RGB 파일
+  /// RGB File
   File get rgbFile => File(rgbVideoPath);
 
-  /// ControlNet 파일
+  /// ControlNet File
   File? get controlNetFile =>
       controlNetVideoPath != null ? File(controlNetVideoPath!) : null;
 }

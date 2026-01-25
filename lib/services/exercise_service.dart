@@ -1,99 +1,144 @@
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/exercise_config.dart';
 import '../models/workout_task.dart';
+import 'cache_service.dart';
+import 'firebase_service.dart';
 
 class ExerciseService {
   // TODO: Replace with your actual Firebase Cloud Function URL
   static const String _functionsUrl =
       'https://YOUR_REGION-YOUR_PROJECT.cloudfunctions.net/getExerciseConfig';
 
-  /// 운동 설정 가져오기
-  /// [useMock]이 true면 로컬 더미 데이터 반환
+  static const String _localWorkoutsKey = 'local_workouts';
+  final FirebaseService _firebaseService = FirebaseService();
+  final CacheService _cacheService = CacheService();
+
+  /// Get Exercise Configuration
+  /// Prioritizes cached file if available -> then Remote -> then Mock
   Future<ExerciseConfig?> getExerciseConfig(
-    String exerciseId, {
-    bool useMock = true,
+    WorkoutTask task, {
+    bool useMock = false,
   }) async {
     if (useMock) {
-      // Mock data logic
-      await Future.delayed(
-        const Duration(milliseconds: 500),
-      ); // Simulate network
-      return _getMockConfig(exerciseId);
+      await Future.delayed(const Duration(milliseconds: 500));
+      return _getMockConfig(task.id);
     }
 
     try {
-      final response = await http.get(
-        Uri.parse('$_functionsUrl?id=$exerciseId'),
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return ExerciseConfig.fromMap(data);
-      } else {
-        debugPrint('Failed to load exercise config: ${response.statusCode}');
-        return null;
+      // 1. Check Cache
+      if (task.configureUrl.isNotEmpty) {
+        final cachedPath = await _cacheService.getCachedPath(task.configureUrl);
+        if (cachedPath != null) {
+          final file = File(cachedPath);
+          if (await file.exists()) {
+            final content = await file.readAsString();
+            final data = json.decode(content);
+            debugPrint('Loaded config from cache: ${task.configureUrl}');
+            return ExerciseConfig.fromMap(data);
+          }
+        }
       }
+
+      // 2. Fetch from URL (Cloud Function / ConfigureUrl)
+      final url = task.configureUrl.isNotEmpty
+          ? task.configureUrl
+          : '$_functionsUrl?id=${task.id}';
+
+      if (url.startsWith('http')) {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          return ExerciseConfig.fromMap(data);
+        }
+      }
+
+      // 3. Fallback to Mock if no URL or fetch failed (for MVP)
+      debugPrint('Fetching config failed or empty URL. Using Mock.');
+      return _getMockConfig(task.id);
     } catch (e) {
       debugPrint('Error fetching exercise config: $e');
-      return null;
+      return _getMockConfig(task.id);
     }
   }
 
-  /// 운동 목록 가져오기 (Curriculum용)
-  Future<List<WorkoutTask>> getAvailableWorkouts({bool useMock = true}) async {
-    if (useMock) {
-      return _getMockWorkouts();
+  /// Get Workout List (Repository Pattern)
+  /// Merges: Built-in + Local + Remote
+  Future<List<WorkoutTask>> getAvailableWorkouts({
+    bool forceRefresh = false,
+  }) async {
+    final workoutsMap = <String, WorkoutTask>{};
+
+    // 1. Fetch Remote (Firebase) - This includes Built-in fallback if offline/empty
+    // We assume FirebaseService returns the "Master List"
+    try {
+      final remoteWorkouts = await _firebaseService.fetchWorkoutAllList();
+      for (final workout in remoteWorkouts) {
+        workoutsMap[workout.id] = workout;
+      }
+    } catch (e) {
+      debugPrint('Error fetching remote workouts: $e');
     }
-    // TODO: Implement Cloud Function call
-    return [];
+
+    // 2. Load Local Overrides/Additions
+    try {
+      final localWorkouts = await _getLocalWorkouts();
+      for (final workout in localWorkouts) {
+        // Local data might overwrite remote if we want (e.g., custom edits),
+        // or just add new ones. For now, let's treat Local as 'offline cache' mostly,
+        // but if it's a new ID, we add it. If same ID, maybe Local is fresher?
+        // Let's assume Remote is source of truth, but Local keeps downloaded status logic if we add it.
+        // Simple merge: ID based.
+        workoutsMap[workout.id] = workout;
+      }
+    } catch (e) {
+      debugPrint('Error loading local workouts: $e');
+    }
+
+    return workoutsMap.values.toList();
+  }
+
+  /// Load workouts saved locally
+  Future<List<WorkoutTask>> _getLocalWorkouts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_localWorkoutsKey);
+    if (jsonString == null) return [];
+
+    try {
+      final List<dynamic> jsonList = json.decode(jsonString);
+      return jsonList.map((e) => WorkoutTask.fromMap(e)).toList();
+    } catch (e) {
+      debugPrint('Error parsing local workouts: $e');
+      return [];
+    }
+  }
+
+  /// Save workout metadata to local storage
+  Future<void> saveWorkoutToLocal(WorkoutTask task) async {
+    final currentList = await _getLocalWorkouts();
+    // Remove existing if any (update)
+    currentList.removeWhere((t) => t.id == task.id);
+    currentList.add(task);
+
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = currentList.map((t) => t.toMap()).toList();
+    await prefs.setString(_localWorkoutsKey, json.encode(jsonList));
   }
 
   ExerciseConfig _getMockConfig(String exerciseId) {
-    // ID나 이름에 따라 분기
+    // Branch by ID or Name
     final id = exerciseId.toLowerCase();
     if (id.contains('squat')) return ExerciseConfig.defaultSquat();
     if (id.contains('push')) return ExerciseConfig.defaultPushup();
     if (id.contains('lunge')) return ExerciseConfig.defaultLunge();
+    if (id.contains('core'))
+      return ExerciseConfig.defaultPlank(); // Need to implement defaultPlank
 
     return ExerciseConfig.defaultSquat();
-  }
-
-  List<WorkoutTask> _getMockWorkouts() {
-    return [
-      WorkoutTask(
-        id: 'squat_01',
-        title: 'Air Squat',
-        description: 'Basic lower body exercise',
-        category: 'Squat',
-        difficulty: 1,
-        reps: 15,
-        sets: 3,
-        timeoutSec: 60,
-        thumbnail: 'https://placehold.co/100x100.png',
-        readyPoseImageUrl: 'https://placehold.co/200x300.png',
-        exampleVideoUrl:
-            'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
-        configureUrl: '',
-        guideAudioUrl: '',
-      ),
-      WorkoutTask(
-        id: 'pushup_01',
-        title: 'Push-up',
-        description: 'Upper body strength',
-        category: 'Push',
-        difficulty: 2,
-        reps: 10,
-        sets: 3,
-        timeoutSec: 60,
-        thumbnail: 'https://placehold.co/100x100.png',
-        readyPoseImageUrl: 'https://placehold.co/200x300.png',
-        exampleVideoUrl:
-            'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
-        configureUrl: '',
-        guideAudioUrl: '',
-      ),
-    ];
   }
 }

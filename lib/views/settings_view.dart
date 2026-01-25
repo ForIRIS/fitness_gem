@@ -7,7 +7,7 @@ import 'camera_view.dart';
 import 'ai_interview_view.dart';
 import 'settings/edit_profile_view.dart';
 
-/// SettingsView - 설정 화면
+/// SettingsView - Settings Screen
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
 
@@ -104,7 +104,7 @@ class _SettingsViewState extends State<SettingsView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 프로필 정보
+                  // Profile Info
                   _buildSection(
                     title: AppLocalizations.of(context)!.profileInfo,
                     trailing: IconButton(
@@ -156,7 +156,7 @@ class _SettingsViewState extends State<SettingsView> {
 
                   const SizedBox(height: 24),
 
-                  // AI 컨설팅
+                  // AI Consulting
                   _buildSection(
                     title: AppLocalizations.of(context)!.aiConsulting,
                     subtitle: AppLocalizations.of(
@@ -167,7 +167,7 @@ class _SettingsViewState extends State<SettingsView> {
 
                   const SizedBox(height: 24),
 
-                  // 보호자 연락처
+                  // Guardian Contact
                   _buildSection(
                     title: AppLocalizations.of(context)!.guardianPhone,
                     subtitle: AppLocalizations.of(
@@ -254,10 +254,12 @@ class _SettingsViewState extends State<SettingsView> {
 
                   const SizedBox(height: 24),
 
-                  // API Key 설정
+                  // API Key Settings
                   _buildSection(
                     title: 'Gemini API Key',
-                    subtitle: AppLocalizations.of(context)!.testCamera,
+                    subtitle: AppLocalizations.of(
+                      context,
+                    )!.apiKeyDialogDescription,
                     child: Column(
                       children: [
                         TextField(
@@ -311,7 +313,7 @@ class _SettingsViewState extends State<SettingsView> {
 
                   const SizedBox(height: 24),
 
-                  // 앱 정보
+                  // App Info
                   _buildSection(
                     title: AppLocalizations.of(context)!.appVersion,
                     child: Column(
@@ -330,7 +332,7 @@ class _SettingsViewState extends State<SettingsView> {
 
                   const SizedBox(height: 24),
 
-                  // 기능 테스트
+                  // Feature Tests
                   _buildSection(
                     title: AppLocalizations.of(context)!.testCamera,
                     child: ListTile(
@@ -349,7 +351,7 @@ class _SettingsViewState extends State<SettingsView> {
                         size: 16,
                       ),
                       onTap: () {
-                        // 커리큘럼 없이 카메라 뷰 실행 (테스트 모드)
+                        // Launch Camera View without curriculum (Test Mode)
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -467,7 +469,7 @@ class _SettingsViewState extends State<SettingsView> {
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: canReinterview ? _startReinterview : null,
-            icon: const Icon(Icons.refresh, size: 18),
+            icon: const Icon(Icons.auto_awesome, size: 18),
             label: Text(
               canReinterview
                   ? AppLocalizations.of(context)!.reconsult
@@ -507,7 +509,7 @@ class _SettingsViewState extends State<SettingsView> {
       ),
     );
 
-    // 인터뷰 완료 시 프로필 다시 로드
+    // Reload profile on interview completion
     if (result == true) {
       await _loadData();
       if (mounted) {

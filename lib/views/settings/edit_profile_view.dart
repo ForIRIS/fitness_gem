@@ -29,11 +29,12 @@ class _EditProfileViewState extends State<EditProfileView> {
   ];
 
   // State
+  late TextEditingController _nicknameController;
   late String _selectedAgeRange;
-  late Set<String> _selectedInjuries;
+  final Set<String> _selectedInjuries = {};
   late TextEditingController _customInjuryController;
   late bool _showCustomInjury;
-  late Set<String> _selectedGoals;
+  final Set<String> _selectedGoals = {};
   late TextEditingController _customGoalController;
   late bool _showCustomGoal;
   late String _experienceLevel;
@@ -47,11 +48,11 @@ class _EditProfileViewState extends State<EditProfileView> {
 
   void _initializeState() {
     final p = widget.profile;
+    _nicknameController = TextEditingController(text: p.nickname);
     _selectedAgeRange = p.age;
     _experienceLevel = p.experienceLevel;
 
     // Injuries
-    _selectedInjuries = {};
     _customInjuryController = TextEditingController();
     _showCustomInjury = false;
 
@@ -73,7 +74,6 @@ class _EditProfileViewState extends State<EditProfileView> {
     }
 
     // Goals
-    _selectedGoals = {};
     _customGoalController = TextEditingController();
     _showCustomGoal = false;
     if (p.goal.isNotEmpty) {
@@ -122,6 +122,7 @@ class _EditProfileViewState extends State<EditProfileView> {
           : OnboardingProfilePage(
               selectedAgeRange: _selectedAgeRange,
               onAgePickerTap: _showAgePickerBottomSheet,
+              nicknameController: _nicknameController,
               selectedInjuries: _selectedInjuries,
               onInjurySelected: _onInjurySelected,
               showCustomInjury: _showCustomInjury,
@@ -174,6 +175,9 @@ class _EditProfileViewState extends State<EditProfileView> {
     setState(() => _isLoading = true);
 
     // Update profile object
+    widget.profile.nickname = _nicknameController.text.trim().isEmpty
+        ? null
+        : _nicknameController.text.trim();
     widget.profile.age = _selectedAgeRange;
     widget.profile.experienceLevel = _experienceLevel;
 

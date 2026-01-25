@@ -7,6 +7,7 @@ import '../models/user_profile.dart';
 import '../models/session_analysis.dart';
 import '../services/firebase_service.dart';
 import '../services/gemini_service.dart';
+import '../services/cache_service.dart';
 import 'camera_view.dart';
 import 'ai_chat_view.dart';
 import 'settings_view.dart';
@@ -157,7 +158,26 @@ class _HomeViewState extends State<HomeView> {
       return;
     }
 
-    // 리소스 캐싱 화면으로 이동
+    // Check for cached resources first
+    final cacheService = CacheService();
+    final isCached = await cacheService.areAllCurriculumResourcesCached(
+      _todayCurriculum!,
+    );
+
+    if (isCached && mounted) {
+      // Skip download screen and go straight to workout
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CameraView(curriculum: _todayCurriculum),
+        ),
+      );
+      return;
+    }
+
+    // Navigate to Resource Caching Screen
+    if (!mounted) return;
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -246,11 +266,9 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
           const SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
-            AppLocalizations.of(context)!.welcomeMessage(
-              _userProfile?.age ?? '',
-              _userProfile?.experienceLevel ?? '',
-            ),
+            _getWelcomeMessage(),
             style: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
 
@@ -629,5 +647,26 @@ class _HomeViewState extends State<HomeView> {
         ),
       ),
     );
+  }
+
+  String _getWelcomeMessage() {
+    if (_userProfile == null) return '';
+
+    final nickname = _userProfile!.nickname;
+    final tier = _userProfile!.userTier; // e.g. 'free', 'premium'
+
+    // 1. Nickname exists
+    if (nickname != null && nickname.isNotEmpty) {
+      // Future: Check subscription tier
+      if (tier != 'free') {
+        return AppLocalizations.of(
+          context,
+        )!.welcomeUserTier(tier.toUpperCase(), nickname);
+      }
+      return AppLocalizations.of(context)!.welcomeUser(nickname);
+    }
+
+    // 2. No nickname -> "Hello Trainee"
+    return AppLocalizations.of(context)!.welcomeTrainee;
   }
 }
