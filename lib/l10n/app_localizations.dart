@@ -392,6 +392,12 @@ abstract class AppLocalizations {
   /// **'Phone number for emergency SMS alerts.'**
   String get guardianPhoneDescription;
 
+  /// No description provided for @guardianStorageNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'This information is stored LOCALLY on your device for privacy.'**
+  String get guardianStorageNotice;
+
   /// No description provided for @setUpLater.
   ///
   /// In en, this message translates to:
@@ -589,6 +595,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hello, {age}-year-old {level} member!'**
   String welcomeMessage(String age, String level);
+
+  /// No description provided for @welcomeTrainee.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello Trainee'**
+  String get welcomeTrainee;
+
+  /// No description provided for @welcomeUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello {name}'**
+  String welcomeUser(String name);
+
+  /// No description provided for @welcomeUserTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello {tier} Member {name}'**
+  String welcomeUserTier(String tier, String name);
+
+  /// No description provided for @nickname.
+  ///
+  /// In en, this message translates to:
+  /// **'Nickname (Optional)'**
+  String get nickname;
+
+  /// No description provided for @enterNickname.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your nickname'**
+  String get enterNickname;
 
   /// No description provided for @startWorkout.
   ///

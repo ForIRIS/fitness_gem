@@ -60,7 +60,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   bool _pendingAIStart = false; // 면책 동의 후 AI로 갈지 여부
 
   // 기능 설정
-  bool _fallDetectionEnabled = true;
+  bool _fallDetectionEnabled = false;
 
   @override
   Widget build(BuildContext context) {

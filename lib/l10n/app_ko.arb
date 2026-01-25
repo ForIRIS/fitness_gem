@@ -56,6 +56,7 @@
   "fallDetectionDescription": "운동 중 넘어짐을 감지합니다.",
   "guardianPhone": "보호자 전화번호 (선택)",
   "guardianPhoneDescription": "비상 시 SMS 알림을 보낼 번호입니다.",
+  "guardianStorageNotice": "이 정보는 개인정보 보호를 위해 기기에만 저장됩니다.",
   "setUpLater": "나중에 설정할게요",
 
   "disclaimerTitle": "의료 면책 조항",

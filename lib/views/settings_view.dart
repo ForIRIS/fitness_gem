@@ -247,6 +247,28 @@ class _SettingsViewState extends State<SettingsView> {
                                   ),
                                 ),
                               ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.verified_user_outlined,
+                                    color: Colors.greenAccent,
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.guardianStorageNotice,
+                                      style: const TextStyle(
+                                        color: Colors.greenAccent,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           )
                         : const SizedBox.shrink(),

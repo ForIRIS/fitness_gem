@@ -56,6 +56,7 @@
   "fallDetectionDescription": "Detects falls during exercise.",
   "guardianPhone": "Guardian Phone (Optional)",
   "guardianPhoneDescription": "Phone number for emergency SMS alerts.",
+  "guardianStorageNotice": "This information is stored LOCALLY on your device for privacy.",
   "setUpLater": "Set up later",
 
   "disclaimerTitle": "Medical Disclaimer",

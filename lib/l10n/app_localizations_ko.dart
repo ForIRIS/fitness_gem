@@ -156,6 +156,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get guardianPhoneDescription => '비상 시 SMS 알림을 보낼 번호입니다.';
 
   @override
+  String get guardianStorageNotice => '이 정보는 개인정보 보호를 위해 기기에만 저장됩니다.';
+
+  @override
   String get setUpLater => '나중에 설정할게요';
 
   @override
@@ -260,6 +263,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String welcomeMessage(String age, String level) {
     return '안녕하세요, $age세 $level 회원님!';
   }
+
+  @override
+  String get welcomeTrainee => '안녕하세요, 연습생님!';
+
+  @override
+  String welcomeUser(String name) {
+    return '안녕하세요, $name님!';
+  }
+
+  @override
+  String welcomeUserTier(String tier, String name) {
+    return '안녕하세요, $tier 멤버 $name님!';
+  }
+
+  @override
+  String get nickname => '닉네임 (선택)';
+
+  @override
+  String get enterNickname => '닉네임을 입력하세요';
 
   @override
   String get startWorkout => '운동 시작';

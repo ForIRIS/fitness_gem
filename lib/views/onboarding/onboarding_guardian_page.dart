@@ -103,20 +103,33 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
               },
             ),
             const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.verified_user_outlined,
+                  color: Colors.greenAccent,
+                  size: 14,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    AppLocalizations.of(context)!.guardianStorageNotice,
+                    style: const TextStyle(
+                      color: Colors.greenAccent,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             Text(
               AppLocalizations.of(context)!.guardianPhoneDescription,
               style: const TextStyle(color: Colors.white30, fontSize: 12),
             ),
           ],
-
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: widget.onSkip,
-            child: Text(
-              AppLocalizations.of(context)!.setUpLater,
-              style: const TextStyle(color: Colors.white54),
-            ),
-          ),
         ],
       ),
     );

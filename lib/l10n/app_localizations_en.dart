@@ -161,6 +161,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Phone number for emergency SMS alerts.';
 
   @override
+  String get guardianStorageNotice =>
+      'This information is stored LOCALLY on your device for privacy.';
+
+  @override
   String get setUpLater => 'Set up later';
 
   @override
@@ -267,6 +271,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String welcomeMessage(String age, String level) {
     return 'Hello, $age-year-old $level member!';
   }
+
+  @override
+  String get welcomeTrainee => 'Hello Trainee';
+
+  @override
+  String welcomeUser(String name) {
+    return 'Hello $name';
+  }
+
+  @override
+  String welcomeUserTier(String tier, String name) {
+    return 'Hello $tier Member $name';
+  }
+
+  @override
+  String get nickname => 'Nickname (Optional)';
+
+  @override
+  String get enterNickname => 'Enter your nickname';
 
   @override
   String get startWorkout => 'Start Workout';

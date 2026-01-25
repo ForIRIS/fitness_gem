@@ -26,7 +26,7 @@ class UserProfile {
     this.nickname,
     this.userTier = 'free',
     this.guardianPhone,
-    this.fallDetectionEnabled = true, // 기본값 활성화
+    this.fallDetectionEnabled = false, // 기본값 비활성화 (Optional)
     this.interviewSummary,
     this.extractedDetails,
     this.lastInterviewDate,
@@ -87,7 +87,7 @@ class UserProfile {
       nickname: map['nickname'],
       userTier: map['userTier'] ?? 'free',
       guardianPhone: map['guardianPhone'],
-      fallDetectionEnabled: map['fallDetectionEnabled'] ?? true,
+      fallDetectionEnabled: map['fallDetectionEnabled'] ?? false,
       interviewSummary: map['interviewSummary'],
       extractedDetails: map['extractedDetails'] != null
           ? Map<String, String>.from(map['extractedDetails'])
