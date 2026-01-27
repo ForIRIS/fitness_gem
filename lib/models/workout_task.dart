@@ -6,6 +6,7 @@ class WorkoutTask {
   final String id;
   final String title;
   final String description;
+  final String advice;
   final String thumbnail;
   final String readyPoseImageUrl;
   final String exampleVideoUrl;
@@ -25,6 +26,7 @@ class WorkoutTask {
     required this.id,
     required this.title,
     required this.description,
+    required this.advice,
     required this.thumbnail,
     required this.readyPoseImageUrl,
     required this.exampleVideoUrl,
@@ -45,6 +47,7 @@ class WorkoutTask {
       id: map['id'] ?? '',
       title: map['title'] ?? '',
       description: map['description'] ?? '',
+      advice: map['advice'] ?? '',
       thumbnail: map['thumbnail'] ?? '',
       readyPoseImageUrl: map['readyPoseImageUrl'] ?? '',
       exampleVideoUrl: map['exampleVideoUrl'] ?? '',
@@ -63,6 +66,7 @@ class WorkoutTask {
       'id': id,
       'title': title,
       'description': description,
+      'advice': advice,
       'thumbnail': thumbnail,
       'readyPoseImageUrl': readyPoseImageUrl,
       'exampleVideoUrl': exampleVideoUrl,
@@ -91,13 +95,13 @@ class WorkoutTask {
   String get categoryDisplayName {
     switch (category) {
       case 'squat':
-        return '하체';
+        return 'Squat';
       case 'push':
-        return '상체';
+        return 'Push';
       case 'core':
-        return '코어';
+        return 'Core';
       case 'lunge':
-        return '런지';
+        return 'Lunge';
       default:
         return category;
     }
@@ -107,13 +111,13 @@ class WorkoutTask {
   String get difficultyDisplayName {
     switch (difficulty) {
       case 1:
-        return '입문';
+        return 'Beginner';
       case 2:
-        return '초급';
+        return 'Intermediate';
       case 3:
-        return '중급';
+        return 'Advanced';
       case 4:
-        return '고급';
+        return 'Expert';
       default:
         return 'Level $difficulty';
     }

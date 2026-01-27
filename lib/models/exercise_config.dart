@@ -22,7 +22,7 @@ class ExerciseConfig {
       id: map['id'] ?? '',
       classLabels: map['class_labels'],
       medianStats: map['median_stats'],
-      coachingCues: map['coaching_cues'] ?? map['coaching_cue'],
+      coachingCues: map['coaching_cues'],
     );
   }
 
@@ -39,65 +39,6 @@ class ExerciseConfig {
 
   factory ExerciseConfig.fromJson(String source) =>
       ExerciseConfig.fromMap(json.decode(source));
-
-  /// 문자열을 PoseLandmarkType으로 변환
-  static PoseLandmarkType? _stringToLandmarkType(String str) {
-    final lower = str.toLowerCase();
-    switch (lower) {
-      case 'nose':
-        return PoseLandmarkType.nose;
-      case 'lefteye':
-      case 'left_eye':
-        return PoseLandmarkType.leftEye;
-      case 'righteye':
-      case 'right_eye':
-        return PoseLandmarkType.rightEye;
-      case 'leftear':
-      case 'left_ear':
-        return PoseLandmarkType.leftEar;
-      case 'rightear':
-      case 'right_ear':
-        return PoseLandmarkType.rightEar;
-      case 'leftshoulder':
-      case 'left_shoulder':
-        return PoseLandmarkType.leftShoulder;
-      case 'rightshoulder':
-      case 'right_shoulder':
-        return PoseLandmarkType.rightShoulder;
-      case 'leftelbow':
-      case 'left_elbow':
-        return PoseLandmarkType.leftElbow;
-      case 'rightelbow':
-      case 'right_elbow':
-        return PoseLandmarkType.rightElbow;
-      case 'leftwrist':
-      case 'left_wrist':
-        return PoseLandmarkType.leftWrist;
-      case 'rightwrist':
-      case 'right_wrist':
-        return PoseLandmarkType.rightWrist;
-      case 'lefthip':
-      case 'left_hip':
-        return PoseLandmarkType.leftHip;
-      case 'righthip':
-      case 'right_hip':
-        return PoseLandmarkType.rightHip;
-      case 'leftknee':
-      case 'left_knee':
-        return PoseLandmarkType.leftKnee;
-      case 'rightknee':
-      case 'right_knee':
-        return PoseLandmarkType.rightKnee;
-      case 'leftankle':
-      case 'left_ankle':
-        return PoseLandmarkType.leftAnkle;
-      case 'rightankle':
-      case 'right_ankle':
-        return PoseLandmarkType.rightAnkle;
-      default:
-        return null;
-    }
-  }
 
   /// 기본 스쿼트 설정 (테스트용)
   static ExerciseConfig defaultSquat() {
