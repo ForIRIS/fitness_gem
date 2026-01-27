@@ -1,14 +1,12 @@
 {
   "@@locale": "en",
-  
   "appTitle": "Fitness Gem",
-  
   "permissionTitle": "Permission Request",
   "permissionGrantedTitle": "Permissions Granted",
   "permissionMessage": "Camera and microphone access is required for pose analysis.",
   "permissionGrantedMessage": "All permissions granted.\nPlease proceed to the next step.",
   "grantPermission": "Grant Permission",
-  "skip": "Skip (Limited Features)",
+  "skip": "Skip",
   "next": "Next",
   "previous": "Previous",
   "start": "Start",
@@ -16,7 +14,6 @@
   "confirm": "Confirm",
   "save": "Save",
   "close": "Close",
-  
   "profileInfo": "Profile Information",
   "profileDescription": "Enter your information for personalized workout recommendations.",
   "ageRange": "Age Range",
@@ -32,7 +29,6 @@
   "hip": "Hip",
   "other": "Other",
   "enterInjuryDetails": "Enter injury details",
-  
   "fitnessGoal": "Fitness Goal",
   "strengthBuilding": "Strength Building",
   "weightLoss": "Weight Loss",
@@ -41,15 +37,12 @@
   "postureCorrection": "Posture Correction",
   "rehabilitation": "Rehabilitation",
   "enterGoalDetails": "Enter your goal",
-  
   "experienceLevel": "Experience Level",
   "beginner": "Beginner (< 1 year)",
   "intermediate": "Intermediate (1-3 years)",
   "advanced": "Advanced (3+ years)",
-  
   "targetExercise": "Target Exercise",
   "selectExercise": "Select a target exercise",
-  
   "safetySettings": "Safety Settings",
   "safetyDescription": "Configure fall detection and emergency contacts.",
   "enableFallDetection": "Enable Fall Detection",
@@ -58,18 +51,14 @@
   "guardianPhoneDescription": "Phone number for emergency SMS alerts.",
   "guardianStorageNotice": "This information is stored LOCALLY on your device for privacy.",
   "setUpLater": "Set up later",
-
   "disclaimerTitle": "Medical Disclaimer",
   "disclaimerMessage": "This app provides AI-based workout analysis but is not a medical device. Please consult a doctor before starting any exercise program.",
   "agreeAndStart": "Agree and Start",
-  
   "aiConsultant": "Talk with AI Consultant",
   "aiConsultantDescription": "Get a more accurate personalized curriculum",
-  
   "disclaimer": "⚠️ Medical Disclaimer",
   "disclaimerContent": "This app does not provide medical advice.\nConsult a healthcare professional before exercising.\nStop immediately if you experience pain or injury.",
   "autoRedirect": "Redirecting in 3 seconds...",
-  
   "settings": "Settings",
   "aiConsulting": "AI Consulting",
   "aiConsultingSubtitle": "Deep consultation for personalized curriculum",
@@ -85,7 +74,6 @@
   "weeklyLimitMessage": "You can consult once a week",
   "aiConsultResult": "AI Consultation Result",
   "consultationUpdated": "Consultation results updated.",
-  
   "permissionRequired": "Permission Required",
   "permissionDeniedMessage": "Camera and microphone permissions were denied.\nPlease enable them in Settings.",
   "openSettings": "Open Settings",
@@ -107,22 +95,32 @@
   "welcomeUser": "Hello {name}",
   "@welcomeUser": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "welcomeUserTier": "Hello {tier} Member {name}",
   "@welcomeUserTier": {
     "placeholders": {
-      "tier": { "type": "String" },
-      "name": { "type": "String" }
+      "tier": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
     }
   },
   "nickname": "Nickname (Optional)",
   "enterNickname": "Enter your nickname",
   "@welcomeMessage": {
     "placeholders": {
-      "age": { "type": "String" },
-      "level": { "type": "String" }
+      "age": {
+        "type": "String"
+      },
+      "level": {
+        "type": "String"
+      }
     }
   },
   "startWorkout": "Start Workout",
@@ -131,7 +129,9 @@
   "estimatedTime": "~{minutes} min",
   "@estimatedTime": {
     "placeholders": {
-      "minutes": { "type": "Object" }
+      "minutes": {
+        "type": "Object"
+      }
     }
   },
   "generatingWorkout": "Generating workout.",
@@ -147,14 +147,18 @@
   "curriculumRecommendation": "I recommend {title}!",
   "@curriculumRecommendation": {
     "placeholders": {
-      "title": { "type": "String" }
+      "title": {
+        "type": "String"
+      }
     }
   },
   "curriculumGenerationError": "Sorry, failed to generate curriculum. Please try again.",
   "errorOccurred": "An error occurred: {error}",
   "@errorOccurred": {
     "placeholders": {
-      "error": { "type": "Object" }
+      "error": {
+        "type": "Object"
+      }
     }
   },
   "viewDetail": "View Details",
@@ -180,7 +184,9 @@
   "downloadFailed": "Download failed: {error}",
   "@downloadFailed": {
     "placeholders": {
-      "error": { "type": "Object" }
+      "error": {
+        "type": "Object"
+      }
     }
   },
   "ready": "Ready!",

@@ -1,14 +1,12 @@
 {
   "@@locale": "ko",
-  
   "appTitle": "피트니스 젬",
-  
   "permissionTitle": "권한 요청",
   "permissionGrantedTitle": "권한 확인 완료",
   "permissionMessage": "자세 분석을 위해 카메라와 마이크\n접근 권한이 필요합니다.",
   "permissionGrantedMessage": "모든 권한이 허용되었습니다.\n다음 단계로 이동해주세요.",
   "grantPermission": "권한 허용",
-  "skip": "건너뛰기 (기능 제한됨)",
+  "skip": "건너뛰기",
   "next": "다음",
   "previous": "이전",
   "start": "시작하기",
@@ -16,7 +14,6 @@
   "confirm": "확인",
   "save": "저장",
   "close": "닫기",
-  
   "profileInfo": "프로필 정보",
   "profileDescription": "맞춤 운동 추천을 위해 정보를 입력해주세요.",
   "ageRange": "나이대",
@@ -32,7 +29,6 @@
   "hip": "고관절",
   "other": "기타",
   "enterInjuryDetails": "부상 부위를 입력하세요",
-  
   "fitnessGoal": "운동 목표",
   "strengthBuilding": "근력 강화",
   "weightLoss": "체중 감량",
@@ -41,15 +37,12 @@
   "postureCorrection": "자세 교정",
   "rehabilitation": "재활 운동",
   "enterGoalDetails": "운동 목표를 입력하세요",
-  
   "experienceLevel": "운동 경험",
   "beginner": "입문 (1년 미만)",
   "intermediate": "중급 (1~3년)",
   "advanced": "고급 (3년 이상)",
-  
   "targetExercise": "타겟 운동",
   "selectExercise": "타겟 운동을 선택하세요",
-  
   "safetySettings": "안전 설정",
   "safetyDescription": "낙상 감지 및 비상 연락처를 설정합니다.",
   "enableFallDetection": "낙상 감지 기능 사용",
@@ -58,18 +51,14 @@
   "guardianPhoneDescription": "비상 시 SMS 알림을 보낼 번호입니다.",
   "guardianStorageNotice": "이 정보는 개인정보 보호를 위해 기기에만 저장됩니다.",
   "setUpLater": "나중에 설정할게요",
-
   "disclaimerTitle": "의료 면책 조항",
   "disclaimerMessage": "이 앱은 AI 기반 운동 분석을 제공하지만 의료 기기가 아닙니다. 운동 프로그램을 시작하기 전에 의사와 상담하십시오.",
   "agreeAndStart": "동의하고 시작하기",
-  
   "aiConsultant": "AI 컨설턴트와 상담하기",
   "aiConsultantDescription": "더 정확한 맞춤 커리큘럼을 받을 수 있어요",
-  
   "disclaimer": "⚠️ 의료 조언 면책",
   "disclaimerContent": "본 앱은 의료 조언을 제공하지 않습니다.\n운동 전 전문 의료진과 상담하세요.\n부상이나 통증 발생 시 즉시 운동을 중단하세요.",
   "autoRedirect": "3초 후 자동으로 넘어갑니다...",
-  
   "settings": "설정",
   "aiConsulting": "AI 컨설팅",
   "aiConsultingSubtitle": "맞춤 커리큘럼을 위한 심층 상담",
@@ -85,7 +74,6 @@
   "weeklyLimitMessage": "일주일에 한 번 상담을 받을 수 있어요",
   "aiConsultResult": "AI 상담 결과",
   "consultationUpdated": "상담 결과가 업데이트되었습니다.",
-  
   "permissionRequired": "권한 필요",
   "permissionDeniedMessage": "카메라와 마이크 권한이 거부되었습니다.\n설정에서 직접 권한을 허용해주세요.",
   "openSettings": "설정 열기",
@@ -107,22 +95,32 @@
   "welcomeUser": "안녕하세요, {name}님!",
   "@welcomeUser": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "welcomeUserTier": "안녕하세요, {tier} 멤버 {name}님!",
   "@welcomeUserTier": {
     "placeholders": {
-      "tier": { "type": "String" },
-      "name": { "type": "String" }
+      "tier": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
     }
   },
   "nickname": "닉네임 (선택)",
   "enterNickname": "닉네임을 입력하세요",
   "@welcomeMessage": {
     "placeholders": {
-      "age": { "type": "String" },
-      "level": { "type": "String" }
+      "age": {
+        "type": "String"
+      },
+      "level": {
+        "type": "String"
+      }
     }
   },
   "startWorkout": "운동 시작",
@@ -131,7 +129,9 @@
   "estimatedTime": "약 {minutes}분",
   "@estimatedTime": {
     "placeholders": {
-      "minutes": { "type": "Object" }
+      "minutes": {
+        "type": "Object"
+      }
     }
   },
   "generatingWorkout": "운동 생성 중...",
@@ -147,14 +147,18 @@
   "curriculumRecommendation": "{title}을 추천드립니다!",
   "@curriculumRecommendation": {
     "placeholders": {
-      "title": { "type": "String" }
+      "title": {
+        "type": "String"
+      }
     }
   },
   "curriculumGenerationError": "죄송합니다, 커리큘럼을 생성하지 못했습니다. 다시 시도해주세요.",
   "errorOccurred": "오류가 발생했습니다: {error}",
   "@errorOccurred": {
     "placeholders": {
-      "error": { "type": "Object" }
+      "error": {
+        "type": "Object"
+      }
     }
   },
   "viewDetail": "상세 보기",
@@ -180,7 +184,9 @@
   "downloadFailed": "다운로드 실패: {error}",
   "@downloadFailed": {
     "placeholders": {
-      "error": { "type": "Object" }
+      "error": {
+        "type": "Object"
+      }
     }
   },
   "ready": "준비 완료!",

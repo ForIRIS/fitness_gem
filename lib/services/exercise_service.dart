@@ -133,11 +133,58 @@ class ExerciseService {
   ExerciseConfig _getMockConfig(String exerciseId) {
     // Branch by ID or Name
     final id = exerciseId.toLowerCase();
-    if (id.contains('squat')) return ExerciseConfig.defaultSquat();
-    if (id.contains('push')) return ExerciseConfig.defaultPushup();
-    if (id.contains('lunge')) return ExerciseConfig.defaultLunge();
-    if (id.contains('core'))
-      return ExerciseConfig.defaultPlank(); // Need to implement defaultPlank
+
+    // Common Mock Data matching User Request structure
+    final mockClassLabels = {
+      "classes": [
+        "1_Ready",
+        "2_Right_Down",
+        "3_Right_Peak",
+        "4_Right_Up",
+        "5_Left_Down",
+        "6_Left_Peak",
+        "7_Left_Up",
+        "8_Right_up",
+      ],
+      "num_classes": 8,
+      "input_shape": [1, 30, 33, 3],
+      "input_name": "landmarks",
+      "feature_set": "strength_legs",
+      "runtime": "onnxruntime-mobile",
+      "opset_version": 18,
+    };
+
+    final mockMedianStats = {
+      "feature_set": "strength_legs",
+      "labels": {
+        "1_Ready": {"cosine_hip_abduction": 0.8526791930198669},
+      },
+    };
+
+    final mockCoachingCues = {
+      "1_Ready": {
+        "hip_knee_ankle_l": {
+          "movement": "Keep your chest upright and core tight the movement.",
+        },
+      },
+    };
+
+    if (id.contains('squat')) {
+      return ExerciseConfig.defaultSquat().copyWith(
+        classLabels: mockClassLabels,
+        medianStats: mockMedianStats,
+        coachingCues: mockCoachingCues,
+      );
+    }
+    if (id.contains('push')) {
+      return ExerciseConfig.defaultPushup();
+    }
+    if (id.contains('lunge')) {
+      return ExerciseConfig.defaultLunge();
+    }
+    if (id.contains('core')) {
+      return ExerciseConfig.defaultPlank();
+    }
 
     return ExerciseConfig.defaultSquat();
   }

@@ -16,7 +16,6 @@ class WorkoutTask {
   final int timeoutSec;
   final String category; // squat, push, core, lunge
   final int difficulty; // 1-4
-  final String? koreanAdvice; // 한국어 조언
 
   // 실행 시 Gemini가 조정한 값
   int adjustedReps;
@@ -36,7 +35,6 @@ class WorkoutTask {
     required this.timeoutSec,
     required this.category,
     required this.difficulty,
-    this.koreanAdvice,
     int? adjustedReps,
     int? adjustedSets,
   }) : adjustedReps = adjustedReps ?? reps,
@@ -57,7 +55,6 @@ class WorkoutTask {
       timeoutSec: map['timeout_sec'] ?? 60,
       category: map['category'] ?? 'squat',
       difficulty: map['difficulty'] ?? 1,
-      koreanAdvice: map['korean_advice'],
     );
   }
 
@@ -76,7 +73,6 @@ class WorkoutTask {
       'timeout_sec': timeoutSec,
       'category': category,
       'difficulty': difficulty,
-      'korean_advice': koreanAdvice,
     };
   }
 
