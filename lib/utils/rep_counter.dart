@@ -1,92 +1,140 @@
-import 'dart:math';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import '../models/exercise_config.dart';
+import '../services/workout_model_service.dart';
 
-/// RepCounter - Rep 카운팅 로직
+/// RepCounter - ML 기반 Rep 카운팅 및 코칭 로직
 class RepCounter {
   final ExerciseConfig config;
+  final WorkoutModelService _modelService = WorkoutModelService();
+
+  // 설정
+  static const int _bufferSize = 30;
+  static const double _inferenceThreshold = 0.7; // State 확정 임계값
 
   // 상태
-  bool _isInStartPosition = true;
-  bool _wasAtTurnPoint = false;
+  final List<List<List<double>>> _poseBuffer = [];
   int _repCount = 0;
+  String? _currentState;
+  bool _isProcessing = false;
+
+  // 코칭 콜백
+  void Function(String)? onCoachingMessage;
 
   RepCounter(this.config);
 
   /// 현재 Rep 카운트
   int get repCount => _repCount;
 
+  /// 현재 상태
+  String? get currentState => _currentState;
+
   /// 카운터 리셋
   void reset() {
     _repCount = 0;
-    _isInStartPosition = true;
-    _wasAtTurnPoint = false;
+    _poseBuffer.clear();
+    _currentState = null;
+    _isProcessing = false;
   }
 
   /// 포즈를 분석하여 Rep 카운트
-  /// 반환값: 새로운 Rep이 카운트되었으면 true
+  /// 반환값: 새로운 Rep이 카운트되었으면 true (비동기 분석 결과는 별도 처리)
   bool processFrame(Pose pose) {
-    if (config.landmarks.length < 3) return false;
+    // 1. 포즈를 [33, 3] 리스트로 변환하여 버퍼에 추가
+    final currentFrame = _poseToLandmarkList(pose);
+    _poseBuffer.add(currentFrame);
 
-    // 설정된 랜드마크에서 각도 계산
-    final angle = _calculateAngle(pose);
-    if (angle == null) return false;
-
-    // 상태 머신 로직
-    if (_isInStartPosition) {
-      // 시작 위치에서 턴 포인트로 이동 감지
-      if (angle <= config.turnThreshold) {
-        _wasAtTurnPoint = true;
-        _isInStartPosition = false;
+    // 2. 버퍼가 30프레임이 되면 ML 추론 실행
+    if (_poseBuffer.length >= _bufferSize) {
+      if (!_isProcessing) {
+        _runInference();
       }
-    } else {
-      // 턴 포인트에서 시작 위치로 복귀 감지
-      if (angle >= config.startThreshold && _wasAtTurnPoint) {
-        _repCount++;
-        _isInStartPosition = true;
-        _wasAtTurnPoint = false;
-        return true; // 새 Rep 카운트됨
+      _poseBuffer.removeAt(0); // 슬라이딩 윈도우
+    }
+
+    return false; // Rep 증가는 _runInference 내부 상태 변화에서 감지됨
+  }
+
+  Future<void> _runInference() async {
+    _isProcessing = true;
+    try {
+      final result = await _modelService.runInference(List.from(_poseBuffer));
+      if (result != null) {
+        _handleModelOutput(result);
+      }
+    } finally {
+      _isProcessing = false;
+    }
+  }
+
+  void _handleModelOutput(ExerciseModelOutput output) {
+    if (config.classLabels == null) return;
+
+    final labels = List<String>.from(config.classLabels!['classes'] ?? []);
+    if (labels.isEmpty || output.phaseProbs.length != labels.length) return;
+
+    // 1. 가장 높은 확률의 Phase 찾기
+    int maxIdx = 0;
+    double maxProb = 0.0;
+    for (int i = 0; i < output.phaseProbs.length; i++) {
+      if (output.phaseProbs[i] > maxProb) {
+        maxProb = output.phaseProbs[i];
+        maxIdx = i;
       }
     }
 
-    return false;
-  }
+    final detectedState = labels[maxIdx];
 
-  /// 세 개의 랜드마크로 각도 계산
-  double? _calculateAngle(Pose pose) {
-    if (config.landmarks.length < 3) return null;
-
-    final landmark1 = pose.landmarks[config.landmarks[0]];
-    final landmark2 = pose.landmarks[config.landmarks[1]];
-    final landmark3 = pose.landmarks[config.landmarks[2]];
-
-    if (landmark1 == null || landmark2 == null || landmark3 == null) {
-      return null;
+    // 2. 상태 변화에 따른 Rep 카운팅
+    if (maxProb >= _inferenceThreshold) {
+      // terminal state (e.g., 'Ready' or 'Up' complete) 감지 로직
+      // 예: '4_Right_Up' 또는 '7_Left_Up'에서 '1_Ready'로 돌아올 때 카운트
+      if (_currentState != null && _currentState != detectedState) {
+        if ((_currentState!.contains('Up') ||
+                _currentState!.contains('Peak')) &&
+            detectedState.contains('Ready')) {
+          _repCount++;
+        }
+      }
+      _currentState = detectedState;
     }
 
-    // 벡터 계산
-    final v1 = Point(landmark1.x - landmark2.x, landmark1.y - landmark2.y);
-    final v2 = Point(landmark3.x - landmark2.x, landmark3.y - landmark2.y);
-
-    // 내적과 크기로 각도 계산
-    final dotProduct = v1.x * v2.x + v1.y * v2.y;
-    final magnitude1 = sqrt(v1.x * v1.x + v1.y * v1.y);
-    final magnitude2 = sqrt(v2.x * v2.x + v2.y * v2.y);
-
-    if (magnitude1 == 0 || magnitude2 == 0) return null;
-
-    final cosAngle = dotProduct / (magnitude1 * magnitude2);
-    final angle = acos(cosAngle.clamp(-1.0, 1.0));
-
-    // 라디안을 도(degree)로 변환
-    return angle * 180 / pi;
+    // 3. 코칭 (공식 Deviation Score 기준)
+    if (output.deviationScore > 0.6) {
+      // 0.6 이상이면 자세 불안정으로 간주
+      _triggerCoaching(detectedState);
+    }
   }
-}
 
-/// 2D 포인트 헬퍼
-class Point {
-  final double x;
-  final double y;
+  void _triggerCoaching(String state) {
+    if (config.coachingCues == null) return;
 
-  Point(this.x, this.y);
+    // 현재 state에 맞는 coaching cue 가져오기
+    final cueMap = config.coachingCues![state];
+    if (cueMap != null && cueMap is Map) {
+      // 가장 대표적인 운동 가이드 (예: hip_knee_ankle_l) 추출
+      // 실제로는 더 정밀한 매핑 로직이 필요할 수 있음
+      final firstCue = cueMap.values.firstWhere(
+        (v) => v['movement'] != null,
+        orElse: () => null,
+      );
+      if (firstCue != null) {
+        onCoachingMessage?.call(firstCue['movement']);
+      }
+    }
+  }
+
+  List<List<double>> _poseToLandmarkList(Pose pose) {
+    final List<List<double>> landmarks = List.generate(
+      33,
+      (_) => [0.0, 0.0, 0.0],
+    );
+
+    pose.landmarks.forEach((type, landmark) {
+      if (type.index < 33) {
+        landmarks[type.index] = [landmark.x, landmark.y, landmark.z];
+      }
+    });
+
+    return landmarks;
+  }
 }

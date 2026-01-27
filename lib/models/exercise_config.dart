@@ -18,13 +18,6 @@ class ExerciseConfig {
   });
 
   factory ExerciseConfig.fromMap(Map<String, dynamic> map) {
-    // landmarks를 문자열 리스트에서 PoseLandmarkType으로 변환
-    final landmarkStrings = (map['landmarks'] as List<dynamic>?) ?? [];
-    final landmarks = landmarkStrings
-        .map((str) => _stringToLandmarkType(str.toString()))
-        .whereType<PoseLandmarkType>()
-        .toList();
-
     return ExerciseConfig(
       id: map['id'] ?? '',
       classLabels: map['class_labels'],
@@ -108,16 +101,7 @@ class ExerciseConfig {
 
   /// 기본 스쿼트 설정 (테스트용)
   static ExerciseConfig defaultSquat() {
-    return ExerciseConfig(
-      id: 'squat_default',
-      landmarks: [
-        PoseLandmarkType.leftHip,
-        PoseLandmarkType.leftKnee,
-        PoseLandmarkType.leftAnkle,
-      ],
-      startThreshold: 160.0, // 서있는 자세 (무릎 거의 펴짐)
-      turnThreshold: 90.0, // 스쿼트 최저점 (무릎 90도)
-    );
+    return ExerciseConfig(id: 'squat_default');
   }
 
   /// 기본 푸시업 설정 (테스트용)
