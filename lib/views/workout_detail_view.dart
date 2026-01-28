@@ -4,6 +4,7 @@ import 'package:video_player/video_player.dart';
 import '../models/workout_curriculum.dart';
 import '../models/workout_task.dart';
 import '../services/cache_service.dart';
+import '../services/functions_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'loading_view.dart';
 import 'camera_view.dart';
@@ -248,6 +249,8 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
   bool _isVideoInitialized = false;
   bool _hasVideoError = false;
   bool _isDescriptionExpanded = false;
+  int _retryCount = 0;
+  final _functionsService = FunctionsService();
 
   @override
   void initState() {
@@ -286,6 +289,37 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
       }
     } catch (e) {
       debugPrint('Video init error: $e');
+
+      // Retry logic: Refresh URL if initialization fails (likely expired)
+      if (_retryCount == 0) {
+        _retryCount++;
+        debugPrint(
+          'Attempting to refresh media URL for task: ${widget.task.id}',
+        );
+
+        try {
+          final taskInfos = await _functionsService.requestTaskInfo([
+            widget.task.id,
+          ]);
+          if (taskInfos.isNotEmpty) {
+            final newInfo = taskInfos.first;
+            widget.task.updateMediaInfo(
+              newThumbnail: newInfo['thumbnail'] as String?,
+              newReadyPoseImageUrl: newInfo['readyPoseImageUrl'] as String?,
+              newExampleVideoUrl: newInfo['exampleVideoUrl'] as String?,
+              newGuideAudioUrl: newInfo['guideAudioUrl'] as String?,
+            );
+
+            debugPrint('Media URL refreshed, retrying video initialization...');
+            // Retry initialization with new URL
+            await _initializeVideo();
+            return;
+          }
+        } catch (refreshError) {
+          debugPrint('Failed to refresh media URL: $refreshError');
+        }
+      }
+
       if (mounted) {
         setState(() => _hasVideoError = true);
       }

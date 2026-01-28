@@ -7,11 +7,11 @@ class WorkoutTask {
   final String title;
   final String description;
   final String advice;
-  final String thumbnail;
-  final String readyPoseImageUrl;
-  final String exampleVideoUrl;
-  final String configureUrl;
-  final String guideAudioUrl;
+  String thumbnail;
+  String readyPoseImageUrl;
+  String exampleVideoUrl;
+  String configureUrl;
+  String guideAudioUrl;
   final int reps;
   final int sets;
   final int timeoutSec;
@@ -89,6 +89,33 @@ class WorkoutTask {
   void applyAdjustment({int? newReps, int? newSets}) {
     if (newReps != null) adjustedReps = newReps;
     if (newSets != null) adjustedSets = newSets;
+  }
+
+  /// Check if media info is missing
+  bool get hasMediaInfo =>
+      thumbnail.isNotEmpty &&
+      readyPoseImageUrl.isNotEmpty &&
+      exampleVideoUrl.isNotEmpty;
+
+  /// Update media info from Cloud Functions or other sources
+  void updateMediaInfo({
+    String? newThumbnail,
+    String? newReadyPoseImageUrl,
+    String? newExampleVideoUrl,
+    String? newGuideAudioUrl,
+  }) {
+    if (newThumbnail != null && newThumbnail.isNotEmpty) {
+      thumbnail = newThumbnail;
+    }
+    if (newReadyPoseImageUrl != null && newReadyPoseImageUrl.isNotEmpty) {
+      readyPoseImageUrl = newReadyPoseImageUrl;
+    }
+    if (newExampleVideoUrl != null && newExampleVideoUrl.isNotEmpty) {
+      exampleVideoUrl = newExampleVideoUrl;
+    }
+    if (newGuideAudioUrl != null && newGuideAudioUrl.isNotEmpty) {
+      guideAudioUrl = newGuideAudioUrl;
+    }
   }
 
   /// Category display name

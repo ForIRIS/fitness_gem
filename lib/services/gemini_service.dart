@@ -9,6 +9,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/user_profile.dart';
 import '../models/workout_task.dart';
 import '../models/workout_curriculum.dart';
+import 'functions_service.dart';
 
 /// GeminiService - Gemini AI Integration Service
 class GeminiService {
@@ -21,6 +22,7 @@ class GeminiService {
 
   String _apiKey = '';
   GenerativeModel? _model;
+  final FunctionsService _functionsService = FunctionsService();
 
   // ... (system instructions omitted for brevity in diff, but they are separate blocks in the file)
 
@@ -253,7 +255,6 @@ Output JSON only.
           orElse: () => availableWorkouts.first,
         );
 
-        // Apply reps/sets adjustments from Gemini
         if (adjustments.containsKey(id)) {
           final adj = adjustments[id] as Map<String, dynamic>;
           task.applyAdjustment(
@@ -261,8 +262,33 @@ Output JSON only.
             newSets: adj['sets'] as int?,
           );
         }
-
         selectedTasks.add(task);
+      }
+
+      // NEW: Batch fetch additional info from Cloud Functions if missing
+      final missingInfoTaskIds = selectedTasks
+          .where((t) => !t.hasMediaInfo)
+          .map((t) => t.id)
+          .toList();
+
+      if (missingInfoTaskIds.isNotEmpty) {
+        debugPrint('Fetching media info for tasks: $missingInfoTaskIds');
+        final extraInfos = await _functionsService.requestTaskInfo(
+          missingInfoTaskIds,
+        );
+
+        for (final info in extraInfos) {
+          final taskId = info['id'] as String?;
+          if (taskId == null) continue;
+
+          final task = selectedTasks.firstWhere((t) => t.id == taskId);
+          task.updateMediaInfo(
+            newThumbnail: info['thumbnail'] as String?,
+            newReadyPoseImageUrl: info['readyPoseImageUrl'] as String?,
+            newExampleVideoUrl: info['exampleVideoUrl'] as String?,
+            newGuideAudioUrl: info['guideAudioUrl'] as String?,
+          );
+        }
       }
 
       return WorkoutCurriculum(
@@ -588,8 +614,33 @@ Output JSON only.
             newSets: adj['sets'] as int?,
           );
         }
-
         selectedTasks.add(task);
+      }
+
+      // NEW: Batch fetch additional info from Cloud Functions if missing
+      final missingInfoTaskIds = selectedTasks
+          .where((t) => !t.hasMediaInfo)
+          .map((t) => t.id)
+          .toList();
+
+      if (missingInfoTaskIds.isNotEmpty) {
+        debugPrint('Fetching media info for tasks (chat): $missingInfoTaskIds');
+        final extraInfos = await _functionsService.requestTaskInfo(
+          missingInfoTaskIds,
+        );
+
+        for (final info in extraInfos) {
+          final taskId = info['id'] as String?;
+          if (taskId == null) continue;
+
+          final task = selectedTasks.firstWhere((t) => t.id == taskId);
+          task.updateMediaInfo(
+            newThumbnail: info['thumbnail'] as String?,
+            newReadyPoseImageUrl: info['readyPoseImageUrl'] as String?,
+            newExampleVideoUrl: info['exampleVideoUrl'] as String?,
+            newGuideAudioUrl: info['guideAudioUrl'] as String?,
+          );
+        }
       }
 
       return WorkoutCurriculum(
