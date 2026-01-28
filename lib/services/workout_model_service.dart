@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import '../models/exercise_config.dart';
+import '../utils/asset_utils.dart';
+import 'dart:io';
 
 class WorkoutModelService {
   static const MethodChannel _channel = MethodChannel(
@@ -19,6 +21,31 @@ class WorkoutModelService {
       print("Failed to load model: '${e.message}'.");
       return false;
     }
+  }
+
+  /// Load the model from assets (extracts to temp file first)
+  Future<bool> loadModelFromAsset(String assetPath) async {
+    try {
+      final localPath = await AssetUtils.getAssetPath(assetPath);
+      return await loadModel(localPath);
+    } catch (e) {
+      print("Failed to load model from asset: $e");
+      return false;
+    }
+  }
+
+  /// Load the sample model based on platform
+  Future<bool> loadSampleModel() async {
+    const basePath = 'assets/models/31c7abde-ede2-4647-b366-4cfb9bf55bbe';
+    String assetPath;
+
+    if (Platform.isIOS) {
+      assetPath = '$basePath/pose_model.mlpackage';
+    } else {
+      assetPath = '$basePath/pose_model.onnx';
+    }
+
+    return await loadModelFromAsset(assetPath);
   }
 
   /// Run inference on a sequence of poses

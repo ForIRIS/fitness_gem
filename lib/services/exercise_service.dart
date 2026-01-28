@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,14 +21,14 @@ class ExerciseService {
   final CacheService _cacheService = CacheService();
 
   /// Get Exercise Configuration
-  /// Prioritizes cached file if available -> then Remote -> then Mock
+  /// Prioritizes cached file if available -> then Remote -> then Sample/Mock
   Future<ExerciseConfig?> getExerciseConfig(
     WorkoutTask task, {
     bool useMock = false,
   }) async {
-    if (useMock) {
-      await Future.delayed(const Duration(milliseconds: 500));
-      return _getMockConfig(task.id);
+    // If test flag is set or ID matches internal sample ID
+    if (useMock || task.id == 'sample_back_lunge') {
+      return _getSampleConfig(task.id);
     }
 
     try {
@@ -58,12 +59,12 @@ class ExerciseService {
         }
       }
 
-      // 3. Fallback to Mock if no URL or fetch failed (for MVP)
-      debugPrint('Fetching config failed or empty URL. Using Mock.');
-      return _getMockConfig(task.id);
+      // 3. Fallback to Sample/Mock if no URL or fetch failed (for MVP)
+      debugPrint('Fetching config failed or empty URL. Using Sample/Mock.');
+      return _getSampleConfig(task.id);
     } catch (e) {
       debugPrint('Error fetching exercise config: $e');
-      return _getMockConfig(task.id);
+      return _getSampleConfig(task.id);
     }
   }
 
@@ -73,6 +74,27 @@ class ExerciseService {
     bool forceRefresh = false,
   }) async {
     final workoutsMap = <String, WorkoutTask>{};
+
+    // Add Sample Workout for Testing
+    final sampleWorkout = WorkoutTask(
+      id: 'sample_back_lunge',
+      title: 'Back Lunge',
+      category: 'lunge',
+      description: 'Train your legs with back lunges using the sample model.',
+      reps: 10,
+      sets: 3,
+      timeoutSec: 60,
+      difficulty: 2,
+      advice: 'Step back and keep your front knee at 90 degrees.',
+      thumbnail: '',
+      readyPoseImageUrl: '',
+      exampleVideoUrl: '',
+      configureUrl: '',
+      guideAudioUrl: '',
+    );
+    workoutsMap[sampleWorkout.id] = sampleWorkout;
+
+    // ... rest of the method
 
     // 1. Fetch Remote (Firebase) - This includes Built-in fallback if offline/empty
     // We assume FirebaseService returns the "Master List"
@@ -130,62 +152,35 @@ class ExerciseService {
     await prefs.setString(_localWorkoutsKey, json.encode(jsonList));
   }
 
-  ExerciseConfig _getMockConfig(String exerciseId) {
-    // Branch by ID or Name
-    final id = exerciseId.toLowerCase();
+  /// Get Sample Configuration from assets
+  Future<ExerciseConfig?> _getSampleConfig(String exerciseId) async {
+    try {
+      // Base path for sample assets
+      const basePath = 'assets/models/31c7abde-ede2-4647-b366-4cfb9bf55bbe';
 
-    // Common Mock Data matching User Request structure
-    final mockClassLabels = {
-      "classes": [
-        "1_Ready",
-        "2_Right_Down",
-        "3_Right_Peak",
-        "4_Right_Up",
-        "5_Left_Down",
-        "6_Left_Peak",
-        "7_Left_Up",
-        "8_Right_up",
-      ],
-      "num_classes": 8,
-      "input_shape": [1, 30, 33, 3],
-      "input_name": "landmarks",
-      "feature_set": "strength_legs",
-      "runtime": "onnxruntime-mobile",
-      "opset_version": 18,
-    };
-
-    final mockMedianStats = {
-      "feature_set": "strength_legs",
-      "labels": {
-        "1_Ready": {"cosine_hip_abduction": 0.8526791930198669},
-      },
-    };
-
-    final mockCoachingCues = {
-      "1_Ready": {
-        "hip_knee_ankle_l": {
-          "movement": "Keep your chest upright and core tight the movement.",
-        },
-      },
-    };
-
-    if (id.contains('squat')) {
-      return ExerciseConfig.defaultSquat().copyWith(
-        classLabels: mockClassLabels,
-        medianStats: mockMedianStats,
-        coachingCues: mockCoachingCues,
+      // Load and parse JSON files
+      final classLabelsStr = await rootBundle.loadString(
+        '$basePath/class_labels.json',
       );
-    }
-    if (id.contains('push')) {
-      return ExerciseConfig.defaultPushup();
-    }
-    if (id.contains('lunge')) {
-      return ExerciseConfig.defaultLunge();
-    }
-    if (id.contains('core')) {
-      return ExerciseConfig.defaultPlank();
-    }
+      final statsStr = await rootBundle.loadString(
+        '$basePath/base_model_stats.json',
+      );
+      final cuesStr = await rootBundle.loadString(
+        '$basePath/base_model_cues.json',
+      );
 
-    return ExerciseConfig.defaultSquat();
+      final Map<String, dynamic> configMap = {
+        'id': exerciseId,
+        'class_labels': json.decode(classLabelsStr),
+        'median_stats': json.decode(statsStr),
+        'coaching_cues': json.decode(cuesStr),
+      };
+
+      debugPrint('Loaded sample config for: $exerciseId');
+      return ExerciseConfig.fromMap(configMap);
+    } catch (e) {
+      debugPrint('Error loading sample config: $e');
+      return ExerciseConfig.defaultSquat();
+    }
   }
 }

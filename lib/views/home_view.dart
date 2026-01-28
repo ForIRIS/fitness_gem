@@ -14,7 +14,6 @@ import 'settings_view.dart';
 import 'loading_view.dart';
 import 'workout_detail_view.dart';
 import '../widgets/shimmer_skeleton.dart';
-import 'package:fitness_gem/theme/app_theme.dart';
 
 /// HomeView - Dashboard Screen
 class HomeView extends StatefulWidget {
@@ -140,10 +139,10 @@ class _HomeViewState extends State<HomeView> {
 
   String _getCategoryFromTarget(String target) {
     final lower = target.toLowerCase();
-    if (lower.contains('squat') || lower.contains('하체')) return 'squat';
-    if (lower.contains('push') || lower.contains('상체')) return 'push';
-    if (lower.contains('plank') || lower.contains('코어')) return 'core';
-    if (lower.contains('lunge') || lower.contains('런지')) return 'lunge';
+    if (lower.contains('squat') || lower.contains('lower')) return 'squat';
+    if (lower.contains('push') || lower.contains('upper')) return 'push';
+    if (lower.contains('plank') || lower.contains('core')) return 'core';
+    if (lower.contains('lunge') || lower.contains('lunge')) return 'lunge';
     return 'squat'; // Default
   }
 
@@ -382,17 +381,17 @@ class _HomeViewState extends State<HomeView> {
   }
 
   String _getWelcomeMessage() {
-    if (_userProfile == null)
+    if (_userProfile == null) {
       return AppLocalizations.of(context)!.welcomeTrainee;
+    }
 
     // Check if we have nickname
     if (_userProfile!.nickname != null && _userProfile!.nickname!.isNotEmpty) {
       // Use nickname format if user tier is present
-      if (_userProfile!.userTier != null &&
-          _userProfile!.userTier!.isNotEmpty) {
+      if (_userProfile!.userTier.isNotEmpty) {
         return AppLocalizations.of(
           context,
-        )!.welcomeUserTier(_userProfile!.userTier!, _userProfile!.nickname!);
+        )!.welcomeUserTier(_userProfile!.userTier, _userProfile!.nickname!);
       }
       return AppLocalizations.of(context)!.welcomeUser(_userProfile!.nickname!);
     }

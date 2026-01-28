@@ -27,7 +27,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get grantPermission => '권한 허용';
 
   @override
-  String get skip => '건너뛰기 (기능 제한됨)';
+  String get skip => '건너뛰기';
 
   @override
   String get next => '다음';

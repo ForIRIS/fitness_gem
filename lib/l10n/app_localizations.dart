@@ -137,7 +137,7 @@ abstract class AppLocalizations {
   /// No description provided for @skip.
   ///
   /// In en, this message translates to:
-  /// **'Skip (Limited Features)'**
+  /// **'Skip'**
   String get skip;
 
   /// No description provided for @next.

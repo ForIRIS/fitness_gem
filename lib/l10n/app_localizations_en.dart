@@ -29,7 +29,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get grantPermission => 'Grant Permission';
 
   @override
-  String get skip => 'Skip (Limited Features)';
+  String get skip => 'Skip';
 
   @override
   String get next => 'Next';

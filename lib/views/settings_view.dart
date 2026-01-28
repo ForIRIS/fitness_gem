@@ -219,7 +219,7 @@ class _SettingsViewState extends State<SettingsView> {
                                 }
                               });
                             },
-                            activeColor: Theme.of(context).primaryColor,
+                            activeThumbColor: Theme.of(context).primaryColor,
                           ),
                           child: _fallDetectionEnabled
                               ? Column(

@@ -1,7 +1,7 @@
 import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:io';
 
-/// TTSService - TTS 음성 피드백 서비스
+/// TTSService - TTS voice feedback service
 class TTSService {
   static final TTSService _instance = TTSService._internal();
   factory TTSService() => _instance;
@@ -10,14 +10,14 @@ class TTSService {
   final FlutterTts _flutterTts = FlutterTts();
   bool _initialized = false;
 
-  /// TTS 초기화
+  /// Initialize TTS
   Future<void> initialize() async {
     if (_initialized) return;
 
-    // 한국어 설정
-    await _flutterTts.setLanguage('ko-KR');
+    // Set English as default
+    await _flutterTts.setLanguage('en-US');
 
-    // iOS 오디오 카테고리 설정 (다른 오디오와 혼합)
+    // iOS audio category configuration (mix with other audio)
     if (Platform.isIOS) {
       await _flutterTts.setIosAudioCategory(
         IosTextToSpeechAudioCategory.playback,
@@ -30,15 +30,15 @@ class TTSService {
       );
     }
 
-    // 음성 속도 및 피치 설정
-    await _flutterTts.setSpeechRate(0.5); // 0.0 ~ 1.0 (기본 0.5)
-    await _flutterTts.setPitch(1.0); // 0.5 ~ 2.0 (기본 1.0)
+    // Set speech rate and pitch
+    await _flutterTts.setSpeechRate(0.5); // 0.0 ~ 1.0 (default 0.5)
+    await _flutterTts.setPitch(1.0); // 0.5 ~ 2.0 (default 1.0)
     await _flutterTts.setVolume(1.0); // 0.0 ~ 1.0
 
     _initialized = true;
   }
 
-  /// 텍스트를 음성으로 읽기
+  /// Read text aloud
   Future<void> speak(String text) async {
     if (!_initialized) {
       await initialize();
@@ -46,114 +46,115 @@ class TTSService {
 
     if (text.isEmpty) return;
 
-    // 현재 재생 중인 음성 중지
+    // Stop current speech before starting new one
     await stop();
 
     await _flutterTts.speak(text);
   }
 
-  /// 음성 재생 중지
+  /// Stop speech playback
   Future<void> stop() async {
     await _flutterTts.stop();
   }
 
-  /// 음성 재생 일시정지
+  /// Pause speech playback
   Future<void> pause() async {
     await _flutterTts.pause();
   }
 
-  /// 현재 재생 중인지 확인
+  /// Check if currently speaking
   Future<bool> get isSpeaking async {
     return await _flutterTts.awaitSpeakCompletion(false);
   }
 
-  /// 음성 속도 설정 (0.0 ~ 1.0)
+  /// Set speech rate (0.0 ~ 1.0)
   Future<void> setSpeechRate(double rate) async {
     await _flutterTts.setSpeechRate(rate);
   }
 
-  /// 볼륨 설정 (0.0 ~ 1.0)
+  /// Set volume (0.0 ~ 1.0)
   Future<void> setVolume(double volume) async {
     await _flutterTts.setVolume(volume);
   }
 
-  /// 완료 콜백 설정
+  /// Set completion handler
   void setCompletionHandler(Function callback) {
     _flutterTts.setCompletionHandler(() {
       callback();
     });
   }
 
-  /// 시작 콜백 설정
+  /// Set start handler
   void setStartHandler(Function callback) {
     _flutterTts.setStartHandler(() {
       callback();
     });
   }
 
-  /// 에러 콜백 설정
+  /// Set error handler
   void setErrorHandler(Function(String) callback) {
     _flutterTts.setErrorHandler((error) {
       callback(error.toString());
     });
   }
 
-  /// TTS 해제
+  /// Dispose TTS resources
   Future<void> dispose() async {
     await _flutterTts.stop();
   }
 
-  // ============ 미리 정의된 메시지 ============
+  // ============ Predefined Messages ============
 
-  /// 운동 시작 안내
+  /// Announcement for starting workout
   Future<void> speakWorkoutStart(String exerciseName) async {
-    await speak('$exerciseName 운동을 시작합니다. 자세를 취해주세요.');
+    await speak('Starting $exerciseName workout. Please take your position.');
   }
 
-  /// 세트 시작 안내
+  /// Announcement for starting a set
   Future<void> speakSetStart(int setNumber, int totalSets) async {
-    await speak('$setNumber세트를 시작합니다.');
+    await speak('Starting set $setNumber.');
   }
 
-  /// 휴식 안내
+  /// Announcement for rest period
   Future<void> speakRestStart(int seconds) async {
-    await speak('$seconds초간 휴식하세요.');
+    await speak('Rest for $seconds seconds.');
   }
 
-  /// 자세 준비 요청
+  /// Requesting ready pose
   Future<void> speakReadyPose() async {
-    await speak('자세를 취해주세요.');
+    await speak('Please take the ready pose.');
   }
 
-  /// 운동 완료 안내
+  /// Announcement for workout completion
   Future<void> speakWorkoutComplete() async {
-    await speak('운동이 완료되었습니다. 수고하셨습니다!');
+    await speak('Workout complete. Great job!');
   }
 
-  /// 낙상 감지 안내
+  /// Announcement for fall detection
   Future<void> speakFallDetection() async {
-    await speak('괜찮으신가요? 문제가 없으시면 화면을 터치해주세요.');
+    await speak(
+      'Are you okay? If there is no problem, please touch the screen.',
+    );
   }
 
-  /// 분석 중 안내
+  /// Announcement for analysis in progress
   Future<void> speakAnalyzing() async {
-    await speak('분석 중입니다. 잠시만 기다려주세요.');
+    await speak('Analyzing. Please wait a moment.');
   }
 
-  /// 실시간 자세 교정 피드백 (짧은 문장)
-  /// [message]: 영어 또는 한국어 짧은 교정 메시지
+  /// Real-time form correction feedback (short phrases)
+  /// [message]: Short correction message in English
   Future<void> speakFormCorrection(String message) async {
     if (!_initialized) await initialize();
     if (message.isEmpty) return;
 
-    // 현재 재생 중이면 스킵 (너무 많은 피드백 방지)
-    // 짧은 메시지이므로 빠른 속도로 재생
+    // Faster speech rate for short, real-time corrections
     await _flutterTts.setSpeechRate(0.6);
     await _flutterTts.speak(message);
-    await _flutterTts.setSpeechRate(0.5); // 원래 속도로 복원
+    await _flutterTts.setSpeechRate(0.5); // Restore original rate
   }
 
-  /// 언어 설정 변경
+  /// Change language setting
   Future<void> setLanguage(String languageCode) async {
     // 'en' or 'ko'
     if (languageCode == 'en') {
@@ -163,22 +164,22 @@ class TTSService {
     }
   }
 
-  /// 신체가 카메라에 다 보이지 않을 때 안내
+  /// Announcement when body is not fully visible to the camera
   Future<void> speakBodyNotVisible() async {
-    await speak('전체 몸이 보이도록 카메라를 조정해주세요.');
+    await speak('Please adjust the camera so your whole body is visible.');
   }
 
-  /// 카운트다운 안내
+  /// Countdown announcement
   Future<void> speakCountdown(int seconds) async {
     if (seconds > 0) {
       await speak('$seconds');
     } else {
-      await speak('시작!');
+      await speak('Start!');
     }
   }
 
-  /// 준비 완료 안내
+  /// Announcement when ready
   Future<void> speakReady() async {
-    await speak('준비 완료! 곧 시작합니다.');
+    await speak('Ready! Starting soon.');
   }
 }

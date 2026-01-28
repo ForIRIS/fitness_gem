@@ -130,8 +130,8 @@ You are "CoreFit AI Curriculum Planner." Your task is to create personalized wor
 
 **JSON SCHEMA**
 {
-  "curriculum_title": "String (Korean)",
-  "curriculum_description": "String (Korean, brief explanation)",
+  "curriculum_title": "String",
+  "curriculum_description": "String (brief explanation)",
   "workout_ids": ["workout_id_1", "workout_id_2", ...],
   "adjustments": {
     "workout_id": {
@@ -139,7 +139,7 @@ You are "CoreFit AI Curriculum Planner." Your task is to create personalized wor
       "sets": Integer
     }
   },
-  "reasoning": "String (Korean, why these exercises were chosen)"
+  "reasoning": "String (why these exercises were chosen)"
 }
 ''';
 
@@ -153,27 +153,27 @@ Gather detailed context that wasn't captured in the basic onboarding form.
 - Ask **ONE question at a time**. Do not overwhelm the user.
 - Ask max **3-5 questions** total.
 - Be polite, empathetic, and professional.
-- Speak in **Korean**.
+- Speak in **English**.
 
 **Input Context**:
 You will receive the user's basic info (Age, Injury, Goal, Experience Level, Target Exercise). Use this to formulate relevant questions.
 
 **Example Questions**:
-- If user has "Injury: 무릎", ask: "무릎 통증은 어떤 상황에서 발생하나요? 움직일 때인가요, 아니면 가만히 있을 때도 아프신가요?"
-- If user has "Goal: 다이어트", ask: "평소 식습관은 어떠신가요? 규칙적으로 식사하시나요?"
-- If user is "Beginner", ask: "운동 경험이 적으시다면, 어떤 운동이 가장 해보고 싶으신가요?"
+- If user has "Injury: Knee", ask: "In what situations does your knee pain occur? Is it during movement, or does it hurt even when you're still?"
+- If user has "Goal: Weight loss", ask: "What are your usual eating habits? Do you eat at regular times?"
+- If user is "Beginner", ask: "Since you don't have much exercise experience, what kind of workout are you most interested in trying?"
 
 **Interview Progress**:
 Keep track of how many questions you have asked. After 3-5 meaningful exchanges, conclude the interview.
 
 **Termination & Extraction (CRITICAL)**:
 When you have gathered enough info (or after 5 turns), you MUST output the final summary.
-Say "감사합니다! 프로필이 업데이트되었습니다." followed by JSON in this EXACT format:
+Say "Thank you! Your profile has been updated." followed by JSON in this EXACT format:
 
 ```json
 {
   "interview_complete": true,
-  "summary_text": "String (Korean, summarized bio for display, 2-3 sentences)",
+  "summary_text": "String (summarized bio for display, 2-3 sentences)",
   "extracted_details": {
     "injury_specifics": "String (or null if no injury)",
     "lifestyle_notes": "String (daily routine, work style, etc.)",
@@ -187,7 +187,7 @@ Say "감사합니다! 프로필이 업데이트되었습니다." followed by JSO
 
 **IMPORTANT**:
 - Only output JSON when concluding the interview.
-- During the interview, respond naturally in Korean as a friendly consultant.
+- During the interview, respond naturally in English as a friendly consultant.
 - If the user wants to skip or says they don't want to answer, respect that and conclude early.
 ''';
 
@@ -267,7 +267,7 @@ Output JSON only.
 
       return WorkoutCurriculum(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: jsonData['curriculum_title'] ?? '오늘의 운동',
+        title: jsonData['curriculum_title'] ?? 'Today\'s Workout',
         description: jsonData['curriculum_description'] ?? '',
         thumbnail: '',
         workoutTaskList: selectedTasks,
@@ -545,7 +545,7 @@ Available Workouts:
 $workoutListText
 
 Based on the user's request, create an appropriate workout curriculum.
-If the user asks for a specific body part (하체, 상체, 코어, etc.), select exercises from that category.
+If the user asks for a specific body part (lower body, upper body, core, etc.), select exercises from that category.
 Output JSON only.
 ''';
 
@@ -594,7 +594,7 @@ Output JSON only.
 
       return WorkoutCurriculum(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: jsonData['curriculum_title'] ?? '맞춤 운동',
+        title: jsonData['curriculum_title'] ?? 'Custom Workout',
         description: jsonData['curriculum_description'] ?? '',
         thumbnail: '',
         workoutTaskList: selectedTasks,
@@ -628,12 +628,12 @@ TASK: START_INTERVIEW
 
 User Profile:
 - Age: ${profile.age}
-- Injury History: ${profile.injuryHistory.isEmpty ? "없음" : profile.injuryHistory}
-- Goal: ${profile.goal.isEmpty ? "미정" : profile.goal}
+- Injury History: ${profile.injuryHistory.isEmpty ? "None" : profile.injuryHistory}
+- Goal: ${profile.goal.isEmpty ? "Undecided" : profile.goal}
 - Experience Level: ${profile.experienceLevel}
 - Target Exercise: ${profile.targetExercise}
 
-Please start the interview in Korean.
+Please start the interview in English.
 ''';
 
       final response = await _interviewSession!.sendMessage(
@@ -650,7 +650,10 @@ Please start the interview in Korean.
   /// Send Interview Message and Receive Response
   Future<InterviewResponse> sendInterviewMessage(String userMessage) async {
     if (_interviewSession == null) {
-      return InterviewResponse(message: '인터뷰 세션이 없습니다.', isComplete: false);
+      return InterviewResponse(
+        message: 'No interview session found.',
+        isComplete: false,
+      );
     }
 
     try {
@@ -697,14 +700,14 @@ Please start the interview in Korean.
       // Handle the specific "Unhandled format for Content: {}" error
       if (e.toString().contains('Unhandled format for Content')) {
         return InterviewResponse(
-          message: '대화 내용 형식이 올바르지 않습니다. 인터뷰를 다시 시작해주세요.',
+          message: 'Invalid message format. Please restart the interview.',
           isComplete: false,
           hasError: true,
         );
       }
 
       return InterviewResponse(
-        message: '오류가 발생했습니다. 다시 시도해주세요.',
+        message: 'An error occurred. Please try again.',
         isComplete: false,
         hasError: true,
       );
@@ -744,13 +747,13 @@ User Message: "$userMessage"
 
       final response = await model.generateContent([prompt]);
       return InterviewResponse(
-        message: response.text ?? '죄송합니다. 사진을 분석할 수 없습니다.',
+        message: response.text ?? 'Sorry, I couldn\'t analyze the photo.',
         isComplete: false,
       );
     } catch (e) {
       debugPrint('Error chatting with image: $e');
       return InterviewResponse(
-        message: '사진 분석 중 오류가 발생했습니다: $e',
+        message: 'Error analyzing photo: $e',
         isComplete: false,
         hasError: true,
       );
@@ -791,10 +794,9 @@ User may have fallen during exercise. Check if:
 3. This is NOT a normal exercise position (like plank or floor exercise)
 
 Respond with JSON:
-{
   "is_fall_detected": Boolean,
   "confidence": Float (0-1),
-  "description": "String (Korean)"
+  "description": "String"
 }
 ''',
               },

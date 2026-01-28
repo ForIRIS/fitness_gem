@@ -2,33 +2,33 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import '../models/exercise_config.dart';
 import '../services/workout_model_service.dart';
 
-/// RepCounter - ML 기반 Rep 카운팅 및 코칭 로직
+/// RepCounter - ML-based rep counting and coaching logic
 class RepCounter {
   final ExerciseConfig config;
   final WorkoutModelService _modelService = WorkoutModelService();
 
-  // 설정
+  // Settings
   static const int _bufferSize = 30;
-  static const double _inferenceThreshold = 0.7; // State 확정 임계값
+  static const double _inferenceThreshold = 0.7; // State confirmation threshold
 
-  // 상태
+  // State
   final List<List<List<double>>> _poseBuffer = [];
   int _repCount = 0;
   String? _currentState;
   bool _isProcessing = false;
 
-  // 코칭 콜백
+  // Coaching callback
   void Function(String)? onCoachingMessage;
 
   RepCounter(this.config);
 
-  /// 현재 Rep 카운트
+  /// Current rep count
   int get repCount => _repCount;
 
-  /// 현재 상태
+  /// Current state
   String? get currentState => _currentState;
 
-  /// 카운터 리셋
+  /// Reset counter
   void reset() {
     _repCount = 0;
     _poseBuffer.clear();
@@ -36,22 +36,22 @@ class RepCounter {
     _isProcessing = false;
   }
 
-  /// 포즈를 분석하여 Rep 카운트
-  /// 반환값: 새로운 Rep이 카운트되었으면 true (비동기 분석 결과는 별도 처리)
+  /// Analyze pose and count reps
+  /// Returns: true if a new rep was counted (async analysis results are handled separately)
   bool processFrame(Pose pose) {
-    // 1. 포즈를 [33, 3] 리스트로 변환하여 버퍼에 추가
+    // 1. Convert pose to [33, 3] list and add to buffer
     final currentFrame = _poseToLandmarkList(pose);
     _poseBuffer.add(currentFrame);
 
-    // 2. 버퍼가 30프레임이 되면 ML 추론 실행
+    // 2. Run ML inference when buffer reaches 30 frames
     if (_poseBuffer.length >= _bufferSize) {
       if (!_isProcessing) {
         _runInference();
       }
-      _poseBuffer.removeAt(0); // 슬라이딩 윈도우
+      _poseBuffer.removeAt(0); // Sliding window
     }
 
-    return false; // Rep 증가는 _runInference 내부 상태 변화에서 감지됨
+    return false; // Rep increment is detected inside _runInference state changes
   }
 
   Future<void> _runInference() async {
@@ -72,7 +72,7 @@ class RepCounter {
     final labels = List<String>.from(config.classLabels!['classes'] ?? []);
     if (labels.isEmpty || output.phaseProbs.length != labels.length) return;
 
-    // 1. 가장 높은 확률의 Phase 찾기
+    // 1. Find the phase with the highest probability
     int maxIdx = 0;
     double maxProb = 0.0;
     for (int i = 0; i < output.phaseProbs.length; i++) {
@@ -84,10 +84,10 @@ class RepCounter {
 
     final detectedState = labels[maxIdx];
 
-    // 2. 상태 변화에 따른 Rep 카운팅
+    // 2. Count reps based on state changes
     if (maxProb >= _inferenceThreshold) {
-      // terminal state (e.g., 'Ready' or 'Up' complete) 감지 로직
-      // 예: '4_Right_Up' 또는 '7_Left_Up'에서 '1_Ready'로 돌아올 때 카운트
+      // Terminal state (e.g., 'Ready' or 'Up' complete) detection logic
+      // Example: Count when transitioning from '4_Right_Up' or '7_Left_Up' back to '1_Ready'
       if (_currentState != null && _currentState != detectedState) {
         if ((_currentState!.contains('Up') ||
                 _currentState!.contains('Peak')) &&
@@ -98,9 +98,9 @@ class RepCounter {
       _currentState = detectedState;
     }
 
-    // 3. 코칭 (공식 Deviation Score 기준)
+    // 3. Coaching (based on official Deviation Score)
     if (output.deviationScore > 0.6) {
-      // 0.6 이상이면 자세 불안정으로 간주
+      // Consider posture unstable if score is above 0.6
       _triggerCoaching(detectedState);
     }
   }
@@ -108,11 +108,11 @@ class RepCounter {
   void _triggerCoaching(String state) {
     if (config.coachingCues == null) return;
 
-    // 현재 state에 맞는 coaching cue 가져오기
+    // Get coaching cue for the current state
     final cueMap = config.coachingCues![state];
     if (cueMap != null && cueMap is Map) {
-      // 가장 대표적인 운동 가이드 (예: hip_knee_ankle_l) 추출
-      // 실제로는 더 정밀한 매핑 로직이 필요할 수 있음
+      // Extract representative exercise guide (e.g., hip_knee_ankle_l)
+      // Actual mapping logic could be more sophisticated
       final firstCue = cueMap.values.firstWhere(
         (v) => v['movement'] != null,
         orElse: () => null,

@@ -64,11 +64,12 @@ class _LoadingViewState extends State<LoadingView> {
 
     // If all URLs are empty (dummy data), complete immediately
     if (total == 0) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _statusMessage = AppLocalizations.of(context)!.ready;
           _isComplete = true;
         });
+      }
       await Future.delayed(
         const Duration(milliseconds: 800),
       ); // Smooth transition
@@ -78,11 +79,12 @@ class _LoadingViewState extends State<LoadingView> {
       return;
     }
 
-    if (mounted)
+    if (mounted) {
       setState(() {
         _totalCount = total;
         _statusMessage = AppLocalizations.of(context)!.downloadingResources;
       });
+    }
 
     final startTime = DateTime.now();
 
@@ -107,11 +109,12 @@ class _LoadingViewState extends State<LoadingView> {
         );
       }
 
-      if (mounted)
+      if (mounted) {
         setState(() {
           _statusMessage = AppLocalizations.of(context)!.downloadComplete;
           _isComplete = true;
         });
+      }
 
       await Future.delayed(const Duration(milliseconds: 500));
       if (mounted) {

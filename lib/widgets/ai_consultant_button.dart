@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:ui'; // Required for PathMetric
 
 import 'package:fitness_gem/l10n/app_localizations.dart';

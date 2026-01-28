@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// SetAnalysis - 개별 세트 분석 결과
+/// SetAnalysis - Analysis results for an individual set
 class SetAnalysis {
   final int setNumber;
   final int score;
@@ -71,7 +71,7 @@ class SetAnalysis {
   }
 }
 
-/// SegmentIssue - 세그먼트별 이슈
+/// SegmentIssue - Issues per segment
 class SegmentIssue {
   final double timestamp;
   final String issue;
@@ -96,7 +96,7 @@ class SegmentIssue {
   }
 }
 
-/// AdaptiveCurriculum - 적응형 커리큘럼 조정
+/// AdaptiveCurriculum - Adaptive curriculum adjustments
 class AdaptiveCurriculum {
   final String decision; // Increase, Maintain, Decrease, Recovery
   final String? weight;
@@ -136,7 +136,7 @@ class AdaptiveCurriculum {
   }
 }
 
-/// SessionAnalysis - 전체 세션 분석 결과
+/// SessionAnalysis - Analysis results for the entire session
 class SessionAnalysis {
   final String sessionId;
   final String curriculumId;
@@ -189,7 +189,7 @@ class SessionAnalysis {
   factory SessionAnalysis.fromJson(String source) =>
       SessionAnalysis.fromMap(json.decode(source));
 
-  // SharedPreferences 저장 (히스토리 리스트로 관리)
+  // Save to SharedPreferences (managed as history list)
   static const _key = 'session_history';
   static const _maxHistoryCount = 30;
 
@@ -198,7 +198,7 @@ class SessionAnalysis {
     final history = await loadAll();
     history.insert(0, analysis);
 
-    // 최대 30개만 유지
+    // Maintain maximum 30 entries
     if (history.length > _maxHistoryCount) {
       history.removeRange(_maxHistoryCount, history.length);
     }
@@ -219,7 +219,7 @@ class SessionAnalysis {
   }
 }
 
-/// TaskAnalysis - 개별 운동 분석 결과
+/// TaskAnalysis - Analysis results for an individual exercise
 class TaskAnalysis {
   final String taskId;
   final String taskTitle;

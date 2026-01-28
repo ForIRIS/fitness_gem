@@ -18,7 +18,7 @@ class _ExternalDashboardViewState extends State<ExternalDashboardView> {
   Widget build(BuildContext context) {
     return SecondaryDisplay(
       callback: (dynamic argument) {
-        // 데이터 수신 처리
+        // Handle incoming data
         if (argument is Map<String, dynamic>) {
           setState(() {
             if (argument.containsKey('exercise')) {
@@ -50,7 +50,7 @@ class _ExternalDashboardViewState extends State<ExternalDashboardView> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 헤더
+              // Header
               Padding(
                 padding: const EdgeInsets.all(32.0),
                 child: Text(
@@ -64,7 +64,7 @@ class _ExternalDashboardViewState extends State<ExternalDashboardView> {
                 ),
               ),
 
-              // 메인 카운터
+              // Main Counter
               Expanded(
                 child: Center(
                   child: Text(
@@ -86,7 +86,7 @@ class _ExternalDashboardViewState extends State<ExternalDashboardView> {
                 ),
               ),
 
-              // 피드백 영역
+              // Feedback Area
               Container(
                 padding: const EdgeInsets.all(48),
                 color: _isGoodPose
@@ -105,7 +105,7 @@ class _ExternalDashboardViewState extends State<ExternalDashboardView> {
                 ),
               ),
 
-              // 하단 로고
+              // Bottom Logo
               const Padding(
                 padding: EdgeInsets.all(24.0),
                 child: Text(

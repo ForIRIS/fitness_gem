@@ -4,7 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../models/session_analysis.dart';
 import '../models/workout_curriculum.dart';
 
-/// ResultsView - 세션 완료 결과 화면
+/// ResultsView - Session completion results screen
 class ResultsView extends StatefulWidget {
   final List<SetAnalysis> setAnalyses;
   final WorkoutCurriculum curriculum;
@@ -91,22 +91,22 @@ class _ResultsViewState extends State<ResultsView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 점수 카드
+                // Score Card
                 _buildScoreCard(),
 
                 const SizedBox(height: 24),
 
-                // 세트별 점수 그래프
+                // Score chart by set
                 _buildScoreChart(),
 
                 const SizedBox(height: 24),
 
-                // 피드백 요약
+                // Feedback Summary
                 _buildFeedbackSummary(),
 
                 const SizedBox(height: 32),
 
-                // 홈으로 버튼
+                // Return Home button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -305,7 +305,7 @@ class _ResultsViewState extends State<ResultsView> {
   }
 
   Widget _buildFeedbackSummary() {
-    // 주요 이슈 수집
+    // Collect main issues
     final issues = <String>{};
     for (final analysis in widget.setAnalyses) {
       if (analysis.mainIssue.isNotEmpty) {

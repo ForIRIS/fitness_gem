@@ -404,8 +404,7 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
                     ),
 
                     // Precautions / Tips (Always visible if present, but compact)
-                    if (widget.task.advice != null &&
-                        widget.task.advice!.isNotEmpty) ...[
+                    if (widget.task.advice.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       _buildPrecautionSection(),
                     ],
@@ -645,7 +644,7 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              widget.task.advice!,
+              widget.task.advice,
               style: TextStyle(
                 color: Colors.orange.shade100,
                 fontSize: 13,

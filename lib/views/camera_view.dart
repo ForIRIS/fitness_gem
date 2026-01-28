@@ -23,6 +23,7 @@ import '../models/exercise_config.dart';
 import '../models/user_profile.dart';
 import '../models/session_analysis.dart';
 import '../services/exercise_service.dart';
+import '../services/workout_model_service.dart';
 import '../viewmodels/display_viewmodel.dart';
 
 /// CameraView - Workout Screen (Camera + Skeleton Overlay + UI)
@@ -90,7 +91,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   // Ready Pose Detection
   List<Point3D>? _readyPoseReference;
   final double _poseSimilarity = 0.0;
-  static const double _readyPoseThreshold = 0.8; // 80% 유사도
+  static const double _readyPoseThreshold = 0.8; // 80% similarity
 
   // Body Visibility and Countdown
   bool _isFullBodyVisible = false;
@@ -164,6 +165,15 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         _exerciseConfig = config;
         _repCounter = RepCounter(_exerciseConfig!);
       });
+
+      // Load native model if it's the sample or mock is enabled
+      final modelService = WorkoutModelService();
+      final modelLoaded = await modelService.loadSampleModel();
+      if (modelLoaded) {
+        debugPrint('Successfully loaded sample model for platform');
+      } else {
+        debugPrint('Failed to load sample model');
+      }
     }
 
     // Set Real-time Form Feedback
@@ -200,25 +210,25 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('일시정지됨', style: TextStyle(color: Colors.white)),
+        title: const Text('Paused', style: TextStyle(color: Colors.white)),
         content: const Text(
-          '운동이 일시정지되었습니다. 계속하시겠습니까?',
+          'Workout is paused. Would you like to continue?',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(context); // 운동 화면 종료
+              Navigator.pop(context); // Exit workout screen
             },
-            child: const Text('종료'),
+            child: const Text('Quit'),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _resumeWorkout();
             },
-            child: const Text('계속하기'),
+            child: const Text('Continue'),
           ),
         ],
       ),
@@ -385,7 +395,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           setState(() => _isFullBodyVisible = bodyVisible);
         }
 
-        // 준비자세 대기 중일 때
+        // When waiting for ready pose
         if (_isWaitingForReadyPose) {
           if (bodyVisible) {
             // Start Countdown if body is visible
@@ -527,7 +537,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         // Countdown Complete - Workout Start!
         timer.cancel();
         _countdownTimer = null;
-        _ttsService.speakCountdown(0); // "시작!"
+        _ttsService.speakCountdown(0); // "Start!"
         _onCountdownComplete();
       }
     });
@@ -637,9 +647,12 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('운동 완료! 🎉', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Workout Complete! 🎉',
+          style: TextStyle(color: Colors.white),
+        ),
         content: const Text(
-          '오늘의 운동을 모두 완료했습니다. 수고하셨습니다!',
+          'You have completed today\'s workout. Great job!',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -648,7 +661,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('홈으로'),
+            child: const Text('Home'),
           ),
         ],
       ),
@@ -698,7 +711,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           else
             const Center(
               child: Text(
-                "카메라 사용 불가 (시뮬레이터)",
+                "Camera unavailable (Simulator)",
                 style: TextStyle(color: Colors.white),
               ),
             ),

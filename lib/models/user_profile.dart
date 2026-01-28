@@ -7,15 +7,15 @@ class UserProfile {
   String goal;
   String experienceLevel;
   String targetExercise; // e.g., "Squat"
-  String? nickname; // 닉네임 (선택)
-  String userTier; // 'free', 'basic', 'premium' (기본: 'free')
-  String? guardianPhone; // 보호자 연락처 (선택)
-  bool fallDetectionEnabled; // 낙상 감지 사용 여부
+  String? nickname; // Nickname (Optional)
+  String userTier; // 'free', 'basic', 'premium' (Default: 'free')
+  String? guardianPhone; // Guardian contact (Optional)
+  bool fallDetectionEnabled; // Whether to use fall detection
 
-  // AI 인터뷰 결과 필드
-  String? interviewSummary; // AI 인터뷰 요약
-  Map<String, String>? extractedDetails; // 상세 추출 정보
-  DateTime? lastInterviewDate; // 마지막 인터뷰 날짜
+  // AI Interview Result Fields
+  String? interviewSummary; // AI interview summary
+  Map<String, String>? extractedDetails; // Detailed extracted info
+  DateTime? lastInterviewDate; // Last interview date
 
   UserProfile({
     required this.age,
@@ -26,16 +26,16 @@ class UserProfile {
     this.nickname,
     this.userTier = 'free',
     this.guardianPhone,
-    this.fallDetectionEnabled = false, // 기본값 비활성화 (Optional)
+    this.fallDetectionEnabled = false, // Default disabled (Optional)
     this.interviewSummary,
     this.extractedDetails,
     this.lastInterviewDate,
   });
 
-  /// 인스턴스 저장 편의 메서드
+  /// Convenience method for saving instance
   Future<void> save() => UserProfile.saveProfile(this);
 
-  /// 7일 경과 여부 체크 - 재인터뷰 가능 여부
+  /// Check if 7 days have passed - Whether re-interview is possible
   bool get canReinterview {
     if (lastInterviewDate == null) return true;
     final daysSinceInterview = DateTime.now()
@@ -44,7 +44,7 @@ class UserProfile {
     return daysSinceInterview >= 7;
   }
 
-  /// 다음 인터뷰 가능 날짜까지 남은 일수
+  /// Days remaining until the next interview is possible
   int get daysUntilReinterview {
     if (lastInterviewDate == null) return 0;
     final daysSinceInterview = DateTime.now()
@@ -53,11 +53,11 @@ class UserProfile {
     return (7 - daysSinceInterview).clamp(0, 7);
   }
 
-  /// 표시 이름 (닉네임이 없으면 'Trainee')
+  /// Display name ('Trainee' if no nickname)
   String get displayName =>
       (nickname != null && nickname!.isNotEmpty) ? nickname! : 'Trainee';
 
-  /// 티어 표시용 (UI)
+  /// For tier display (UI)
   String get displayTier => userTier.toUpperCase();
 
   Map<String, dynamic> toMap() {

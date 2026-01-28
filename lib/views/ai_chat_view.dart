@@ -46,16 +46,16 @@ class _AIChatViewState extends State<AIChatView>
     _messages.add(
       ChatMessage(
         text:
-            '안녕하세요! 오늘은 어떤 운동을 하고 싶으신가요?\n'
-            '예: "가볍게 하체 운동 하고 싶어", "상체 위주로 해줘"',
+            'Hello! What kind of workout would you like to do today?\n'
+            'Example: "I want to do a light lower body workout", "Focus on my upper body"',
         isUser: false,
       ),
     );
   }
 
-  // ... (중간 코드 생략)
+  // ... (Middle code omitted)
 
-  // ... (중간 코드 생략)
+  // ... (Middle code omitted)
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -498,7 +498,7 @@ class _AIChatViewState extends State<AIChatView>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '약 ${curriculum.estimatedMinutes}분 • ${curriculum.workoutTaskList.length}개 운동',
+                    'About ${curriculum.estimatedMinutes} min • ${curriculum.workoutTaskList.length} exercises',
                     style: const TextStyle(color: Colors.white60, fontSize: 13),
                   ),
                 ],
@@ -611,7 +611,7 @@ class _AIChatViewState extends State<AIChatView>
             ),
             const SizedBox(height: 4),
             Text(
-              '${task.adjustedSets}세트 x ${task.adjustedReps}회',
+              '${task.adjustedSets} Sets x ${task.adjustedReps} Reps',
               style: const TextStyle(color: Colors.white54, fontSize: 11),
             ),
           ],

@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
-/// ExerciseConfig - Rep 카운팅용 운동 설정
-/// configureUrl에서 다운로드한 JSON으로 생성
+/// ExerciseConfig - Exercise settings for Rep counting
+/// Created from JSON downloaded from configureUrl
 class ExerciseConfig {
   final String id;
   final Map<String, dynamic>? classLabels;
@@ -40,22 +39,22 @@ class ExerciseConfig {
   factory ExerciseConfig.fromJson(String source) =>
       ExerciseConfig.fromMap(json.decode(source));
 
-  /// 기본 스쿼트 설정 (테스트용)
+  /// Default Squat settings (for testing)
   static ExerciseConfig defaultSquat() {
     return ExerciseConfig(id: 'squat_default');
   }
 
-  /// 기본 푸시업 설정 (테스트용)
+  /// Default Push-up settings (for testing)
   static ExerciseConfig defaultPushup() {
     return ExerciseConfig(id: 'pushup_default');
   }
 
-  /// 기본 런지 설정 (테스트용)
+  /// Default Lunge settings (for testing)
   static ExerciseConfig defaultLunge() {
     return ExerciseConfig(id: 'lunge_default');
   }
 
-  /// 기본 플랭크 설정 (테스트용)
+  /// Default Plank settings (for testing)
   static ExerciseConfig defaultPlank() {
     return ExerciseConfig(id: 'plank_default');
   }

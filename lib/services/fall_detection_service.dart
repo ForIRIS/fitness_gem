@@ -4,29 +4,30 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'gemini_service.dart';
 import '../models/user_profile.dart';
 
-/// FallDetectionService - 낙상 감지 서비스
-/// 운동 중 낙상 의심 상황 감지 및 대응
+/// FallDetectionService - Fall detection service
+/// Detects and responds to suspected fall situations during exercise
 class FallDetectionService {
-  // 설정
-  static const double _headDropThreshold = 0.3; // 화면 높이의 30% 이상 하락
-  static const int _noMovementDurationMs = 5000; // 5초간 움직임 없음
-  static const double _movementThreshold = 20.0; // 픽셀 단위 움직임 임계값
+  // Settings
+  static const double _headDropThreshold =
+      0.3; // Drop more than 30% of screen height
+  static const int _noMovementDurationMs = 5000; // No movement for 5 seconds
+  static const double _movementThreshold = 20.0; // Movement threshold in pixels
 
-  // 상태
+  // State
   double? _previousHeadY;
   double? _referenceHeadY;
   DateTime? _lastMovementTime;
   bool _isFallSuspected = false;
   bool _isMonitoring = false;
 
-  // 낙상 감지 콜백
+  // Fall detection callbacks
   void Function()? onFallSuspected;
   void Function(bool confirmed)? onFallConfirmed;
 
-  // Gemini 서비스
+  // Gemini service
   final GeminiService _geminiService = GeminiService();
 
-  /// 모니터링 시작
+  /// Start monitoring
   void startMonitoring() {
     _isMonitoring = true;
     _isFallSuspected = false;
@@ -35,21 +36,21 @@ class FallDetectionService {
     _lastMovementTime = DateTime.now();
   }
 
-  /// 모니터링 중지
+  /// Stop monitoring
   void stopMonitoring() {
     _isMonitoring = false;
     _isFallSuspected = false;
   }
 
-  /// 포즈 업데이트 및 낙상 감지
-  /// 반환: 낙상 의심 여부
+  /// Process pose and detect fall
+  /// Returns: True if a fall is suspected
   bool processPose(Pose pose, double screenHeight, String currentExercise) {
     if (!_isMonitoring || _isFallSuspected) return false;
 
-    // 눕는 운동은 낙상 감지 제외
+    // Exclude lying exercises from fall detection
     if (_isLyingExercise(currentExercise)) return false;
 
-    // 머리 위치 추출
+    // Extract head position
     final nose = pose.landmarks[PoseLandmarkType.nose];
     final leftEar = pose.landmarks[PoseLandmarkType.leftEar];
     final rightEar = pose.landmarks[PoseLandmarkType.rightEar];
@@ -63,10 +64,10 @@ class FallDetectionService {
       return false;
     }
 
-    // 기준 머리 위치 설정 (첫 프레임)
+    // Set reference head position (first frame)
     _referenceHeadY ??= headY;
 
-    // 움직임 감지
+    // Detect movement
     if (_previousHeadY != null) {
       final movement = (headY - _previousHeadY!).abs();
       if (movement > _movementThreshold) {
@@ -74,18 +75,18 @@ class FallDetectionService {
       }
     }
 
-    // 급격한 머리 하락 감지
+    // Detect rapid head drop
     final headDrop = headY - (_referenceHeadY ?? headY);
     final dropRatio = headDrop / screenHeight;
 
     if (dropRatio > _headDropThreshold) {
-      // 머리가 급격히 하락함 + 무응답 체크
+      // Head dropped rapidly + check for unresponsiveness
       final timeSinceLastMovement = DateTime.now().difference(
         _lastMovementTime ?? DateTime.now(),
       );
 
       if (timeSinceLastMovement.inMilliseconds > _noMovementDurationMs) {
-        // 낙상 의심!
+        // Fall suspected!
         _isFallSuspected = true;
         onFallSuspected?.call();
         return true;
@@ -96,7 +97,7 @@ class FallDetectionService {
     return false;
   }
 
-  /// 눕는 운동 여부 확인
+  /// Check if it's a lying exercise
   bool _isLyingExercise(String exercise) {
     final lower = exercise.toLowerCase();
     return lower.contains('plank') ||
@@ -106,14 +107,14 @@ class FallDetectionService {
         lower.contains('bridge');
   }
 
-  /// 사용자 응답 처리 (확인 버튼 클릭)
+  /// Handle user response (confirm button click)
   void userResponded() {
     _isFallSuspected = false;
-    _referenceHeadY = null; // 기준 위치 리셋
+    _referenceHeadY = null; // Reset reference position
     _lastMovementTime = DateTime.now();
   }
 
-  /// 타임아웃 시 Gemini 분석 요청
+  /// Request Gemini analysis on timeout
   Future<bool> analyzeWithGemini({
     required File videoFile,
     required UserProfile profile,
@@ -127,7 +128,7 @@ class FallDetectionService {
     return isFall;
   }
 
-  /// 낙상 감지 상태 리셋
+  /// Reset fall detection state
   void reset() {
     _isFallSuspected = false;
     _previousHeadY = null;
@@ -135,9 +136,9 @@ class FallDetectionService {
     _lastMovementTime = DateTime.now();
   }
 
-  /// 현재 낙상 의심 상태
+  /// Current fall suspected status
   bool get isFallSuspected => _isFallSuspected;
 
-  /// 모니터링 중인지 여부
+  /// Whether monitoring is active
   bool get isMonitoring => _isMonitoring;
 }

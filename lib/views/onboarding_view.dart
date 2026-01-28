@@ -5,7 +5,6 @@ import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../models/user_profile.dart';
 import 'ai_interview_view.dart';
 import '../services/gemini_service.dart';
-import 'package:flutter/services.dart';
 
 // Sub-pages
 import 'onboarding/onboarding_permissions_page.dart';
@@ -14,7 +13,7 @@ import 'onboarding/onboarding_exercise_page.dart';
 import 'onboarding/onboarding_guardian_page.dart';
 import 'home_view.dart';
 
-/// OnboardingView - 온보딩 화면
+/// OnboardingView - Onboarding Screen
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
 
@@ -40,7 +39,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   final TextEditingController _guardianController = TextEditingController();
   String? _completeGuardianPhone;
 
-  // 나이 범위 목록
+  // Age range list
   static const List<String> _ageRanges = [
     '16~19',
     '20~24',
@@ -55,11 +54,12 @@ class _OnboardingViewState extends State<OnboardingView> {
     '65+',
   ];
 
-  // 면책 팝업 표시 여부
+  // Whether to show disclaimer popup
   bool _showDisclaimer = false;
-  bool _pendingAIStart = false; // 면책 동의 후 AI로 갈지 여부
+  bool _pendingAIStart =
+      false; // Whether to go to AI after agreeing to disclaimer
 
-  // 기능 설정
+  // Feature settings
   bool _fallDetectionEnabled = false;
 
   @override
@@ -100,7 +100,7 @@ class _OnboardingViewState extends State<OnboardingView> {
               children: [
                 Column(
                   children: [
-                    // 진행 표시기
+                    // Progress indicator
                     _buildProgressIndicator(),
 
                     Expanded(
@@ -160,7 +160,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                   ],
                 ),
 
-                // 면책 팝업
+                // Disclaimer popup
                 if (_showDisclaimer) _buildDisclaimerOverlay(),
               ],
             ),
@@ -175,12 +175,12 @@ class _OnboardingViewState extends State<OnboardingView> {
   void _onInjurySelected(String injury, bool selected) {
     setState(() {
       if (injury == AppLocalizations.of(context)!.none) {
-        // '없음' 선택 시 다른 모든 선택 해제
+        // Clear all others if 'None' is selected
         _selectedInjuries.clear();
         if (selected) _selectedInjuries.add(injury);
         _showCustomInjury = false;
       } else {
-        // 다른 부상 선택 시 '없음' 해제
+        // Remove 'None' if another injury is selected
         _selectedInjuries.remove(AppLocalizations.of(context)!.none);
         if (selected) {
           _selectedInjuries.add(injury);
@@ -236,7 +236,7 @@ class _OnboardingViewState extends State<OnboardingView> {
       return const SizedBox.shrink();
     }
 
-    // Guardian Page (마지막 페이지)일 경우 AI Consultant 버튼 추가
+    // Add AI Consultant button if on Guardian Page (last page)
     if (_currentPage == 3) {
       return Padding(
         padding: const EdgeInsets.all(24.0),
@@ -299,7 +299,7 @@ class _OnboardingViewState extends State<OnboardingView> {
       padding: const EdgeInsets.all(24.0),
       child: Row(
         children: [
-          // 이전 버튼 (컴팩트)
+          // Previous button (Compact)
           ElevatedButton(
             onPressed: _previousPage,
             style: ElevatedButton.styleFrom(
@@ -312,7 +312,7 @@ class _OnboardingViewState extends State<OnboardingView> {
             ),
           ),
           const SizedBox(width: 12),
-          // 다음 버튼 (확장)
+          // Next button (Extended)
           Expanded(
             child: ElevatedButton(
               onPressed: _onNextPressed,
@@ -346,7 +346,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   void _onNextPressed() {
-    // 마지막 페이지에서는 시작 로직 실행 (AI 스킵)
+    // Start logic on last page (Skip AI)
     if (_currentPage == 3) {
       _finishOnboarding(startAI: false);
     } else {
@@ -355,8 +355,8 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   Future<void> _finishOnboarding({required bool startAI}) async {
-    // 저장 로직은 _completeOnboardingAndNavigate 에서 수행
-    // 먼저 면책 팝업 표시 및 경로 설정
+    // Save logic is performed in _completeOnboardingAndNavigate
+    // Show disclaimer popup and set path first
     setState(() {
       _pendingAIStart = startAI;
       _showDisclaimer = true;
@@ -402,7 +402,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   Future<void> _completeOnboardingAndNavigate() async {
-    // UserProfile 생성 & 저장
+    // Create & Save UserProfile
     final profile = UserProfile(
       nickname: _nicknameController.text.trim().isEmpty
           ? null
@@ -417,7 +417,7 @@ class _OnboardingViewState extends State<OnboardingView> {
       experienceLevel: _experienceLevel,
       targetExercise: _exerciseController.text.isEmpty
           ? 'Squat'
-          : _exerciseController.text, // 기본값
+          : _exerciseController.text, // Default value
       guardianPhone: _guardianController.text.isEmpty
           ? null
           : _completeGuardianPhone ?? _guardianController.text,
@@ -477,7 +477,7 @@ class _OnboardingViewState extends State<OnboardingView> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // 헤더
+                  // Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

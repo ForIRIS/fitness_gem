@@ -73,3 +73,5 @@ key.properties
 *.md
 !README.md
 !*system_instruction.md
+
+assets/models/

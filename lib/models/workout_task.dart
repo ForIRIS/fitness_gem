@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-/// WorkoutTask - 개별 운동 정보
-/// Firestore /workouts/{workout_id} 컬렉션에서 가져옴
+/// WorkoutTask - Individual workout info
+/// Fetched from Firestore /workouts/{workout_id} collection
 class WorkoutTask {
   final String id;
   final String title;
@@ -18,7 +18,7 @@ class WorkoutTask {
   final String category; // squat, push, core, lunge
   final int difficulty; // 1-4
 
-  // 실행 시 Gemini가 조정한 값
+  // Values adjusted by Gemini during execution
   int adjustedReps;
   int adjustedSets;
 
@@ -85,13 +85,13 @@ class WorkoutTask {
   factory WorkoutTask.fromJson(String source) =>
       WorkoutTask.fromMap(json.decode(source));
 
-  /// Gemini 응답을 기반으로 조정된 reps/sets 적용
+  /// Apply reps/sets adjustment based on Gemini response
   void applyAdjustment({int? newReps, int? newSets}) {
     if (newReps != null) adjustedReps = newReps;
     if (newSets != null) adjustedSets = newSets;
   }
 
-  /// 카테고리 한글 이름
+  /// Category display name
   String get categoryDisplayName {
     switch (category) {
       case 'squat':
@@ -107,7 +107,7 @@ class WorkoutTask {
     }
   }
 
-  /// 난이도 표시
+  /// Difficulty display
   String get difficultyDisplayName {
     switch (difficulty) {
       case 1:

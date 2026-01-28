@@ -3,7 +3,7 @@ import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../models/user_profile.dart';
 import '../services/gemini_service.dart';
 
-/// AIInterviewView - AI 인터뷰 채팅 화면
+/// AIInterviewView - AI Interview Chat Screen
 class AIInterviewView extends StatefulWidget {
   final UserProfile userProfile;
   final bool isFromOnboarding;
@@ -109,10 +109,10 @@ class _AIInterviewViewState extends State<AIInterviewView>
         return;
       }
 
-      // 메시지에서 JSON 부분 제거하고 표시
+      // Remove JSON part from message and display
       String displayMessage = response.message;
       if (response.isComplete) {
-        // JSON 부분 제거
+        // Remove JSON part
         displayMessage = displayMessage
             .replaceAll(RegExp(r'```json[\s\S]*```', multiLine: true), '')
             .replaceAll(
@@ -134,7 +134,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
         _isInterviewComplete = response.isComplete;
       });
 
-      // 인터뷰 완료 시 프로필 업데이트
+      // Update profile when interview is complete
       if (response.isComplete) {
         await _saveInterviewResult(
           response.summaryText,
@@ -163,12 +163,12 @@ class _AIInterviewViewState extends State<AIInterviewView>
 
   void _skipInterview() {
     _geminiService.endInterviewSession();
-    Navigator.pop(context, false); // false = 인터뷰 스킵됨
+    Navigator.pop(context, false); // false = Interview skipped
   }
 
   void _completeInterview() {
     _geminiService.endInterviewSession();
-    Navigator.pop(context, true); // true = 인터뷰 완료됨
+    Navigator.pop(context, true); // true = Interview complete
   }
 
   void _retryConnection() {
@@ -238,9 +238,9 @@ class _AIInterviewViewState extends State<AIInterviewView>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.black.withValues(alpha: 0.7),
-                    Colors.black.withValues(alpha: 0.5),
-                    Colors.black.withValues(alpha: 0.8),
+                    Colors.black.withOpacity(0.7),
+                    Colors.black.withOpacity(0.5),
+                    Colors.black.withOpacity(0.8),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -251,14 +251,14 @@ class _AIInterviewViewState extends State<AIInterviewView>
 
           Column(
             children: [
-              // 안내 배너
+              // Guidance Banner
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
                 ),
-                color: Colors.amber.withValues(alpha: 0.15),
+                color: Colors.amber.withOpacity(0.15),
                 child: Row(
                   children: [
                     const Icon(
@@ -284,19 +284,19 @@ class _AIInterviewViewState extends State<AIInterviewView>
                 ),
               ),
 
-              // 에러 배너
+              // Error Banner
               if (_hasError)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
-                  color: Colors.red.withValues(alpha: 0.2),
+                  color: Colors.red.withOpacity(0.2),
                   child: Row(
                     children: [
                       const Icon(Icons.wifi_off, color: Colors.red, size: 20),
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Text(
-                          '네트워크 오류가 발생했습니다',
+                          'A network error occurred',
                           style: TextStyle(color: Colors.red, fontSize: 13),
                         ),
                       ),
@@ -311,7 +311,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
                   ),
                 ),
 
-              // 채팅 메시지 리스트
+              // Chat Message List
               Expanded(
                 child: ListView.builder(
                   controller: _scrollController,
@@ -326,7 +326,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
                 ),
               ),
 
-              // 완료 버튼 (인터뷰 완료 시)
+              // Completion Button (When Interview Complete)
               if (_isInterviewComplete)
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -350,7 +350,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
                   ),
                 ),
 
-              // 입력 필드
+              // Input Field
               if (!_isInterviewComplete)
                 Container(
                   padding: const EdgeInsets.symmetric(
