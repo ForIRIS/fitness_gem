@@ -32,6 +32,8 @@
 	<string>We need access to the microphone for video recording.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need access to your photo library to analyze exercise photos.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>We need speech recognition to allow you to talk to the AI Consultant.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

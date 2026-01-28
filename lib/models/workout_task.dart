@@ -15,6 +15,8 @@ class WorkoutTask {
   final int reps;
   final int sets;
   final int timeoutSec;
+  final int durationSec; // For non-countable exercises (e.g., planks)
+  final bool isCountable; // true = rep-based, false = duration-based
   final String category; // squat, push, core, lunge
   final int difficulty; // 1-4
 
@@ -35,6 +37,8 @@ class WorkoutTask {
     required this.reps,
     required this.sets,
     required this.timeoutSec,
+    this.durationSec = 0,
+    this.isCountable = true,
     required this.category,
     required this.difficulty,
     int? adjustedReps,
@@ -56,6 +60,8 @@ class WorkoutTask {
       reps: map['reps'] ?? 10,
       sets: map['sets'] ?? 3,
       timeoutSec: map['timeout_sec'] ?? 60,
+      durationSec: map['duration_sec'] ?? 0,
+      isCountable: map['is_countable'] ?? true,
       category: map['category'] ?? 'squat',
       difficulty: map['difficulty'] ?? 1,
     );
@@ -75,6 +81,8 @@ class WorkoutTask {
       'reps': reps,
       'sets': sets,
       'timeout_sec': timeoutSec,
+      'duration_sec': durationSec,
+      'is_countable': isCountable,
       'category': category,
       'difficulty': difficulty,
     };

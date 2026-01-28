@@ -94,6 +94,8 @@ class GeminiService {
   // System Instructions - Store loaded data
   String _analystSystemInstruction = '';
   String _consultantSystemInstruction = '';
+  String _interviewSystemInstruction = '';
+  String _curriculumSystemInstruction = '';
 
   /// Load System Instructions from assets
   Future<void> _loadSystemInstructions() async {
@@ -104,94 +106,22 @@ class GeminiService {
       _consultantSystemInstruction = await rootBundle.loadString(
         'assets/prompts/consultant_system_instruction.md',
       );
+      _interviewSystemInstruction = await rootBundle.loadString(
+        'assets/prompts/interview_system_instruction.md',
+      );
+      _curriculumSystemInstruction = await rootBundle.loadString(
+        'assets/prompts/curriculum_planner_system_instruction.md',
+      );
       debugPrint('System Instructions loaded from assets.');
 
       // Re-initialize model (Apply new instructions)
       _initModel();
     } catch (e) {
       debugPrint('Error loading system instructions: $e');
-      // Fallback values if needed, or keeping empty string
     }
   }
 
-  // System Instructions - For Curriculum Generation
-  static const String _curriculumSystemInstruction = '''
-**ROLE & OBJECTIVE**
-You are "CoreFit AI Curriculum Planner." Your task is to create personalized workout curricula based on user profiles and available exercises.
-
-**INPUT**
-1. User Profile (Age, Injury History, Goal, Experience Level)
-2. Requested workout category (squat/push/core/lunge)
-3. Available workout list from the app's exercise library
-
-**OUTPUT FORMAT**
-- **Format**: JSON only. No Markdown code blocks.
-- Output a JSON array of workout IDs that form the optimal curriculum.
-- Consider user's injury history to avoid unsafe exercises.
-- Match difficulty level to user's experience.
-
-**JSON SCHEMA**
-{
-  "curriculum_title": "String",
-  "curriculum_description": "String (brief explanation)",
-  "workout_ids": ["workout_id_1", "workout_id_2", ...],
-  "adjustments": {
-    "workout_id": {
-      "reps": Integer,
-      "sets": Integer
-    }
-  },
-  "reasoning": "String (why these exercises were chosen)"
-}
-''';
-
-  // System Instructions - For AI Interview
-  static const String _interviewSystemInstruction = '''
-**MODE: DEEP INTERVIEWER**
-You are a professional fitness consultant conducting a deep interview to understand the user better.
-
-**Your Goal**:
-Gather detailed context that wasn't captured in the basic onboarding form.
-- Ask **ONE question at a time**. Do not overwhelm the user.
-- Ask max **3-5 questions** total.
-- Be polite, empathetic, and professional.
-- Speak in **English**.
-
-**Input Context**:
-You will receive the user's basic info (Age, Injury, Goal, Experience Level, Target Exercise). Use this to formulate relevant questions.
-
-**Example Questions**:
-- If user has "Injury: Knee", ask: "In what situations does your knee pain occur? Is it during movement, or does it hurt even when you're still?"
-- If user has "Goal: Weight loss", ask: "What are your usual eating habits? Do you eat at regular times?"
-- If user is "Beginner", ask: "Since you don't have much exercise experience, what kind of workout are you most interested in trying?"
-
-**Interview Progress**:
-Keep track of how many questions you have asked. After 3-5 meaningful exchanges, conclude the interview.
-
-**Termination & Extraction (CRITICAL)**:
-When you have gathered enough info (or after 5 turns), you MUST output the final summary.
-Say "Thank you! Your profile has been updated." followed by JSON in this EXACT format:
-
-```json
-{
-  "interview_complete": true,
-  "summary_text": "String (summarized bio for display, 2-3 sentences)",
-  "extracted_details": {
-    "injury_specifics": "String (or null if no injury)",
-    "lifestyle_notes": "String (daily routine, work style, etc.)",
-    "diet_preference": "String (or null)",
-    "stress_level": "String (or null)",
-    "exercise_preference": "String (preferred workout style)",
-    "available_time": "String (how much time for exercise)"
-  }
-}
-```
-
-**IMPORTANT**:
-- Only output JSON when concluding the interview.
-- During the interview, respond naturally in English as a friendly consultant.
-- If the user wants to skip or says they don't want to answer, respect that and conclude early.
-''';
+  // Hardcoded prompts removed - now loaded from assets
 
   // ============ Curriculum Generation ============
 
@@ -618,35 +548,16 @@ Output JSON only.
       }
 
       // NEW: Batch fetch additional info from Cloud Functions if missing
-      final missingInfoTaskIds = selectedTasks
-          .where((t) => !t.hasMediaInfo)
-          .map((t) => t.id)
-          .toList();
-
-      if (missingInfoTaskIds.isNotEmpty) {
-        debugPrint('Fetching media info for tasks (chat): $missingInfoTaskIds');
-        final extraInfos = await _functionsService.requestTaskInfo(
-          missingInfoTaskIds,
-        );
-
-        for (final info in extraInfos) {
-          final taskId = info['id'] as String?;
-          if (taskId == null) continue;
-
-          final task = selectedTasks.firstWhere((t) => t.id == taskId);
-          task.updateMediaInfo(
-            newThumbnail: info['thumbnail'] as String?,
-            newReadyPoseImageUrl: info['readyPoseImageUrl'] as String?,
-            newExampleVideoUrl: info['exampleVideoUrl'] as String?,
-            newGuideAudioUrl: info['guideAudioUrl'] as String?,
-          );
-        }
-      }
+      await _enrichTaskMediaInfo(selectedTasks);
 
       return WorkoutCurriculum(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: jsonData['curriculum_title'] ?? 'Custom Workout',
-        description: jsonData['curriculum_description'] ?? '',
+        title:
+            jsonData['title'] ??
+            jsonData['curriculum_title'] ??
+            'Custom Workout',
+        description:
+            jsonData['description'] ?? jsonData['curriculum_description'] ?? '',
         thumbnail: '',
         workoutTaskList: selectedTasks,
         createdAt: DateTime.now(),
@@ -654,6 +565,121 @@ Output JSON only.
     } catch (e) {
       debugPrint('Error in chat curriculum: $e');
       return null;
+    }
+  }
+
+  /// Generate Curriculum directly from Interview Results
+  Future<WorkoutCurriculum?> generateCurriculumFromInterviewResult({
+    required UserProfile profile,
+    required List<WorkoutTask> availableWorkouts,
+    required Map<String, String> interviewDetails,
+  }) async {
+    try {
+      final workoutListText = _buildWorkoutListText(availableWorkouts);
+
+      final prompt =
+          '''
+User Profile:
+- Age: ${profile.age}
+- Injury History: ${profile.injuryHistory}
+- Goal: ${profile.goal}
+- Experience Level: ${profile.experienceLevel}
+
+Interview Details (Extracted Context):
+${json.encode(interviewDetails)}
+
+Available Workouts:
+$workoutListText
+
+Create a highly personalized workout curriculum based on the DEEP INTERVIEW results.
+Select appropriate exercises that match the user's specific needs found in the interview.
+Output JSON only.
+''';
+
+      final model = GenerativeModel(
+        model: 'gemini-3-flash-preview',
+        apiKey: _apiKey,
+        systemInstruction: Content.system(_curriculumSystemInstruction),
+        generationConfig: GenerationConfig(
+          responseMimeType: 'application/json',
+        ),
+      );
+
+      final response = await model.generateContent([Content.text(prompt)]);
+      final jsonText = response.text;
+
+      if (jsonText == null) return null;
+
+      final jsonData = json.decode(jsonText) as Map<String, dynamic>;
+
+      final workoutIds =
+          (jsonData['workoutTaskList'] as List<dynamic>?)
+              ?.map((e) => e['id'].toString())
+              .toList() ??
+          (jsonData['workout_ids'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [];
+
+      final selectedTasks = <WorkoutTask>[];
+      // Note: The new prompt format returns full task objects in 'workoutTaskList',
+      // but we should match with availableWorkouts to get canonical IDs,
+      // OR parse the detailed adjustments from the JSON if the AI modifies them.
+      // For safety, we match IDs with our database and apply adjustments.
+
+      for (final id in workoutIds) {
+        final task = availableWorkouts.firstWhere(
+          (t) => t.id == id,
+          orElse: () => availableWorkouts.first,
+        );
+        // Clone task to apply specific adjustments if needed,
+        // or just add to list. For now, adding directly.
+        // If we want AI-specific adjustments (reps/sets), we would parse them here.
+        selectedTasks.add(task);
+      }
+
+      await _enrichTaskMediaInfo(selectedTasks);
+
+      return WorkoutCurriculum(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: jsonData['title'] ?? 'Personalized Plan',
+        description:
+            jsonData['description'] ?? 'Based on your consultation results.',
+        thumbnail: '',
+        workoutTaskList: selectedTasks,
+        createdAt: DateTime.now(),
+      );
+    } catch (e) {
+      debugPrint('Error generating curriculum from interview: $e');
+      return null;
+    }
+  }
+
+  /// Helper to batch fetch media info
+  Future<void> _enrichTaskMediaInfo(List<WorkoutTask> tasks) async {
+    final missingInfoTaskIds = tasks
+        .where((t) => !t.hasMediaInfo)
+        .map((t) => t.id)
+        .toList();
+
+    if (missingInfoTaskIds.isNotEmpty) {
+      debugPrint('Fetching media info for tasks: $missingInfoTaskIds');
+      final extraInfos = await _functionsService.requestTaskInfo(
+        missingInfoTaskIds,
+      );
+
+      for (final info in extraInfos) {
+        final taskId = info['id'] as String?;
+        if (taskId == null) continue;
+
+        final task = tasks.firstWhere((t) => t.id == taskId);
+        task.updateMediaInfo(
+          newThumbnail: info['thumbnail'] as String?,
+          newReadyPoseImageUrl: info['readyPoseImageUrl'] as String?,
+          newExampleVideoUrl: info['exampleVideoUrl'] as String?,
+          newGuideAudioUrl: info['guideAudioUrl'] as String?,
+        );
+      }
     }
   }
 

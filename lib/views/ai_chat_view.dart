@@ -10,6 +10,8 @@ import '../services/gemini_service.dart';
 import 'workout_detail_view.dart';
 import 'loading_view.dart';
 import 'camera_view.dart';
+import '../services/tts_service.dart';
+import '../services/stt_service.dart';
 
 /// AIChatView - AI Consultation Chat Screen
 class AIChatView extends StatefulWidget {
@@ -30,6 +32,11 @@ class _AIChatViewState extends State<AIChatView>
   WorkoutCurriculum? _suggestedCurriculum;
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
+  final TTSService _ttsService = TTSService();
+  final STTService _sttService = STTService();
+
+  bool _isTtsEnabled = true;
+  bool _isListening = false;
 
   late AnimationController _shimmerController;
 
@@ -42,6 +49,8 @@ class _AIChatViewState extends State<AIChatView>
       duration: const Duration(milliseconds: 1500),
     )..repeat();
 
+    _initializeServices();
+
     // Initial Message
     _messages.add(
       ChatMessage(
@@ -51,6 +60,11 @@ class _AIChatViewState extends State<AIChatView>
         isUser: false,
       ),
     );
+  }
+
+  Future<void> _initializeServices() async {
+    await _ttsService.initialize();
+    await _sttService.initialize();
   }
 
   // ... (Middle code omitted)
@@ -110,6 +124,9 @@ class _AIChatViewState extends State<AIChatView>
             _messages.add(ChatMessage(text: response.message, isUser: false));
             _isLoading = false;
           });
+          if (_isTtsEnabled) {
+            _ttsService.speak(response.message);
+          }
         }
       } else {
         final firebaseService = FirebaseService();
@@ -135,6 +152,13 @@ class _AIChatViewState extends State<AIChatView>
             );
             _isLoading = false;
           });
+          if (_isTtsEnabled) {
+            _ttsService.speak(
+              AppLocalizations.of(
+                context,
+              )!.curriculumRecommendation(curriculum.title),
+            );
+          }
         } else {
           setState(() {
             _messages.add(
@@ -207,6 +231,18 @@ class _AIChatViewState extends State<AIChatView>
           style: const TextStyle(color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isTtsEnabled ? Icons.volume_up : Icons.volume_off,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              setState(() => _isTtsEnabled = !_isTtsEnabled);
+              if (!_isTtsEnabled) _ttsService.stop();
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -374,7 +410,27 @@ class _AIChatViewState extends State<AIChatView>
                             },
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 8),
+                        // Voice Input Button
+                        GestureDetector(
+                          onLongPressStart: (_) => _startListening(),
+                          onLongPressEnd: (_) => _stopListening(),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: _isListening
+                                  ? Colors.red.withOpacity(0.2)
+                                  : Colors.transparent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              _isListening ? Icons.mic : Icons.mic_none,
+                              color: _isListening ? Colors.red : Colors.white,
+                              size: 28,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         IconButton(
                           onPressed: _isLoading ? null : _sendMessage,
                           icon: const Icon(Icons.send),
@@ -744,6 +800,28 @@ class _AIChatViewState extends State<AIChatView>
         ),
       ),
     );
+  }
+
+  Future<void> _startListening() async {
+    final available = await _sttService.initialize();
+    if (available) {
+      setState(() => _isListening = true);
+      _sttService.startListening(
+        onResult: (text) {
+          setState(() {
+            _messageController.text = text;
+          });
+        },
+        languageCode: Localizations.localeOf(context).languageCode == 'ko'
+            ? 'ko-KR'
+            : 'en-US',
+      );
+    }
+  }
+
+  Future<void> _stopListening() async {
+    setState(() => _isListening = false);
+    await _sttService.stopListening();
   }
 
   @override

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../models/user_profile.dart';
 import '../services/gemini_service.dart';
+import '../services/tts_service.dart';
+import '../services/stt_service.dart';
+import '../services/firebase_service.dart';
+import '../models/workout_curriculum.dart';
 
 /// AIInterviewView - AI Interview Chat Screen
 class AIInterviewView extends StatefulWidget {
@@ -24,10 +28,14 @@ class _AIInterviewViewState extends State<AIInterviewView>
   final ScrollController _scrollController = ScrollController();
   final List<_ChatMessage> _messages = [];
   final GeminiService _geminiService = GeminiService();
+  final TTSService _ttsService = TTSService();
+  final STTService _sttService = STTService();
 
   bool _isLoading = false;
   bool _isInterviewComplete = false;
   bool _hasError = false;
+  bool _isTtsEnabled = true;
+  bool _isListening = false;
 
   late AnimationController _shimmerController;
 
@@ -39,7 +47,13 @@ class _AIInterviewViewState extends State<AIInterviewView>
       duration: const Duration(milliseconds: 1500),
     )..repeat();
 
+    _initializeServices();
     _startInterview();
+  }
+
+  Future<void> _initializeServices() async {
+    await _ttsService.initialize();
+    await _sttService.initialize();
   }
 
   Future<void> _startInterview() async {
@@ -57,6 +71,9 @@ class _AIInterviewViewState extends State<AIInterviewView>
           _messages.add(_ChatMessage(text: response, isUser: false));
           _isLoading = false;
         });
+        if (_isTtsEnabled) {
+          _ttsService.speak(response);
+        }
       } else {
         setState(() {
           _hasError = true;
@@ -134,9 +151,26 @@ class _AIInterviewViewState extends State<AIInterviewView>
         _isInterviewComplete = response.isComplete;
       });
 
+      if (_isTtsEnabled && !response.isComplete) {
+        _ttsService.speak(displayMessage);
+      } else if (response.isComplete) {
+        _ttsService.speak(AppLocalizations.of(context)!.downloadComplete);
+      }
+
       // Update profile when interview is complete
       if (response.isComplete) {
-        await _saveInterviewResult(
+        // Show generating message (can be handled by UI state or message)
+        setState(() {
+          _messages.add(
+            _ChatMessage(
+              text: 'Generating your personalized curriculum...',
+              isUser: false,
+            ),
+          );
+          _isLoading = true;
+        });
+
+        await _processInterviewResult(
           response.summaryText,
           response.extractedDetails,
         );
@@ -150,15 +184,66 @@ class _AIInterviewViewState extends State<AIInterviewView>
     _scrollToBottom();
   }
 
-  Future<void> _saveInterviewResult(
+  Future<void> _processInterviewResult(
     String? summaryText,
     Map<String, String>? extractedDetails,
   ) async {
+    // 1. Save Profile
     final profile = widget.userProfile;
     profile.interviewSummary = summaryText;
     profile.extractedDetails = extractedDetails;
     profile.lastInterviewDate = DateTime.now();
     await UserProfile.saveProfile(profile);
+
+    // 2. Generate Curriculum
+    if (extractedDetails != null) {
+      try {
+        final firebaseService = FirebaseService();
+        await firebaseService.initialize();
+        final allWorkouts = await firebaseService.fetchWorkoutAllList();
+
+        final curriculum = await _geminiService
+            .generateCurriculumFromInterviewResult(
+              profile: profile,
+              availableWorkouts: allWorkouts,
+              interviewDetails: extractedDetails,
+            );
+
+        if (curriculum != null) {
+          // Save curriculum to shared prefs for the main screen to pick up
+          await WorkoutCurriculum.save(curriculum);
+
+          if (mounted) {
+            setState(() {
+              _messages.add(
+                _ChatMessage(
+                  text: 'Curriculum created: ${curriculum.title}',
+                  isUser: false,
+                ),
+              );
+              _isLoading = false;
+              _isInterviewComplete = true; // Use this to show "Start" button
+            });
+
+            if (mounted) {
+              _ttsService.speak(
+                AppLocalizations.of(context)!.downloadComplete,
+              ); // Or generic success message if localization not ready
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        debugPrint('Error generating curriculum in view: $e');
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _isInterviewComplete = true;
+      });
+    }
   }
 
   void _skipInterview() {
@@ -218,6 +303,16 @@ class _AIInterviewViewState extends State<AIInterviewView>
               AppLocalizations.of(context)!.skip,
               style: const TextStyle(color: Colors.white54),
             ),
+          ),
+          IconButton(
+            icon: Icon(
+              _isTtsEnabled ? Icons.volume_up : Icons.volume_off,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              setState(() => _isTtsEnabled = !_isTtsEnabled);
+              if (!_isTtsEnabled) _ttsService.stop();
+            },
           ),
         ],
       ),
@@ -395,7 +490,27 @@ class _AIInterviewViewState extends State<AIInterviewView>
                           onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
+                      // Voice Input Button
+                      GestureDetector(
+                        onLongPressStart: (_) => _startListening(),
+                        onLongPressEnd: (_) => _stopListening(),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _isListening
+                                ? Colors.red.withOpacity(0.2)
+                                : Colors.transparent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            _isListening ? Icons.mic : Icons.mic_none,
+                            color: _isListening ? Colors.red : Colors.amber,
+                            size: 28,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       IconButton(
                         onPressed: _isLoading ? null : _sendMessage,
                         icon: const Icon(Icons.send),
@@ -410,6 +525,28 @@ class _AIInterviewViewState extends State<AIInterviewView>
         ],
       ),
     );
+  }
+
+  Future<void> _startListening() async {
+    final available = await _sttService.initialize();
+    if (available) {
+      setState(() => _isListening = true);
+      _sttService.startListening(
+        onResult: (text) {
+          setState(() {
+            _messageController.text = text;
+          });
+        },
+        languageCode: Localizations.localeOf(context).languageCode == 'ko'
+            ? 'ko-KR'
+            : 'en-US',
+      );
+    }
+  }
+
+  Future<void> _stopListening() async {
+    setState(() => _isListening = false);
+    await _sttService.stopListening();
   }
 
   Widget _buildMessageBubble(_ChatMessage message) {
