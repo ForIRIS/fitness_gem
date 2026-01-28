@@ -40,26 +40,14 @@ class _LoadingViewState extends State<LoadingView> {
   Future<void> _startCaching() async {
     final cacheService = CacheService();
 
-    // Create list of resources to cache
-    final resources = <WorkoutResourceUrls>[];
-    for (final task in widget.curriculum.workoutTaskList) {
-      resources.add(
-        WorkoutResourceUrls(
-          exampleVideoUrl: task.exampleVideoUrl,
-          readyPoseImageUrl: task.readyPoseImageUrl,
-          guideAudioUrl: task.guideAudioUrl,
-          configureUrl: task.configureUrl,
-        ),
-      );
-    }
-
     // Calculate total resources (excluding empty URLs)
     int total = 0;
-    for (final resource in resources) {
-      if (resource.exampleVideoUrl.isNotEmpty) total++;
-      if (resource.readyPoseImageUrl.isNotEmpty) total++;
-      if (resource.guideAudioUrl.isNotEmpty) total++;
-      if (resource.configureUrl.isNotEmpty) total++;
+    for (final _ in widget.curriculum.workoutTaskList) {
+      // Note: Initially URLs might be empty, but CacheService will fetch them.
+      // We assume each task has 4 resources.
+      // If we want a more accurate progress bar BEFORE fetching, we might need a different approach.
+      // For now, let's assume 4 items per task for the progress bar.
+      total += 4;
     }
 
     // If all URLs are empty (dummy data), complete immediately
@@ -90,7 +78,7 @@ class _LoadingViewState extends State<LoadingView> {
 
     try {
       await cacheService.cacheWorkoutResources(
-        resources,
+        widget.curriculum.workoutTaskList,
         onProgress: (completed, totalItems, currentItem) {
           if (mounted) {
             setState(() {

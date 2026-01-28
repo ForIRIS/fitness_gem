@@ -12,6 +12,8 @@ class WorkoutTask {
   String exampleVideoUrl;
   String configureUrl;
   String guideAudioUrl;
+  String coremlUrl;
+  String onnxUrl;
   final int reps;
   final int sets;
   final int timeoutSec;
@@ -34,6 +36,8 @@ class WorkoutTask {
     required this.exampleVideoUrl,
     required this.configureUrl,
     required this.guideAudioUrl,
+    this.coremlUrl = '',
+    this.onnxUrl = '',
     required this.reps,
     required this.sets,
     required this.timeoutSec,
@@ -57,6 +61,8 @@ class WorkoutTask {
       exampleVideoUrl: map['exampleVideoUrl'] ?? '',
       configureUrl: map['configureUrl'] ?? '',
       guideAudioUrl: map['guideAudioUrl'] ?? '',
+      coremlUrl: map['coremlUrl'] ?? '',
+      onnxUrl: map['onnxUrl'] ?? '',
       reps: map['reps'] ?? 10,
       sets: map['sets'] ?? 3,
       timeoutSec: map['timeout_sec'] ?? 60,
@@ -78,6 +84,8 @@ class WorkoutTask {
       'exampleVideoUrl': exampleVideoUrl,
       'configureUrl': configureUrl,
       'guideAudioUrl': guideAudioUrl,
+      'coremlUrl': coremlUrl,
+      'onnxUrl': onnxUrl,
       'reps': reps,
       'sets': sets,
       'timeout_sec': timeoutSec,
@@ -111,6 +119,8 @@ class WorkoutTask {
     String? newReadyPoseImageUrl,
     String? newExampleVideoUrl,
     String? newGuideAudioUrl,
+    String? newCoremlUrl,
+    String? newOnnxUrl,
   }) {
     if (newThumbnail != null && newThumbnail.isNotEmpty) {
       thumbnail = newThumbnail;
@@ -123,6 +133,12 @@ class WorkoutTask {
     }
     if (newGuideAudioUrl != null && newGuideAudioUrl.isNotEmpty) {
       guideAudioUrl = newGuideAudioUrl;
+    }
+    if (newCoremlUrl != null && newCoremlUrl.isNotEmpty) {
+      coremlUrl = newCoremlUrl;
+    }
+    if (newOnnxUrl != null && newOnnxUrl.isNotEmpty) {
+      onnxUrl = newOnnxUrl;
     }
   }
 

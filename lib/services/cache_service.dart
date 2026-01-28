@@ -2,8 +2,10 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:archive/archive.dart';
 import '../models/workout_curriculum.dart';
 import '../models/workout_task.dart';
+import 'firebase_service.dart';
 
 /// CacheService - Resource caching service
 /// Download and local storage of guide videos, images, and audio
@@ -91,6 +93,32 @@ class CacheService {
     }
   }
 
+  /// Unzip a file to the same directory
+  Future<void> _unzipFile(File zipFile) async {
+    try {
+      final bytes = await zipFile.readAsBytes();
+      final archive = ZipDecoder().decodeBytes(bytes);
+
+      for (final file in archive) {
+        final filename = file.name;
+        if (file.isFile) {
+          final data = file.content as List<int>;
+          final outFile = File('${zipFile.parent.path}/$filename');
+          await outFile.create(recursive: true);
+          await outFile.writeAsBytes(data);
+        } else {
+          final outDir = Directory('${zipFile.parent.path}/$filename');
+          await outDir.create(recursive: true);
+        }
+      }
+      // Optional: Delete the zip file after extraction
+      // await zipFile.delete();
+      debugPrint('Unzipped: ${zipFile.path}');
+    } catch (e) {
+      debugPrint('Unzip error for ${zipFile.path}: $e');
+    }
+  }
+
   /// Batch download multiple URLs
   Future<Map<String, String?>> downloadMultiple(
     List<String> urls, {
@@ -112,23 +140,36 @@ class CacheService {
 
   /// Cache all resources needed for a curriculum
   Future<bool> cacheWorkoutResources(
-    List<WorkoutResourceUrls> resources, {
+    List<WorkoutTask> tasks, {
     void Function(int completed, int total, String currentItem)? onProgress,
   }) async {
+    // 1. URL이 비어 있는 경우 Cloud Functions를 통해 URL 획득
+    final tasksToFetch = tasks.where((t) => t.exampleVideoUrl.isEmpty).toList();
+    if (tasksToFetch.isNotEmpty) {
+      onProgress?.call(0, 1, 'Fetching URLs...');
+      await FirebaseService().requestTaskUrls(tasksToFetch);
+    }
+
     final allUrls = <String>[];
 
-    for (final resource in resources) {
-      if (resource.exampleVideoUrl.isNotEmpty) {
-        allUrls.add(resource.exampleVideoUrl);
+    for (final task in tasks) {
+      if (task.exampleVideoUrl.isNotEmpty) {
+        allUrls.add(task.exampleVideoUrl);
       }
-      if (resource.readyPoseImageUrl.isNotEmpty) {
-        allUrls.add(resource.readyPoseImageUrl);
+      if (task.readyPoseImageUrl.isNotEmpty) {
+        allUrls.add(task.readyPoseImageUrl);
       }
-      if (resource.guideAudioUrl.isNotEmpty) {
-        allUrls.add(resource.guideAudioUrl);
+      if (task.guideAudioUrl.isNotEmpty) {
+        allUrls.add(task.guideAudioUrl);
       }
-      if (resource.configureUrl.isNotEmpty) {
-        allUrls.add(resource.configureUrl);
+      if (task.configureUrl.isNotEmpty) {
+        allUrls.add(task.configureUrl);
+      }
+      if (task.coremlUrl.isNotEmpty) {
+        allUrls.add(task.coremlUrl);
+      }
+      if (task.onnxUrl.isNotEmpty) {
+        allUrls.add(task.onnxUrl);
       }
     }
 
@@ -137,11 +178,17 @@ class CacheService {
       final fileName = _getFileName(url);
       onProgress?.call(completed, allUrls.length, fileName);
 
-      await downloadAndCache(url);
+      final cachedPath = await downloadAndCache(url);
+
+      // Zip 파일인 경우 압축 해제
+      if (cachedPath != null && url.toLowerCase().contains('.zip')) {
+        onProgress?.call(completed, allUrls.length, 'Unzipping $fileName...');
+        await _unzipFile(File(cachedPath));
+      }
+
       completed++;
     }
 
-    onProgress?.call(allUrls.length, allUrls.length, 'Complete');
     onProgress?.call(allUrls.length, allUrls.length, 'Complete');
     return true;
   }

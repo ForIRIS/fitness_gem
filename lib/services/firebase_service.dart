@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import '../firebase_options.dart';
 import '../models/workout_task.dart';
 
@@ -157,6 +158,44 @@ class FirebaseService {
       return _dummyWorkoutTasks
           .where((task) => workoutTaskIds.contains(task.id))
           .toList();
+    }
+  }
+
+  /// Cloud Function을 통해 운동 미디어 URL(Signed URL) 요청
+  Future<void> requestTaskUrls(List<WorkoutTask> tasks) async {
+    if (tasks.isEmpty) return;
+
+    try {
+      final taskIds = tasks.map((t) => t.id).toList();
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('requestTaskInfo')
+          .call({'task_ids': taskIds});
+
+      final List<dynamic> taskUrls = result.data['task_urls'];
+
+      for (var taskData in taskUrls) {
+        final id = taskData['id'];
+        final task = tasks.firstWhere((t) => t.id == id);
+
+        task.updateMediaInfo(
+          newThumbnail: taskData['thumbnail'],
+          newReadyPoseImageUrl: taskData['readyPoseImageUrl'],
+          newExampleVideoUrl:
+              taskData['videoUrl'], // Map videoUrl to exampleVideoUrl
+          newGuideAudioUrl:
+              taskData['audioUrl'], // Map audioUrl to guideAudioUrl
+          newCoremlUrl: taskData['coremlUrl'],
+          newOnnxUrl: taskData['onnxUrl'],
+        );
+
+        // configureUrl update (WorkoutTask model needs this update if not already there)
+        if (taskData['configureUrl'] != null &&
+            taskData['configureUrl'].toString().isNotEmpty) {
+          task.configureUrl = taskData['configureUrl'];
+        }
+      }
+    } catch (e) {
+      debugPrint('Error calling requestTaskInfo: $e');
     }
   }
 
