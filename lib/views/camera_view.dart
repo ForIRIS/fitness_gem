@@ -25,6 +25,8 @@ import '../models/session_analysis.dart';
 import '../services/exercise_service.dart';
 import '../services/workout_model_service.dart';
 import '../viewmodels/display_viewmodel.dart';
+import '../widgets/coaching_overlay.dart';
+import '../services/coaching_management_service.dart';
 
 /// CameraView - Workout Screen (Camera + Skeleton Overlay + UI)
 class CameraView extends StatefulWidget {
@@ -109,6 +111,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
   // 서비스
   final ExerciseService _exerciseService = ExerciseService();
+  final CoachingManagementService _cms = CoachingManagementService();
   late final DisplayViewModel _displayViewModel;
 
   @override
@@ -138,6 +141,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     _countdownTimer?.cancel();
     _guideVideoController?.dispose();
     _ttsService.dispose();
+    _cms.dispose();
     super.dispose();
   }
 
@@ -789,6 +793,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
           // 9. Pause Overlay
           if (_isPaused) _buildPauseOverlay(),
+
+          // 10. Coaching Overlay (New CMS-based)
+          const CoachingOverlay(),
         ],
       ),
     );

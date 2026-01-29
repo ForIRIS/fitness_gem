@@ -20,8 +20,8 @@ class ExerciseConfig {
     return ExerciseConfig(
       id: map['id'] ?? '',
       classLabels: map['class_labels'],
-      medianStats: map['median_stats'],
-      coachingCues: map['coaching_cues'],
+      medianStats: map['base_model_stats'],
+      coachingCues: map['base_model_cues'],
     );
   }
 

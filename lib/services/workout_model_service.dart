@@ -13,9 +13,17 @@ class WorkoutModelService {
   /// [modelPath] should be the absolute path to the .mlpackage (iOS) or .onnx (Android) file
   Future<bool> loadModel(String modelPath) async {
     try {
+      String assetPath;
+      if (Platform.isIOS) {
+        assetPath = '$modelPath/pose_model.mlpackage';
+      } else {
+        assetPath = '$modelPath/pose_model.onnx';
+      }
+
       final bool result = await _channel.invokeMethod('loadModel', {
-        'modelPath': modelPath,
+        'modelPath': assetPath,
       });
+
       return result;
     } on PlatformException catch (e) {
       print("Failed to load model: '${e.message}'.");

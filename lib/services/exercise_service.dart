@@ -68,6 +68,25 @@ class ExerciseService {
     }
   }
 
+  Future<WorkoutTask> getSampleWorkoutTask() async {
+    return WorkoutTask(
+      id: '31c7abde-ede2-4647-b366-4cfb9bf55bbe',
+      title: 'Back Lunge',
+      category: 'lunge',
+      description: 'Train your legs with back lunges using the sample model.',
+      reps: 10,
+      sets: 3,
+      timeoutSec: 60,
+      difficulty: 2,
+      advice: 'Step back and keep your front knee at 90 degrees.',
+      thumbnail: '',
+      readyPoseImageUrl: '',
+      exampleVideoUrl: '',
+      configureUrl: '',
+      guideAudioUrl: '',
+    );
+  }
+
   /// Get Workout List (Repository Pattern)
   /// Merges: Built-in + Local + Remote
   Future<List<WorkoutTask>> getAvailableWorkouts({
@@ -77,7 +96,7 @@ class ExerciseService {
 
     // Add Sample Workout for Testing
     final sampleWorkout = WorkoutTask(
-      id: 'sample_back_lunge',
+      id: '31c7abde-ede2-4647-b366-4cfb9bf55bbe',
       title: 'Back Lunge',
       category: 'lunge',
       description: 'Train your legs with back lunges using the sample model.',
@@ -111,11 +130,6 @@ class ExerciseService {
     try {
       final localWorkouts = await _getLocalWorkouts();
       for (final workout in localWorkouts) {
-        // Local data might overwrite remote if we want (e.g., custom edits),
-        // or just add new ones. For now, let's treat Local as 'offline cache' mostly,
-        // but if it's a new ID, we add it. If same ID, maybe Local is fresher?
-        // Let's assume Remote is source of truth, but Local keeps downloaded status logic if we add it.
-        // Simple merge: ID based.
         workoutsMap[workout.id] = workout;
       }
     } catch (e) {
