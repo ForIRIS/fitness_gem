@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'dart:async';
+import 'dart:ui';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -100,7 +101,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   bool _isWaitingForReadyPose = true;
   int _countdownSeconds = 0;
   Timer? _countdownTimer;
-  DateTime? _lastBodyNotVisibleTTS;
+
+  // PIP State
+  bool _isVideoFullscreen = true; // Default: Video Fullscreen, Camera PIP
 
   // Real-time Form Feedback
   final FormRuleChecker _formRuleChecker = FormRuleChecker();
@@ -287,7 +290,8 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           ..initialize().then((_) {
             setState(() {});
             _guideVideoController!.setLooping(true);
-            _guideVideoController!.play();
+            // Don't auto-play here, wait for workout start
+            // _guideVideoController!.play();
           });
 
     // Initialize TTS
@@ -567,14 +571,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     }
   }
 
-  /// TTS Warning (Throttled to once every 5 seconds)
+  /// TTS Warning (Throttled via CoachingManagementService)
   void _speakBodyNotVisibleThrottled() {
-    final now = DateTime.now();
-    if (_lastBodyNotVisibleTTS == null ||
-        now.difference(_lastBodyNotVisibleTTS!).inSeconds >= 5) {
-      _lastBodyNotVisibleTTS = now;
-      _ttsService.speakBodyNotVisible();
-    }
+    _cms.deliver('Show your full body');
   }
 
   /// Start Workout after Countdown Complete
@@ -586,6 +585,12 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     // Start Recording
     if (_controller != null) {
       await _startRecording();
+    }
+
+    // Start Video Playback
+    if (_guideVideoController != null &&
+        _guideVideoController!.value.isInitialized) {
+      _guideVideoController!.play();
     }
 
     // Start Timer
@@ -672,6 +677,10 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     );
   }
 
+  void _togglePIPMode() {
+    setState(() => _isVideoFullscreen = !_isVideoFullscreen);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_isCameraInitialized) {
@@ -700,93 +709,21 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Camera Preview
-          if (_controller != null && _controller!.value.isInitialized)
-            SizedBox.expand(
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: _controller!.value.previewSize!.height,
-                  height: _controller!.value.previewSize!.width,
-                  child: CameraPreview(_controller!),
-                ),
-              ),
-            )
-          else
-            const Center(
-              child: Text(
-                "Camera unavailable (Simulator)",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
+          // 1. Main Background Content
+          Positioned.fill(child: _buildMainContent()),
 
-          // 2. Skeleton Overlay
-          if (_poses.isNotEmpty && _controller != null)
-            Transform.scale(
-              scaleX: -1,
-              alignment: Alignment.center,
-              child: CustomPaint(
-                painter: PosePainter(
-                  _poses,
-                  _controller!.value.previewSize!,
-                  Platform.isAndroid
-                      ? InputImageRotation.rotation270deg
-                      : InputImageRotation
-                            .rotation90deg, // iOS Portrait Scaling Fix
-                  _camera?.lensDirection ?? CameraLensDirection.front,
-                ),
-              ),
-            ),
+          // 2. PIP Content (Bottom Right)
+          Positioned(right: 16, bottom: 40, child: _buildPIPContent()),
 
-          // 3. Top UI - Back + Status Info (Top Right)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 10,
-            left: 16,
-            right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Back Button
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    _buildNextExerciseCard(),
-                    if (_currentTask != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        _currentTask?.title ?? '',
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+          // 7. Ready Pose Waiting Overlay
+          if (_isWaitingForReadyPose) _buildReadyPoseOverlay(),
 
-                // Right Info (Next Exercise)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [_buildCurrentTaskInfo()],
-                ),
-              ],
-            ),
-          ),
-
-          // 5. Guide Video (Bottom Right) - User request: Show video instead of button
-          Positioned(right: 16, bottom: 40, child: _buildGuidePIP()),
+          // 8. Header Overlay (Back, Title, Stats)
+          _buildHeader(),
 
           // 6. Bottom UI - Timer (Left)
           if (!_isWaitingForReadyPose)
             Positioned(bottom: 40, left: 16, child: _buildCircularTimer()),
-
-          // 7. Ready Pose Waiting Overlay
-          if (_isWaitingForReadyPose) _buildReadyPoseOverlay(),
 
           // 8. Rest Overlay
           if (_isResting) _buildRestOverlay(),
@@ -801,35 +738,150 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildCurrentTaskInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        const SizedBox(height: 12),
-        Text(
-          '$_currentRep / ${_currentTask?.adjustedReps ?? '-'}',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+  Widget _buildMainContent() {
+    if (_isVideoFullscreen) {
+      return _buildGuideVideoPlayer(fit: BoxFit.contain);
+    } else {
+      return _buildCameraWithSkeleton();
+    }
+  }
+
+  Widget _buildHeader() {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Column(
+            children: [
+              // Top Row: Back Button & Exercise Title
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildGlassButton(
+                    icon: Icons.arrow_back,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 12.0),
+                      child: Text(
+                        _currentTask?.title ?? '',
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Secondary Row: Next Exercise & Rep Counter
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [_buildNextExerciseCard(), _buildCurrentTaskInfo()],
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Set $_currentSet / ${_currentTask?.adjustedSets ?? '-'}',
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            shadows: [Shadow(blurRadius: 4, color: Colors.black)],
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildGuidePIP() {
+  Widget _buildGlassButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.2),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1.0,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            icon: Icon(icon, color: Colors.white),
+            onPressed: onTap,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentTaskInfo() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.2),
+            border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    '$_currentRep',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      height: 1.0,
+                    ),
+                  ),
+                  Text(
+                    ' / ${_currentTask?.adjustedReps ?? '-'}',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'SET $_currentSet / ${_currentTask?.adjustedSets ?? '-'}',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPIPContent() {
     return Container(
       width: 120, // 조금 더 키움
       height: 160,
@@ -845,16 +897,98 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child:
-            _guideVideoController != null &&
-                _guideVideoController!.value.isInitialized
-            ? AspectRatio(
-                aspectRatio: _guideVideoController!.value.aspectRatio,
-                child: VideoPlayer(_guideVideoController!),
-              )
-            : const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: _isVideoFullscreen
+                ? _buildCameraWithSkeleton(isPIP: true)
+                : _buildGuideVideoPlayer(fit: BoxFit.cover),
+          ),
+
+          // Toggle Button
+          Positioned(
+            top: 4,
+            right: 4,
+            child: GestureDetector(
+              onTap: _togglePIPMode,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  border: Border.all(color: Colors.white30),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.swap_calls,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCameraWithSkeleton({bool isPIP = false}) {
+    if (_controller == null || !_controller!.value.isInitialized) {
+      return const Center(
+        child: Text(
+          "Camera unavailable",
+          style: TextStyle(color: Colors.white, fontSize: 10),
+        ),
+      );
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Camera Preview
+        FittedBox(
+          fit: isPIP ? BoxFit.cover : BoxFit.cover,
+          child: SizedBox(
+            width: _controller!.value.previewSize!.height,
+            height: _controller!.value.previewSize!.width,
+            child: CameraPreview(_controller!),
+          ),
+        ),
+
+        // Skeleton Overlay
+        if (_poses.isNotEmpty)
+          Transform.scale(
+            scaleX: -1,
+            alignment: Alignment.center,
+            child: CustomPaint(
+              painter: PosePainter(
+                _poses,
+                _controller!.value.previewSize!,
+                Platform.isAndroid
+                    ? InputImageRotation.rotation270deg
+                    : InputImageRotation.rotation90deg,
+                _camera?.lensDirection ?? CameraLensDirection.front,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildGuideVideoPlayer({BoxFit fit = BoxFit.contain}) {
+    if (_guideVideoController == null ||
+        !_guideVideoController!.value.isInitialized) {
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+    }
+
+    return SizedBox.expand(
+      child: FittedBox(
+        fit: fit,
+        child: SizedBox(
+          width: _guideVideoController!.value.size.width,
+          height: _guideVideoController!.value.size.height,
+          child: VideoPlayer(_guideVideoController!),
+        ),
       ),
     );
   }
@@ -863,30 +997,60 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     final nextTask = _curriculum?.nextTask;
     final isLast = _curriculum?.isLastTask ?? true;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.black54,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            '다음 운동',
-            style: TextStyle(color: Colors.white54, fontSize: 12),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.2),
+            border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(height: 4),
-          Text(
-            isLast ? '마지막 운동' : (nextTask?.title ?? '-'),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+          child: IntrinsicWidth(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.skip_next_rounded,
+                      color: Colors.white54,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'UP NEXT',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 140),
+                  child: Text(
+                    isLast ? 'Last Exercise' : (nextTask?.title ?? '-'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -954,7 +1118,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 16),
               const Text(
-                '준비하세요!',
+                'Get Ready!',
                 style: TextStyle(color: Colors.white70, fontSize: 24),
               ),
             ] else if (!_isFullBodyVisible) ...[
@@ -962,7 +1126,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               const Icon(Icons.person_outline, size: 100, color: Colors.orange),
               const SizedBox(height: 24),
               const Text(
-                '전체 몸이 보이도록\n카메라를 조정해주세요',
+                'Adjust camera to see\nfull body',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
@@ -972,7 +1136,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 16),
               const Text(
-                '어깨, 엉덩이, 무릎, 발목이\n모두 화면에 보여야 합니다',
+                'Shoulders, hips, knees, ankles\nmust be visible',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white54, fontSize: 16),
               ),
@@ -981,7 +1145,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               const Icon(Icons.check_circle, size: 80, color: Colors.green),
               const SizedBox(height: 16),
               const Text(
-                '자세 확인 중...',
+                'Checking pose...',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -1005,7 +1169,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
             const Icon(Icons.timer, size: 60, color: Colors.deepPurple),
             const SizedBox(height: 16),
             const Text(
-              '휴식 중...',
+              'Resting...',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 28,
@@ -1014,7 +1178,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
             ),
             const SizedBox(height: 8),
             const Text(
-              '분석 중입니다. 잠시만 기다려주세요.',
+              'Analyzing. Please wait.',
               style: TextStyle(color: Colors.white70, fontSize: 16),
             ),
           ],
@@ -1033,7 +1197,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
             const Icon(Icons.pause_circle, size: 80, color: Colors.white54),
             const SizedBox(height: 16),
             const Text(
-              '일시정지',
+              'Paused',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 28,

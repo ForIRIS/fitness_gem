@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:video_player/video_player.dart';
 import '../models/workout_curriculum.dart';
+import '../services/workout_model_service.dart';
 import '../models/workout_task.dart';
 import '../services/cache_service.dart';
 import '../services/functions_service.dart';
@@ -27,6 +28,8 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
   late PageController _pageController;
   late int _currentIndex;
 
+  final _modelService = WorkoutModelService();
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +38,19 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
       initialPage: widget.initialIndex,
       viewportFraction: 0.92,
     );
+
+    // Preload model to reduce lag when starting workout
+    _preloadModel();
+  }
+
+  Future<void> _preloadModel() async {
+    // Fire and forget - just warm up the model loading
+    try {
+      await _modelService.loadSampleModel();
+      debugPrint('Background model preloading completed');
+    } catch (e) {
+      debugPrint('Background model preloading failed: $e');
+    }
   }
 
   @override

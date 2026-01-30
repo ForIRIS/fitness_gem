@@ -34,7 +34,16 @@ class CoachingManagementService {
 
   // Configuration & State
   static const Duration globalCooling = Duration(seconds: 4);
-  static const Duration duplicateCooling = Duration(seconds: 10);
+  static const Duration defaultDuplicateCooling = Duration(
+    seconds: 5,
+  ); // Reduced default to 5s for responsiveness
+
+  // Message-specific cooling durations
+  static final Map<String, Duration> _specificCoolingDurations = {
+    'Show your full body': const Duration(seconds: 15), // Less frequent
+    'Lower your hips': const Duration(seconds: 8),
+    'Keep your back straight': const Duration(seconds: 8),
+  };
 
   DateTime? _lastMessageTime;
   final Map<String, DateTime> _lastMessageMap = {};
@@ -53,7 +62,14 @@ class CoachingManagementService {
 
     // 2. Duplicate Prevention Check
     if (_lastMessageMap.containsKey(message)) {
-      if (now.difference(_lastMessageMap[message]!) < duplicateCooling) {
+      final coolingDuration = _specificCoolingDurations.entries
+          .firstWhere(
+            (entry) => message.contains(entry.key),
+            orElse: () => MapEntry(message, defaultDuplicateCooling),
+          )
+          .value;
+
+      if (now.difference(_lastMessageMap[message]!) < coolingDuration) {
         return;
       }
     }
