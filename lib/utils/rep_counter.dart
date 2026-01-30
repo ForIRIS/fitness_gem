@@ -24,7 +24,12 @@ class RepCounter {
   int _repCount = 0;
   String? _currentState;
   ExercisePhase? _currentPhase;
+
   bool _isProcessing = false;
+
+  // Low confidence / Error tracking
+  int _lowConfidenceCounter = 0;
+  static const int _lowConfidenceThreshold = 10; // Frames
 
   // Debouncing & Sequence
   String? _lastDetectedState;
@@ -162,8 +167,14 @@ class RepCounter {
 
     final detectedState = labels[maxIdx];
 
+    // 1. Error Monitoring Phase (Run on every result)
+    _monitorPoseErrors(output, detectedState, maxProb);
+
     // Debouncing
     if (maxProb >= _inferenceThreshold) {
+      // Reset low confidence counter since we have a good lock
+      _lowConfidenceCounter = 0;
+
       if (_lastDetectedState == detectedState) {
         _stateCounter++;
       } else {
@@ -187,6 +198,14 @@ class RepCounter {
         }
       }
     } else {
+      // Low confidence / Weird pose handling
+      _lowConfidenceCounter++;
+      if (_lowConfidenceCounter >= _lowConfidenceThreshold) {
+        // If the model is persistently confused, it's likely a form issue
+        _onLowConfidence();
+        _lowConfidenceCounter = 0; // Reset to avoid spamming every frame
+      }
+
       _stateCounter = 0;
       _lastDetectedState = null;
     }
@@ -366,9 +385,8 @@ class RepCounter {
     _calculateMovingAverage(state);
 
     // Single-Rep Sequence Analysis
-    if (ExercisePhase.fromLabel(state) == ExercisePhase.peak) {
-      _analyzePeakPerformance(output, state);
-    }
+    // We can now analyze performance in any phase if we have stats
+    _analyzePoseQuality(output, state);
   }
 
   void _calculateMovingAverage(String state) {
@@ -390,28 +408,80 @@ class RepCounter {
     _movingAverageFeatures[state] = averages;
   }
 
-  void _analyzePeakPerformance(ExerciseModelOutput output, String state) {
-    // Monitor for significant confidence drops or deviations
-    if (output.deviationScore > 0.6) {
-      _triggerSpecificCoaching(state);
-    }
-
-    // Compare against median values
-    if (config.medianStats != null && config.medianStats![state] != null) {
-      // TODO: Detailed feature comparison logic
-      // If error margin correlates with a specific model_cue
+  /// Monitor for generic deviations or low confidence signals
+  void _monitorPoseErrors(
+    ExerciseModelOutput output,
+    String state,
+    double probability,
+  ) {
+    // If deviation score is very high, strictly warn
+    if (output.deviationScore > 0.8) {
+      _cms.deliver("Movement looks uncertain. Please check your form.");
     }
   }
 
-  void _triggerSpecificCoaching(String state) {
+  void _onLowConfidence() {
+    // Triggered when model has low confidence for multiple frames
+    _cms.deliver("Please adjust your position or camera angle.");
+  }
+
+  void _analyzePoseQuality(ExerciseModelOutput output, String state) {
+    if (config.medianStats == null || config.classLabels == null) return;
+    final stats = config.medianStats![state];
+    if (stats == null) return; // No stats for this state
+
+    final List<double> medians = List<double>.from(stats ?? []);
+    if (medians.isEmpty || medians.length != output.currentFeatures.length) {
+      return;
+    }
+
+    // Identify deviating features
+    final featureKeys = config.featureKeys;
+    if (featureKeys.length != medians.length) return;
+
+    final deviatingFeatures = <String>{};
+    for (int i = 0; i < medians.length; i++) {
+      final diff = (output.currentFeatures[i] - medians[i]).abs();
+      // Heuristic threshold: if feature differs by > 0.2 (normalized approx)
+      // We might need per-feature thresholds, but 0.2 is a safe start
+      if (diff > 0.2) {
+        deviatingFeatures.add(featureKeys[i]);
+      }
+    }
+
+    if (deviatingFeatures.isNotEmpty) {
+      _triggerSpecificCoaching(state, deviatingFeatures);
+    }
+  }
+
+  void _triggerSpecificCoaching(String state, Set<String> deviatingFeatures) {
     if (config.coachingCues == null) return;
 
-    final cues = config.coachingCues![state];
-    if (cues != null && cues is Map) {
-      // Find the first cue with a message
-      for (final entry in cues.entries) {
+    final cuesData = config.coachingCues![state];
+    if (cuesData == null) return;
+
+    // Handle List<dynamic> format from JSON
+    if (cuesData is List) {
+      for (final cueObj in cuesData) {
+        if (cueObj is Map && cueObj.containsKey('feature')) {
+          final targetFeatures = List<String>.from(cueObj['feature'] ?? []);
+          // If any of the cue's target features are deviating, trigger it
+          if (targetFeatures.any((f) => deviatingFeatures.contains(f))) {
+            if (cueObj.containsKey('message')) {
+              _cms.deliver(cueObj['message']);
+              return; // Deliver one message at a time
+            }
+          }
+        }
+      }
+    }
+    // Fallback for Map format (if legacy)
+    else if (cuesData is Map) {
+      for (final entry in cuesData.entries) {
         final cueData = entry.value;
         if (cueData is Map && cueData.containsKey('movement')) {
+          // This legacy path doesn't check features? Preserving old behavior just in case
+          // or we can remove it if we are sure. Let's keep it safe.
           _cms.deliver(cueData['movement']);
           return;
         }
