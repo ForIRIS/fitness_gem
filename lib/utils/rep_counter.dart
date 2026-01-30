@@ -4,12 +4,16 @@ import '../models/exercise_config.dart';
 import '../services/workout_model_service.dart';
 import '../services/coaching_management_service.dart';
 import 'pose_normalization.dart';
+import 'adaptive_one_euro_filter.dart';
+import '../models/counting_mode.dart';
+import '../models/exercise_phase.dart';
 
 /// RepCounter - ML-based rep counting and coaching logic
 class RepCounter {
   final ExerciseConfig config;
   final WorkoutModelService _modelService;
-  final CoachingManagementService _cms = CoachingManagementService();
+  final CoachingManagementService _cms;
+  final AdaptiveOneEuroFilter _smoothingFilter;
 
   // Settings
   static const int _bufferSize = 30;
@@ -19,6 +23,7 @@ class RepCounter {
   final List<List<List<double>>> _poseBuffer = [];
   int _repCount = 0;
   String? _currentState;
+  ExercisePhase? _currentPhase;
   bool _isProcessing = false;
 
   // Debouncing & Sequence
@@ -29,12 +34,8 @@ class RepCounter {
 
   // Sequence Mode Tracking
   final Set<String> _detectedLabelsInRep = {};
-  bool _isSequentialMode = false;
   int _totalPhases = 0;
-
-  // Non-Sequential Mode Tracking
-  String? _lastLockedLabel;
-  String? _nonSeqPendingLabel;
+  final Set<String> _sidesCompletedInCycle = {};
 
   // Evaluation & Performance Analysis
   final List<List<double>> _featureBuffer = [];
@@ -43,8 +44,20 @@ class RepCounter {
   // Coaching callback (Consider deprecated in favor of CMS)
   void Function(String)? onCoachingMessage;
 
-  RepCounter(this.config, {WorkoutModelService? modelService})
-    : _modelService = modelService ?? WorkoutModelService() {
+  // Rep Count Callback
+  final void Function(int)? onRepCountChanged;
+
+  RepCounter(
+    this.config, {
+    this.onRepCountChanged,
+    WorkoutModelService? modelService,
+    CoachingManagementService? coachingService,
+  }) : _modelService = modelService ?? WorkoutModelService(),
+       _cms = coachingService ?? CoachingManagementService(),
+       _smoothingFilter = AdaptiveOneEuroFilter(
+         profile: config.smoothingProfile,
+         adaptive: true,
+       ) {
     _initializeMode();
   }
 
@@ -53,15 +66,21 @@ class RepCounter {
     final labels = List<String>.from(config.classLabels!['classes'] ?? []);
     if (labels.isEmpty) return;
 
-    // Trigger: If labels are numerical, the system operates in Sequence Mode.
-    _isSequentialMode = labels.any((l) => RegExp(r'^\d').hasMatch(l));
-    _totalPhases = labels.length;
+    // Phase count for sequential/side modes
+    _totalPhases =
+        config.numClasses ??
+        labels.where((l) => RegExp(r'^\d').hasMatch(l)).length;
+    if (_totalPhases == 0) _totalPhases = labels.length;
   }
 
   /// Current rep count
   int get repCount => _repCount;
 
+  /// Current phase
+  ExercisePhase? get currentPhase => _currentPhase;
+
   /// Current state
+
   String? get currentState => _currentState;
 
   /// Reset counter
@@ -69,19 +88,36 @@ class RepCounter {
     _repCount = 0;
     _poseBuffer.clear();
     _currentState = null;
+    _currentPhase = null;
     _isProcessing = false;
+
     _detectedLabelsInRep.clear();
     _featureBuffer.clear();
     _movingAverageFeatures.clear();
-    _lastLockedLabel = null;
-    _nonSeqPendingLabel = null;
+    _sidesCompletedInCycle.clear();
     _lastDetectedState = null;
     _stateCounter = 0;
   }
 
   /// Analyze pose and count reps
-  bool processFrame(Pose pose) {
-    final currentFrame = _poseToLandmarkList(pose);
+  void processFrame(Pose pose) {
+    final rawFrame = _poseToLandmarkList(pose);
+
+    // Apply temporal smoothing
+    final t = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    final flat = rawFrame.expand((l) => l).toList();
+    final smoothedFlat = _smoothingFilter.filter(t, flat);
+
+    // Reconstruct frame
+    final List<List<double>> currentFrame = [];
+    for (int i = 0; i < smoothedFlat.length; i += 3) {
+      currentFrame.add([
+        smoothedFlat[i],
+        smoothedFlat[i + 1],
+        smoothedFlat[i + 2],
+      ]);
+    }
+
     _poseBuffer.add(currentFrame);
 
     if (_poseBuffer.length >= _bufferSize) {
@@ -90,8 +126,6 @@ class RepCounter {
       }
       _poseBuffer.removeAt(0);
     }
-
-    return false;
   }
 
   Future<void> _runInference() async {
@@ -138,11 +172,14 @@ class RepCounter {
       }
 
       if (_stateCounter >= _debounceThreshold) {
+        final detectedPhase = ExercisePhase.fromLabel(detectedState);
         if (_currentState != detectedState) {
           _onStateChange(detectedState);
           _currentState = detectedState;
+          _currentPhase = detectedPhase;
 
           // Reset feature buffer on label change
+
           _featureBuffer.clear();
         } else {
           // Same state: Evaluation & Performance
@@ -156,28 +193,59 @@ class RepCounter {
   }
 
   void _onStateChange(String newState) {
-    if (_isSequentialMode) {
-      _handleSequentialTransition(newState);
-    } else {
-      _handleNonSequentialTransition(newState);
+    final mode = config.countType;
+
+    switch (mode) {
+      case CountingMode.singleAction:
+        _handleActionTransition(newState);
+        break;
+      case CountingMode.alternatingFullCycle:
+      case CountingMode.alternatingPerSide:
+      case CountingMode.sequential:
+        _handleSequentialTransition(newState);
+        break;
     }
   }
 
-  /// Sequential Mode (Numerical Labels)
+  void _incrementRep() {
+    _repCount++;
+    onRepCountChanged?.call(_repCount);
+  }
+
+  /// Action Mode: Count specific actions
+  void _handleActionTransition(String newState) {
+    // Ignore utility states
+    final phase = ExercisePhase.fromLabel(newState);
+    if (phase == ExercisePhase.error ||
+        phase == ExercisePhase.idle ||
+        phase == ExercisePhase.ready) {
+      return;
+    }
+
+    // Prepare debouncing or specific action logic if needed
+    // For now, any distinct action state entry counts as a rep
+    // assuming _onStateChange is already debounced by _debounceThreshold
+    _incrementRep();
+  }
+
+  /// Sequential, Side & Alternating Modes
   void _handleSequentialTransition(String newState) {
     // Collect detected labels
     _detectedLabelsInRep.add(newState);
 
-    // Rep Completion Check (Typical reset to "1_Ready" or similar)
-    // assuming first label is start of sequence
+    // Check for sequence completion (Restart)
+    // Convention: "1_Ready" or similar starts/resets the sequence
     final isRestart = newState.startsWith('1');
 
     if (isRestart && _detectedLabelsInRep.length >= 2) {
       // Check if rep should be counted
       if (_shouldCountSequentialRep()) {
-        _repCount++;
-      } else if (_detectedLabelsInRep.any((l) => l.contains('Peak'))) {
+        _processCompletion();
+      } else if (_detectedLabelsInRep.any(
+        (l) => ExercisePhase.fromLabel(l) == ExercisePhase.peak,
+      )) {
         // Validation Error: If a "Peak" label is skipped
+
         _checkPeakSkip();
       }
       _detectedLabelsInRep.clear();
@@ -185,19 +253,84 @@ class RepCounter {
     }
   }
 
+  void _processCompletion() {
+    final mode = config.countType;
+
+    if (mode == CountingMode.alternatingFullCycle) {
+      final side = _detectCompletedSide();
+      if (side != null) {
+        _sidesCompletedInCycle.add(side);
+        if (_sidesCompletedInCycle.length >= 2) {
+          _incrementRep();
+          _sidesCompletedInCycle.clear();
+        }
+      }
+    } else {
+      // SEQUENTIAL or ALTERNATING_PER_SIDE
+      _incrementRep();
+    }
+  }
+
+  String? _detectCompletedSide() {
+    if (_detectedLabelsInRep.any((l) => l.contains('Right'))) return 'R';
+    if (_detectedLabelsInRep.any((l) => l.contains('Left'))) return 'L';
+    return null;
+  }
+
   bool _shouldCountSequentialRep() {
     if (_detectedLabelsInRep.isEmpty) return false;
 
-    // 1. At least 80% of the defined sequence numbers are detected.
+    // 1. Ratio Check
     final numDetected = _detectedLabelsInRep.length;
     final ratio = numDetected / _totalPhases;
-    if (ratio < 0.8) return false;
+    // Lower threshold provided as we might skip some transition frames
+    if (ratio < 0.5) return false;
 
-    // 2. All labels marked as "Peak" are successfully included in the sequence.
+    // 2. Peak Check
     final labels = List<String>.from(config.classLabels!['classes'] ?? []);
-    final peakLabels = labels.where((l) => l.contains('Peak')).toList();
+    final peakLabels = labels
+        .where((l) => ExercisePhase.fromLabel(l) == ExercisePhase.peak)
+        .toList();
     for (final peak in peakLabels) {
-      if (!_detectedLabelsInRep.contains(peak)) return false;
+      // If we are in an alternating mode, we only care about the peak matching the declared side
+      // for the current sequence.
+      if (!_detectedLabelsInRep.contains(peak)) {
+        final mode = config.countType;
+        if (mode == CountingMode.alternatingFullCycle ||
+            mode == CountingMode.alternatingPerSide) {
+          continue;
+        }
+        return false;
+      }
+    }
+
+    // 3. Side Consistency Check (for alternating modes)
+    final mode = config.countType;
+    if (mode == CountingMode.alternatingFullCycle ||
+        mode == CountingMode.alternatingPerSide) {
+      final hasRight = _detectedLabelsInRep.any((l) => l.contains('Right'));
+      final hasLeft = _detectedLabelsInRep.any((l) => l.contains('Left'));
+
+      // If we have mixed signals within a single sequence, invalid
+      if (hasRight && hasLeft) return false;
+
+      // Ensure we hit the peak for the detected side
+      if (hasRight) {
+        if (!peakLabels.any(
+          (l) => l.contains('Right') && _detectedLabelsInRep.contains(l),
+        )) {
+          return false;
+        }
+      } else if (hasLeft) {
+        if (!peakLabels.any(
+          (l) => l.contains('Left') && _detectedLabelsInRep.contains(l),
+        )) {
+          return false;
+        }
+      } else {
+        // No side detected? Valid only if SEQUENTIAL
+        if (mode != CountingMode.sequential) return false;
+      }
     }
 
     return true;
@@ -205,8 +338,11 @@ class RepCounter {
 
   void _checkPeakSkip() {
     final labels = List<String>.from(config.classLabels!['classes'] ?? []);
-    final peakLabels = labels.where((l) => l.contains('Peak')).toList();
+    final peakLabels = labels
+        .where((l) => ExercisePhase.fromLabel(l) == ExercisePhase.peak)
+        .toList();
     bool peakSkipped = false;
+
     for (final peak in peakLabels) {
       if (!_detectedLabelsInRep.contains(peak)) {
         peakSkipped = true;
@@ -216,31 +352,6 @@ class RepCounter {
 
     if (peakSkipped) {
       _cms.deliver("Please follow the on-screen guide accurately.");
-    }
-  }
-
-  /// Non-Sequential Mode (Standard Labels)
-  void _handleNonSequentialTransition(String newState) {
-    // Trigger: count a rep when a label (not starting with Ready, Idle, or Error)
-    // appears twice consecutively.
-    if (newState.startsWith('Ready') ||
-        newState.startsWith('Idle') ||
-        newState.startsWith('Error')) {
-      return;
-    }
-
-    if (_lastLockedLabel == newState) {
-      // Already counted this label, waiting for a transition to reset
-      return;
-    }
-
-    if (_nonSeqPendingLabel == newState) {
-      // Consecutive appearance confirmed
-      _repCount++;
-      _lastLockedLabel = newState;
-      _nonSeqPendingLabel = null;
-    } else {
-      _nonSeqPendingLabel = newState;
     }
   }
 
@@ -255,7 +366,7 @@ class RepCounter {
     _calculateMovingAverage(state);
 
     // Single-Rep Sequence Analysis
-    if (state.contains('Peak')) {
+    if (ExercisePhase.fromLabel(state) == ExercisePhase.peak) {
       _analyzePeakPerformance(output, state);
     }
   }

@@ -41,7 +41,7 @@ class ExerciseService {
             final content = await file.readAsString();
             final data = json.decode(content);
             debugPrint('Loaded config from cache: ${task.configureUrl}');
-            return ExerciseConfig.fromMap(data);
+            return ExerciseConfig.fromMap(data, category: task.category);
           }
         }
       }
@@ -55,7 +55,7 @@ class ExerciseService {
         final response = await http.get(Uri.parse(url));
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
-          return ExerciseConfig.fromMap(data);
+          return ExerciseConfig.fromMap(data, category: task.category);
         }
       }
 
@@ -191,7 +191,7 @@ class ExerciseService {
       };
 
       debugPrint('Loaded sample config for: $exerciseId');
-      return ExerciseConfig.fromMap(configMap);
+      return ExerciseConfig.fromMap(configMap, category: exerciseId);
     } catch (e) {
       debugPrint('Error loading sample config: $e');
       return ExerciseConfig.defaultSquat();

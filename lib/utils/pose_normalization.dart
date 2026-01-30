@@ -12,8 +12,9 @@ class PoseNormalization {
     List<List<double>> landmarks, {
     double? scale,
   }) {
-    if (landmarks.length < 25)
+    if (landmarks.length < 25) {
       return landmarks; // Safety check for indices 23, 24
+    }
 
     // Landmarks indices (ML Kit Pose Detection standard):
     // 23: left_hip, 24: right_hip
@@ -46,8 +47,9 @@ class PoseNormalization {
       factor = scale;
     } else {
       // midShoulder = Average of left and right shoulder offsets
-      if (offsetLandmarks.length < 13)
+      if (offsetLandmarks.length < 13) {
         return offsetLandmarks; // Safety check for 11, 12
+      }
 
       final lShoulder = offsetLandmarks[11];
       final rShoulder = offsetLandmarks[12];

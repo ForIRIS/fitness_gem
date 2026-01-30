@@ -1,9 +1,8 @@
-import 'package:flutter/foundation.dart';
-import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fitness_gem/models/exercise_config.dart';
 import 'package:fitness_gem/utils/rep_counter.dart';
 import 'package:fitness_gem/services/workout_model_service.dart';
+import 'package:fitness_gem/services/coaching_management_service.dart';
 import 'package:fitness_gem/models/exercise_config.dart'
     show ExerciseModelOutput;
 
@@ -26,42 +25,222 @@ class ManualMockWorkoutModelService implements WorkoutModelService {
   Future<bool> loadSampleModel() async => true;
 }
 
+class MockCoachingManagementService implements CoachingManagementService {
+  @override
+  Future<void> deliver(String message, {String? audioUrl}) async {}
+
+  @override
+  void dispose() {}
+
+  @override
+  Stream<CoachingMessage?> get messageStream => const Stream.empty();
+}
+
 void main() {
-  group('RepCounter Sequential Mode', () {
+  late ManualMockWorkoutModelService mockModelService;
+  late MockCoachingManagementService mockCms;
+
+  setUp(() {
+    mockModelService = ManualMockWorkoutModelService();
+    mockCms = MockCoachingManagementService();
+  });
+
+  group('RepCounter SEQUENTIAL Mode', () {
     late RepCounter repCounter;
-    late ManualMockWorkoutModelService mockModelService;
-    late ExerciseConfig config;
+    // Labels matching the actual model format
+    final classes = [
+      '1_Ready',
+      '2_Right_Down',
+      '3_Right_Peak',
+      '4_Right_Up',
+      '5_Left_Down',
+      '6_Left_Peak',
+      '7_Left_Up',
+    ];
 
     setUp(() {
-      mockModelService = ManualMockWorkoutModelService();
-      config = ExerciseConfig(
+      final config = ExerciseConfig(
         id: 'test_seq',
         classLabels: {
-          'classes': ['1_Ready', '2_Down', '3_Peak', '4_Up'],
-          'num_classes': 4,
+          'classes': classes,
+          'num_classes': 7,
+          'countingMode': 'SEQUENTIAL',
         },
       );
-      repCounter = RepCounter(config, modelService: mockModelService);
+      repCounter = RepCounter(
+        config,
+        modelService: mockModelService,
+        coachingService: mockCms,
+      );
     });
 
-    test('should count a rep when sequence is followed correctly', () async {
-      // Simulate following 1 -> 2 -> 3 -> 4 -> 1
-      final sequence = ['1_Ready', '2_Down', '3_Peak', '4_Up', '1_Ready'];
-
-      for (final state in sequence) {
-        final probs = List.filled(4, 0.0);
-        probs[['1_Ready', '2_Down', '3_Peak', '4_Up'].indexOf(state)] = 1.0;
-
-        repCounter.handleModelOutputForTest(
-          ExerciseModelOutput(
-            phaseProbs: probs,
-            deviationScore: 0.0,
-            currentFeatures: [0.0],
-          ),
-        );
-      }
-
+    test('should count a rep when full sequence (R + L) is completed', () {
+      // Full cycle: Ready -> R_Down -> R_Peak -> R_Up -> L_Down -> L_Peak -> L_Up -> Ready
+      final sequence = [
+        '1_Ready',
+        '2_Right_Down',
+        '3_Right_Peak',
+        '4_Right_Up',
+        '5_Left_Down',
+        '6_Left_Peak',
+        '7_Left_Up',
+        '1_Ready',
+      ];
+      _simulateSequence(repCounter, sequence, classes);
       expect(repCounter.repCount, 1);
     });
   });
+
+  group('RepCounter SINGLE_ACTION Mode', () {
+    late RepCounter repCounter;
+    final classes = ['Idle', 'Jab', 'Cross', 'Hook'];
+
+    setUp(() {
+      final config = ExerciseConfig(
+        id: 'test_action',
+        classLabels: {'classes': classes, 'countingMode': 'SINGLE_ACTION'},
+      );
+      repCounter = RepCounter(
+        config,
+        modelService: mockModelService,
+        coachingService: mockCms,
+      );
+    });
+
+    test('should count each action label', () {
+      _simulateState(repCounter, 'Idle', classes.length, classes);
+      _simulateState(repCounter, 'Jab', classes.length, classes); // 1
+      _simulateState(repCounter, 'Idle', classes.length, classes);
+      _simulateState(repCounter, 'Cross', classes.length, classes); // 2
+      expect(repCounter.repCount, 2);
+    });
+  });
+
+  group('RepCounter ALTERNATING_PER_SIDE Mode', () {
+    late RepCounter repCounter;
+    final classes = [
+      '1_Ready',
+      '2_Right_Down',
+      '3_Right_Peak',
+      '4_Right_Up',
+      '5_Left_Down',
+      '6_Left_Peak',
+      '7_Left_Up',
+    ];
+
+    setUp(() {
+      final config = ExerciseConfig(
+        id: 'test_per_side',
+        classLabels: {
+          'classes': classes,
+          'num_classes': 7,
+          'countingMode': 'ALTERNATING_PER_SIDE',
+        },
+      );
+      repCounter = RepCounter(
+        config,
+        modelService: mockModelService,
+        coachingService: mockCms,
+      );
+    });
+
+    test('should count each side as a full rep', () {
+      // Right side only: Ready -> R_Down -> R_Peak -> R_Up -> Ready
+      _simulateSequence(repCounter, [
+        '1_Ready',
+        '2_Right_Down',
+        '3_Right_Peak',
+        '4_Right_Up',
+        '1_Ready',
+      ], classes);
+      expect(repCounter.repCount, 1);
+      // Left side only: L_Down -> L_Peak -> L_Up -> Ready
+      _simulateSequence(repCounter, [
+        '5_Left_Down',
+        '6_Left_Peak',
+        '7_Left_Up',
+        '1_Ready',
+      ], classes);
+      expect(repCounter.repCount, 2);
+    });
+  });
+
+  group('RepCounter ALTERNATING_FULL_CYCLE Mode', () {
+    late RepCounter repCounter;
+    final classes = [
+      '1_Ready',
+      '2_Right_Down',
+      '3_Right_Peak',
+      '4_Right_Up',
+      '5_Left_Down',
+      '6_Left_Peak',
+      '7_Left_Up',
+    ];
+
+    setUp(() {
+      final config = ExerciseConfig(
+        id: 'test_full_cycle',
+        classLabels: {
+          'classes': classes,
+          'num_classes': 7,
+          'countingMode': 'ALTERNATING_FULL_CYCLE',
+        },
+      );
+      repCounter = RepCounter(
+        config,
+        modelService: mockModelService,
+        coachingService: mockCms,
+      );
+    });
+
+    test('should count only after both sides are completed', () {
+      // Right side only: Ready -> R_Down -> R_Peak -> R_Up -> Ready
+      _simulateSequence(repCounter, [
+        '1_Ready',
+        '2_Right_Down',
+        '3_Right_Peak',
+        '4_Right_Up',
+        '1_Ready',
+      ], classes);
+      expect(repCounter.repCount, 0); // Not yet, waiting for Left
+      // Left side: L_Down -> L_Peak -> L_Up -> Ready
+      _simulateSequence(repCounter, [
+        '5_Left_Down',
+        '6_Left_Peak',
+        '7_Left_Up',
+        '1_Ready',
+      ], classes);
+      expect(repCounter.repCount, 1); // Now counted!
+    });
+  });
+}
+
+void _simulateSequence(
+  RepCounter counter,
+  List<String> sequence,
+  List<String> labels,
+) {
+  for (final state in sequence) {
+    _simulateState(counter, state, labels.length, labels);
+  }
+}
+
+void _simulateState(
+  RepCounter counter,
+  String state,
+  int numClasses,
+  List<String> labels,
+) {
+  for (int i = 0; i < 3; i++) {
+    final probs = List.filled(numClasses, 0.0);
+    final idx = labels.indexOf(state);
+    if (idx != -1) probs[idx] = 1.0;
+    counter.handleModelOutputForTest(
+      ExerciseModelOutput(
+        phaseProbs: probs,
+        deviationScore: 0.0,
+        currentFeatures: [0.0],
+      ),
+    );
+  }
 }

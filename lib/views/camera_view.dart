@@ -167,7 +167,19 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     if (config != null && mounted) {
       setState(() {
         _exerciseConfig = config;
-        _repCounter = RepCounter(_exerciseConfig!);
+        _repCounter = RepCounter(
+          _exerciseConfig!,
+          onRepCountChanged: (newCount) {
+            if (mounted) {
+              setState(() {
+                _currentRep = newCount;
+                if (_currentRep >= (_currentTask?.adjustedReps ?? 10)) {
+                  _onSetComplete();
+                }
+              });
+            }
+          },
+        );
       });
 
       // Load native model if it's the sample or mock is enabled
@@ -423,10 +435,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
         // Rep Counting
         if (_repCounter != null && !_isResting) {
-          final newRep = _repCounter!.processFrame(pose);
-          if (newRep && mounted) {
-            _incrementRep();
-          }
+          _repCounter!.processFrame(pose);
         }
 
         // Real-time Form Feedback
@@ -581,15 +590,6 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
     // Start Timer
     _startWorkoutTimer();
-  }
-
-  void _incrementRep() {
-    setState(() {
-      _currentRep++;
-      if (_currentRep >= (_currentTask?.adjustedReps ?? 10)) {
-        _onSetComplete();
-      }
-    });
   }
 
   void _onSetComplete() async {

@@ -1,28 +1,48 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'counting_mode.dart';
+import '../utils/adaptive_one_euro_filter.dart';
 
 /// ExerciseConfig - Exercise settings for Rep counting
 /// Created from JSON downloaded from configureUrl
 class ExerciseConfig {
   final String id;
+  final String? category;
   final Map<String, dynamic>? classLabels;
   final Map<String, dynamic>? medianStats;
   final Map<String, dynamic>? coachingCues;
 
   ExerciseConfig({
     required this.id,
+    this.category,
     this.classLabels,
     this.medianStats,
     this.coachingCues,
   });
 
-  factory ExerciseConfig.fromMap(Map<String, dynamic> map) {
+  factory ExerciseConfig.fromMap(Map<String, dynamic> map, {String? category}) {
     return ExerciseConfig(
       id: map['id'] ?? '',
+      category: category,
       classLabels: map['class_labels'],
       medianStats: map['base_model_stats'],
       coachingCues: map['base_model_cues'],
     );
+  }
+
+  // Counting Mode Helpers
+  CountingMode get countType =>
+      CountingMode.fromString(classLabels?['countingMode']);
+  String? get countLabel => classLabels?['countLabel'];
+  int? get numClasses => classLabels?['num_classes'];
+
+  OneEuroProfile get smoothingProfile {
+    final explicitProfile = classLabels?['smoothingProfile']?.toString();
+    if (explicitProfile != null) {
+      return AdaptiveOneEuroFilter.profileFromString(explicitProfile);
+    }
+    // Fallback to category mapping
+    return AdaptiveOneEuroFilter.profileFromCategory(category);
   }
 
   Map<String, dynamic> toMap() {
