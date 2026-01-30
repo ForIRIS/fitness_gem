@@ -75,6 +75,7 @@ dependencies:
   image_picker: ^1.2.1
   intl_phone_field: ^3.2.0
   archive: ^3.6.1
+  google_fonts: ^8.0.0
 
 dev_dependencies:
   flutter_test:

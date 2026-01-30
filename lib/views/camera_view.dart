@@ -28,6 +28,8 @@ import '../services/workout_model_service.dart';
 import '../viewmodels/display_viewmodel.dart';
 import '../widgets/coaching_overlay.dart';
 import '../services/coaching_management_service.dart';
+import '../widgets/glass_dialog.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// CameraView - Workout Screen (Camera + Skeleton Overlay + UI)
 class CameraView extends StatefulWidget {
@@ -227,27 +229,29 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Paused', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'Workout is paused. Would you like to continue?',
-          style: TextStyle(color: Colors.white70),
+      builder: (context) => GlassDialog(
+        title: 'Paused',
+        content: 'Workout is paused. Would you like to continue?',
+        icon: const Icon(
+          Icons.pause_circle_outline,
+          color: Colors.white,
+          size: 48,
         ),
         actions: [
-          TextButton(
+          GlassButton(
+            text: 'Quit',
             onPressed: () {
               Navigator.pop(context);
               Navigator.pop(context); // Exit workout screen
             },
-            child: const Text('Quit'),
           ),
-          ElevatedButton(
+          GlassButton(
+            text: 'Continue',
+            isPrimary: true,
             onPressed: () {
               Navigator.pop(context);
               _resumeWorkout();
             },
-            child: const Text('Continue'),
           ),
         ],
       ),
@@ -654,23 +658,18 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text(
-          'Workout Complete! 🎉',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'You have completed today\'s workout. Great job!',
-          style: TextStyle(color: Colors.white70),
-        ),
+      builder: (context) => GlassDialog(
+        title: 'Workout Complete! 🎉',
+        content: 'You have completed today\'s workout. Great job!',
+        icon: const Icon(Icons.emoji_events, color: Colors.amber, size: 48),
         actions: [
-          ElevatedButton(
+          GlassButton(
+            text: 'Home',
+            isPrimary: true,
             onPressed: () {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('Home'),
           ),
         ],
       ),
@@ -771,11 +770,13 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                       child: Text(
                         _currentTask?.title ?? '',
                         textAlign: TextAlign.right,
-                        style: const TextStyle(
+                        style: GoogleFonts.barlowCondensed(
                           color: Colors.white,
-                          fontSize: 24,
+                          fontSize: 32, // Increased size for impact
                           fontWeight: FontWeight.w800,
-                          shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+                          shadows: [
+                            const Shadow(blurRadius: 4, color: Colors.black),
+                          ],
                         ),
                       ),
                     ),
@@ -847,16 +848,16 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                 children: [
                   Text(
                     '$_currentRep',
-                    style: const TextStyle(
+                    style: GoogleFonts.barlowCondensed(
                       color: Colors.white,
-                      fontSize: 36,
+                      fontSize: 42,
                       fontWeight: FontWeight.w900,
                       height: 1.0,
                     ),
                   ),
                   Text(
                     ' / ${_currentTask?.adjustedReps ?? '-'}',
-                    style: const TextStyle(
+                    style: GoogleFonts.barlow(
                       color: Colors.white70,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -867,7 +868,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               const SizedBox(height: 4),
               Text(
                 'SET $_currentSet / ${_currentTask?.adjustedSets ?? '-'}',
-                style: const TextStyle(
+                style: GoogleFonts.barlow(
                   color: Colors.white70,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -906,23 +907,29 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                 : _buildGuideVideoPlayer(fit: BoxFit.cover),
           ),
 
-          // Toggle Button
+          // Toggle Button with larger touch target
           Positioned(
-            top: 4,
-            right: 4,
+            top: 0,
+            right: 0,
             child: GestureDetector(
               onTap: _togglePIPMode,
+              behavior: HitTestBehavior.opaque, // Catch all taps
               child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  border: Border.all(color: Colors.white30),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.swap_calls,
-                  color: Colors.white,
-                  size: 16,
+                padding: const EdgeInsets.all(
+                  12,
+                ), // Increased padding for touch target
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    border: Border.all(color: Colors.white30),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.swap_calls,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
               ),
             ),
@@ -1022,9 +1029,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                       size: 14,
                     ),
                     const SizedBox(width: 4),
-                    const Text(
+                    Text(
                       'UP NEXT',
-                      style: TextStyle(
+                      style: GoogleFonts.barlow(
                         color: Colors.white54,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -1040,7 +1047,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                     isLast ? 'Last Exercise' : (nextTask?.title ?? '-'),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: GoogleFonts.barlow(
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1087,7 +1094,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           ),
           Text(
             '${_timeoutSeconds - _elapsedSeconds}',
-            style: TextStyle(
+            style: GoogleFonts.barlowCondensed(
               color: Colors.white,
               fontSize: timerSize * 0.35, // 크기에 비례하여 폰트 조정
               fontWeight: FontWeight.bold,
@@ -1110,43 +1117,46 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
             if (_countdownSeconds > 0) ...[
               Text(
                 '$_countdownSeconds',
-                style: const TextStyle(
+                style: GoogleFonts.barlowCondensed(
                   color: Colors.white,
                   fontSize: 120,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Get Ready!',
-                style: TextStyle(color: Colors.white70, fontSize: 24),
+                style: GoogleFonts.barlowCondensed(
+                  color: Colors.white70,
+                  fontSize: 24,
+                ),
               ),
             ] else if (!_isFullBodyVisible) ...[
               // 신체가 안 보일 때
               const Icon(Icons.person_outline, size: 100, color: Colors.orange),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Adjust camera to see\nfull body',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: GoogleFonts.barlowCondensed(
                   color: Colors.white,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Shoulders, hips, knees, ankles\nmust be visible',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white54, fontSize: 16),
+                style: GoogleFonts.barlow(color: Colors.white54, fontSize: 16),
               ),
             ] else ...[
               // 신체가 보이고 카운트다운 대기 중
               const Icon(Icons.check_circle, size: 80, color: Colors.green),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Checking pose...',
-                style: TextStyle(
+                style: GoogleFonts.barlowCondensed(
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -1160,51 +1170,64 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   }
 
   Widget _buildRestOverlay() {
-    return Container(
-      color: Colors.black.withValues(alpha: 0.8),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.timer, size: 60, color: Colors.deepPurple),
-            const SizedBox(height: 16),
-            const Text(
-              'Resting...',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          color: Colors.black.withOpacity(0.4),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.timer, size: 60, color: Colors.deepPurple),
+                const SizedBox(height: 16),
+                Text(
+                  'Resting...',
+                  style: GoogleFonts.barlowCondensed(
+                    color: Colors.white,
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Analyzing. Please wait.',
+                  style: GoogleFonts.barlow(
+                    color: Colors.white70,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Analyzing. Please wait.',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildPauseOverlay() {
-    return Container(
-      color: Colors.black.withValues(alpha: 0.9),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.pause_circle, size: 80, color: Colors.white54),
-            const SizedBox(height: 16),
-            const Text(
-              'Paused',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          color: Colors.black.withOpacity(0.6),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.pause_circle, size: 80, color: Colors.white54),
+                const SizedBox(height: 16),
+                Text(
+                  'Paused',
+                  style: GoogleFonts.barlowCondensed(
+                    color: Colors.white,
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

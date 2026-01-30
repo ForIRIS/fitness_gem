@@ -9,6 +9,8 @@ import '../services/functions_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'loading_view.dart';
 import 'camera_view.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:ui';
 
 class WorkoutDetailView extends StatefulWidget {
   final WorkoutCurriculum curriculum;
@@ -114,10 +116,11 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                       ),
                       Text(
                         AppLocalizations.of(context)!.todayWorkout,
-                        style: const TextStyle(
+                        style: GoogleFonts.barlowCondensed(
                           color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
                         ),
                       ),
                       const SizedBox(width: 48), // Balance
@@ -175,22 +178,50 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                   child: SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _startWorkout,
-                      icon: const Icon(Icons.play_arrow, size: 28),
-                      label: Text(
-                        AppLocalizations.of(context)!.startWorkout,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
+                    child: GestureDetector(
+                      onTap: _startWorkout,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFFDC2626),
+                              Color(0xFFF87171),
+                            ], // Brand Red/Orange
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
                           borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFDC2626).withOpacity(0.4),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Container(
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.play_arrow,
+                                size: 28,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                AppLocalizations.of(context)!.startWorkout,
+                                style: GoogleFonts.barlowCondensed(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -352,117 +383,119 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12), // Reduced margin
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E2C),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
-        child: Column(
-          children: [
-            // Video Preview
-            _buildVideoPreview(),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.08), // Glass effect
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.12),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                // Video Preview
+                _buildVideoPreview(),
 
-            // Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title & Badge Row (Compacted)
-                    Row(
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.deepPurple,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${widget.index + 1}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.task.title,
-                                style: const TextStyle(
+                        // Title & Badge Row (Compacted)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.deepPurple,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${widget.index + 1}',
+                                style: GoogleFonts.barlowCondensed(
                                   color: Colors.white,
-                                  fontSize: 20,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  height: 1.1,
                                 ),
                               ),
-                              const SizedBox(height: 6),
-                              // Tags Inline
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 4,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _buildCompactTag(
-                                    widget.task.categoryDisplayName,
-                                    Colors.cyan.shade700,
+                                  Text(
+                                    widget.task.title,
+                                    style: GoogleFonts.barlowCondensed(
+                                      color: Colors.white,
+                                      fontSize: 28, // Larger title
+                                      fontWeight: FontWeight.w800, // Extra bold
+                                      height: 1.0,
+                                    ),
                                   ),
-                                  _buildCompactTag(
-                                    widget.task.difficultyDisplayName,
-                                    _getDifficultyColor(widget.task.difficulty),
+                                  const SizedBox(height: 6),
+                                  // Tags Inline
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 4,
+                                    children: [
+                                      _buildCompactTag(
+                                        widget.task.categoryDisplayName,
+                                        Colors.cyan.shade700,
+                                      ),
+                                      _buildCompactTag(
+                                        widget.task.difficultyDisplayName,
+                                        _getDifficultyColor(
+                                          widget.task.difficulty,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
+
+                        const SizedBox(height: 16),
+
+                        // Stats Grid (Compacted)
+                        _buildStatsGrid(),
+
+                        const SizedBox(height: 16),
+
+                        // Collapsible Description
+                        _buildExpandableSection(
+                          icon: Icons.info_outline,
+                          title: AppLocalizations.of(
+                            context,
+                          )!.workoutDescription,
+                          content: widget.task.description,
+                        ),
+
+                        // Precautions / Tips (Always visible if present, but compact)
+                        if (widget.task.advice.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          _buildPrecautionSection(),
+                        ],
                       ],
                     ),
-
-                    const SizedBox(height: 16),
-
-                    // Stats Grid (Compacted)
-                    _buildStatsGrid(),
-
-                    const SizedBox(height: 16),
-
-                    // Collapsible Description
-                    _buildExpandableSection(
-                      icon: Icons.info_outline,
-                      title: AppLocalizations.of(context)!.workoutDescription,
-                      content: widget.task.description,
-                    ),
-
-                    // Precautions / Tips (Always visible if present, but compact)
-                    if (widget.task.advice.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      _buildPrecautionSection(),
-                    ],
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -532,47 +565,53 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItem(
-            icon: Icons.repeat,
-            value: isTimeBased
-                ? AppLocalizations.of(
-                    context,
-                  )!.estimatedTime(widget.task.timeoutSec)
-                : '${widget.task.adjustedReps}',
-            label: isTimeBased
-                ? AppLocalizations.of(
-                    context,
-                  )!.estimatedTime('').replaceAll(RegExp(r'[^가-힣a-zA-Z]'), '')
-                : AppLocalizations.of(context)!.repsTotal.split(' ')[0],
-          ),
-          Container(
-            width: 1,
-            height: 24,
-            color: Colors.white.withValues(alpha: 0.1),
-          ),
-          _buildStatItem(
-            icon: Icons.layers,
-            value: '${widget.task.adjustedSets}',
-            label: AppLocalizations.of(context)!.sets,
-          ),
-          Container(
-            width: 1,
-            height: 24,
-            color: Colors.white.withValues(alpha: 0.1),
-          ),
-          _buildStatItem(
-            icon: Icons.timer_outlined,
-            value: '${widget.task.timeoutSec}s',
-            label: 'Time',
-          ),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildStatItem(
+              icon: Icons.repeat,
+              value: isTimeBased
+                  ? AppLocalizations.of(
+                      context,
+                    )!.estimatedTime(widget.task.timeoutSec)
+                  : '${widget.task.adjustedReps}',
+              label: isTimeBased
+                  ? AppLocalizations.of(
+                      context,
+                    )!.estimatedTime('').replaceAll(RegExp(r'[^가-힣a-zA-Z]'), '')
+                  : AppLocalizations.of(context)!.repsTotal.split(' ')[0],
+            ),
+            VerticalDivider(
+              color: Colors.white.withOpacity(0.1),
+              thickness: 1,
+              width: 20,
+              indent: 4,
+              endIndent: 4,
+            ),
+            _buildStatItem(
+              icon: Icons.layers,
+              value: '${widget.task.adjustedSets}',
+              label: AppLocalizations.of(context)!.sets,
+            ),
+            VerticalDivider(
+              color: Colors.white.withOpacity(0.1),
+              thickness: 1,
+              width: 20,
+              indent: 4,
+              endIndent: 4,
+            ),
+            _buildStatItem(
+              icon: Icons.timer_outlined,
+              value: '${widget.task.timeoutSec}s',
+              label: 'Time',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -591,18 +630,23 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
             const SizedBox(width: 4),
             Text(
               value,
-              style: const TextStyle(
+              style: GoogleFonts.barlowCondensed(
                 color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontSize: 22, // Prominent stats
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
         ),
         const SizedBox(height: 2),
         Text(
-          label,
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+          label.toUpperCase(),
+          style: GoogleFonts.barlow(
+            color: Colors.white54,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
         ),
       ],
     );
@@ -629,9 +673,9 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
               const SizedBox(width: 8),
               Text(
                 title,
-                style: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 13,
+                style: GoogleFonts.barlow(
+                  color: Colors.white70,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -650,9 +694,9 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
           const SizedBox(height: 8),
           Text(
             content,
-            style: const TextStyle(
+            style: GoogleFonts.barlow(
               color: Colors.white70,
-              fontSize: 14,
+              fontSize: 15,
               height: 1.5,
             ),
           ),
@@ -662,9 +706,9 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
             content,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: GoogleFonts.barlow(
               color: Colors.white60,
-              fontSize: 14,
+              fontSize: 15,
               height: 1.5,
             ),
           ),

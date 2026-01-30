@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/user_profile.dart';
 import '../services/gemini_service.dart';
 import 'camera_view.dart';
@@ -60,17 +61,8 @@ class _SettingsViewState extends State<SettingsView> {
 
     _profile!.fallDetectionEnabled = _fallDetectionEnabled;
     if (_fallDetectionEnabled) {
-      // If toggled on, ensure we save the phone number
-      // If user hasn't typed anything new, _completeGuardianPhone might be null,
-      // so fallback to existing text if needed, or handle validation.
-      // For now, simple fallback or validation.
       if (_completeGuardianPhone != null) {
         _profile!.guardianPhone = _completeGuardianPhone;
-      } else if (_guardianController.text.isNotEmpty) {
-        // Fallback for existing number if not modified
-        // This is tricky with IntlPhoneField controller vs completeNumber.
-        // Assuming _completeGuardianPhone captures updates.
-        // If it's existing data loaded into controller, completeNumber logic usually triggers on change.
       }
     } else {
       _profile!.guardianPhone = null;
@@ -88,48 +80,48 @@ class _SettingsViewState extends State<SettingsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFF3E5F5), // Light purple/pink
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A237E)),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           AppLocalizations.of(context)!.settings,
-          style: const TextStyle(color: Colors.white),
+          style: GoogleFonts.barlowCondensed(
+            color: const Color(0xFF1A237E),
+            fontWeight: FontWeight.w600,
+            fontSize: 24,
+          ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: true,
       ),
       body: Stack(
         children: [
-          // Background Image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/fitness_bg.png',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  Container(color: Colors.black),
-            ),
-          ),
-          // Gradient Overlay
+          // Background Gradient (Subtle)
           Positioned.fill(
             child: Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.black.withValues(alpha: 0.8),
-                    Colors.black.withValues(alpha: 0.6),
-                    Colors.black.withValues(alpha: 0.9),
+                    Color(0xFFE1BEE7), // Lighter Purple
+                    Color(0xFFF3E5F5), // Base
+                    Color(0xFFE3F2FD), // Light Blue tint
                   ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
             ),
           ),
-          // Content
+
           SafeArea(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -138,9 +130,9 @@ class _SettingsViewState extends State<SettingsView> {
                           title: AppLocalizations.of(context)!.profileInfo,
                           trailing: IconButton(
                             icon: const Icon(
-                              Icons.edit,
-                              color: Colors.white54,
-                              size: 20,
+                              Icons.edit_outlined,
+                              color: Color(0xFF5E35B1),
+                              size: 22,
                             ),
                             onPressed: () async {
                               if (_profile != null) {
@@ -209,17 +201,9 @@ class _SettingsViewState extends State<SettingsView> {
                             onChanged: (val) {
                               setState(() {
                                 _fallDetectionEnabled = val;
-                                if (!val) {
-                                  // If turned off, just clear state visually if desired,
-                                  // or keep it to restore if toggled back.
-                                  // User request: Default is not entering.
-                                } else {
-                                  // If there is existing phone in profile, ensure controller has it?
-                                  // It is already loaded in initState.
-                                }
                               });
                             },
-                            activeThumbColor: Theme.of(context).primaryColor,
+                            activeColor: const Color(0xFF5E35B1),
                           ),
                           child: _fallDetectionEnabled
                               ? Column(
@@ -227,27 +211,42 @@ class _SettingsViewState extends State<SettingsView> {
                                     const SizedBox(height: 12),
                                     IntlPhoneField(
                                       controller: _guardianController,
+                                      dropdownIconPosition:
+                                          IconPosition.trailing,
                                       decoration: InputDecoration(
                                         labelText: AppLocalizations.of(
                                           context,
                                         )!.guardianPhone,
-                                        labelStyle: const TextStyle(
-                                          color: Colors.white54,
+                                        labelStyle: GoogleFonts.barlow(
+                                          color: Colors.black54,
                                         ),
-                                        enabledBorder: const OutlineInputBorder(
+                                        filled: true,
+                                        fillColor: Colors.grey.withOpacity(
+                                          0.05,
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                           borderSide: BorderSide(
-                                            color: Colors.white24,
+                                            color: Colors.black.withOpacity(
+                                              0.1,
+                                            ),
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: Theme.of(
-                                              context,
-                                            ).primaryColor,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
                                           ),
-                                        ),
-                                        counterStyle: const TextStyle(
-                                          color: Colors.white54,
+                                          borderSide: const BorderSide(
+                                            color: Color(0xFF5E35B1),
+                                          ),
                                         ),
                                       ),
                                       initialCountryCode:
@@ -255,50 +254,64 @@ class _SettingsViewState extends State<SettingsView> {
                                             context,
                                           ).countryCode ??
                                           'KR',
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                                      style: GoogleFonts.barlow(
+                                        color: Colors.black87,
                                       ),
-                                      dropdownTextStyle: const TextStyle(
-                                        color: Colors.white,
+                                      dropdownTextStyle: GoogleFonts.barlow(
+                                        color: Colors.black87,
                                       ),
                                       dropdownIcon: const Icon(
                                         Icons.arrow_drop_down,
-                                        color: Colors.white,
+                                        color: Colors.black54,
                                       ),
                                       onChanged: (phone) {
                                         _completeGuardianPhone =
                                             phone.completeNumber;
                                       },
                                     ),
-                                    const SizedBox(height: 12),
+                                    const SizedBox(height: 16),
                                     SizedBox(
                                       width: double.infinity,
                                       child: ElevatedButton(
                                         onPressed: _saveGuardianPhone,
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.grey[800],
+                                          backgroundColor: const Color(
+                                            0xFF1A237E,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16,
+                                          ),
                                         ),
                                         child: Text(
                                           AppLocalizations.of(context)!.save,
+                                          style: GoogleFonts.barlow(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
+                                    const SizedBox(height: 12),
                                     Row(
                                       children: [
                                         const Icon(
                                           Icons.verified_user_outlined,
-                                          color: Colors.greenAccent,
-                                          size: 14,
+                                          color: Colors.green,
+                                          size: 16,
                                         ),
-                                        const SizedBox(width: 4),
+                                        const SizedBox(width: 6),
                                         Expanded(
                                           child: Text(
                                             AppLocalizations.of(
                                               context,
                                             )!.guardianStorageNotice,
-                                            style: const TextStyle(
-                                              color: Colors.greenAccent,
+                                            style: GoogleFonts.barlow(
+                                              color: Colors.green[700],
                                               fontSize: 12,
                                             ),
                                           ),
@@ -325,32 +338,40 @@ class _SettingsViewState extends State<SettingsView> {
                               TextField(
                                 controller: _apiKeyController,
                                 obscureText: !_showApiKey,
-                                style: const TextStyle(color: Colors.white),
+                                style: GoogleFonts.barlow(
+                                  color: Colors.black87,
+                                ),
                                 decoration: InputDecoration(
                                   hintText: AppLocalizations.of(
                                     context,
                                   )!.enterApiKey,
-                                  hintStyle: const TextStyle(
-                                    color: Colors.white38,
+                                  hintStyle: GoogleFonts.barlow(
+                                    color: Colors.black38,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.grey.withOpacity(0.05),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
                                   ),
                                   enabledBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(
-                                      color: Colors.white24,
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: Colors.black.withOpacity(0.1),
                                     ),
-                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                   focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Theme.of(context).primaryColor,
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFF5E35B1),
                                     ),
-                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _showApiKey
                                           ? Icons.visibility_off
                                           : Icons.visibility,
-                                      color: Colors.white54,
+                                      color: Colors.black54,
                                     ),
                                     onPressed: () {
                                       setState(
@@ -360,18 +381,26 @@ class _SettingsViewState extends State<SettingsView> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 16),
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
                                   onPressed: _saveApiKey,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(
-                                      context,
-                                    ).primaryColor,
+                                    backgroundColor: const Color(0xFF5E35B1),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
                                   ),
                                   child: Text(
                                     AppLocalizations.of(context)!.saveApiKey,
+                                    style: GoogleFonts.barlow(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -405,21 +434,31 @@ class _SettingsViewState extends State<SettingsView> {
                           title: AppLocalizations.of(context)!.testCamera,
                           child: ListTile(
                             contentPadding: EdgeInsets.zero,
-                            leading: const Icon(
-                              Icons.camera_alt,
-                              color: Colors.white,
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE3F2FD),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Color(0xFF1A237E),
+                                size: 20,
+                              ),
                             ),
                             title: Text(
                               AppLocalizations.of(context)!.testCamera,
-                              style: const TextStyle(color: Colors.white),
+                              style: GoogleFonts.barlow(
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                             trailing: const Icon(
                               Icons.arrow_forward_ios,
-                              color: Colors.white54,
+                              color: Colors.black26,
                               size: 16,
                             ),
                             onTap: () {
-                              // Launch Camera View without curriculum (Test Mode)
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -430,6 +469,7 @@ class _SettingsViewState extends State<SettingsView> {
                             },
                           ),
                         ),
+                        const SizedBox(height: 48),
                       ],
                     ),
                   ),
@@ -446,11 +486,17 @@ class _SettingsViewState extends State<SettingsView> {
     required Widget child,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05), // Glassmorphism
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,9 +510,9 @@ class _SettingsViewState extends State<SettingsView> {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
+                      style: GoogleFonts.barlowCondensed(
+                        color: const Color(0xFF1A237E),
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -474,8 +520,8 @@ class _SettingsViewState extends State<SettingsView> {
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: const TextStyle(
-                          color: Colors.white54,
+                        style: GoogleFonts.barlow(
+                          color: Colors.black45,
                           fontSize: 13,
                         ),
                       ),
@@ -486,7 +532,7 @@ class _SettingsViewState extends State<SettingsView> {
               if (trailing != null) trailing,
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           child,
         ],
       ),
@@ -504,25 +550,29 @@ class _SettingsViewState extends State<SettingsView> {
         if (hasInterview && _profile?.interviewSummary != null) ...[
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+              color: const Color(0xFFFFF8E1), // Amber tint
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.amber.withOpacity(0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.auto_awesome, color: Colors.amber, size: 16),
-                    SizedBox(width: 6),
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: Colors.orange,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
                     Text(
                       AppLocalizations.of(context)!.aiConsultResult,
-                      style: TextStyle(
-                        color: Colors.amber,
+                      style: GoogleFonts.barlow(
+                        color: Colors.orange[800],
                         fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -530,7 +580,11 @@ class _SettingsViewState extends State<SettingsView> {
                 const SizedBox(height: 8),
                 Text(
                   _profile!.interviewSummary!,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  style: GoogleFonts.barlow(
+                    color: Colors.black87,
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -541,20 +595,31 @@ class _SettingsViewState extends State<SettingsView> {
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: canReinterview ? _startReinterview : null,
-            icon: const Icon(Icons.auto_awesome, size: 18),
+            icon: Icon(
+              Icons.refresh,
+              color: canReinterview ? Colors.white : Colors.black26,
+            ),
             label: Text(
               canReinterview
                   ? AppLocalizations.of(context)!.reconsult
                   : AppLocalizations.of(
                       context,
                     )!.daysUntilReconsult(daysRemaining),
+              style: GoogleFonts.barlow(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: canReinterview ? Colors.amber : Colors.grey[700],
-              foregroundColor: canReinterview ? Colors.black : Colors.white54,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              disabledBackgroundColor: Colors.grey[800],
-              disabledForegroundColor: Colors.white38,
+              backgroundColor: canReinterview
+                  ? const Color(0xFFFF8F00) // Deep Orange/Amber
+                  : Colors.grey[200],
+              foregroundColor: canReinterview ? Colors.white : Colors.black38,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              elevation: canReinterview ? 4 : 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ),
@@ -563,7 +628,12 @@ class _SettingsViewState extends State<SettingsView> {
             padding: const EdgeInsets.only(top: 8),
             child: Text(
               AppLocalizations.of(context)!.weeklyLimitMessage,
-              style: const TextStyle(color: Colors.white38, fontSize: 12),
+              style: GoogleFonts.barlow(
+                color: Colors.black45,
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
       ],
@@ -596,12 +666,22 @@ class _SettingsViewState extends State<SettingsView> {
 
   Widget _buildInfoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white70)),
-          Text(value, style: const TextStyle(color: Colors.white)),
+          Text(
+            label,
+            style: GoogleFonts.barlow(color: Colors.black54, fontSize: 14),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.barlow(
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
         ],
       ),
     );
