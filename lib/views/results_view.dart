@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/session_analysis.dart';
-import '../models/workout_curriculum.dart';
+import '../models/workout_curriculum_model.dart';
 
 /// ResultsView - Session completion results screen
 class ResultsView extends StatefulWidget {
   final List<SetAnalysis> setAnalyses;
-  final WorkoutCurriculum curriculum;
+  final WorkoutCurriculumModel curriculum;
 
   const ResultsView({
     super.key,

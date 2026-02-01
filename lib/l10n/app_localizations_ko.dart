@@ -313,6 +313,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get emptyProgressTitle => '아직 기록이 없어요';
 
   @override
+  String get failedToLoadFeatured => '추천 프로그램을 불러오지 못했습니다.';
+
+  @override
+  String get failedToLoadProfile => '사용자 프로필을 불러오지 못했습니다.';
+
+  @override
   String get noRecordMessage => '운동을 시작하고 데이터를 쌓아보세요';
 
   @override
@@ -461,4 +467,28 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get createWorkout => '운동 생성하기';
+
+  @override
+  String get programs => '프로그램';
+
+  @override
+  String get dailyHotCategories => '실시간 인기 카테고리';
+
+  @override
+  String get readyToWorkout => '운동 준비 완료';
+
+  @override
+  String get pickAProgram => '프로그램 선택';
+
+  @override
+  String get fullyCustomizableProgram => '커스텀 프로그램';
+
+  @override
+  String get joinTheFlow => '내 몸의 변화를\n피트니스 젬과 함께.\n지금 시작하세요.';
+
+  @override
+  String get members => '회원';
+
+  @override
+  String get hold => '유지';
 }

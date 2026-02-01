@@ -73,7 +73,7 @@ class MainApp extends StatelessWidget {
         },
       ),
 
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       initialRoute: '/',
       routes: {
         '/': (context) =>

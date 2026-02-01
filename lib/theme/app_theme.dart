@@ -1,39 +1,44 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // 2026 Trend Palette: Neo-Minimalism / Cyber-Sport
-  static const Color primary = Color(0xFF6200EA); // Electric Indigo
-  static const Color primaryVariant = Color(0xFF7C4DFF);
+  // 2026 Trend Palette: Pantone Data
+  static const Color cloudDancer = Color(0xFFF0EEE9); // 11-4201 TCX
+  static const Color irisOrchid = Color(0xFFB57EDC); // 17-3323 TCX
+  static const Color capri = Color(0xFF00B0E0); // 15-4722 TCX
+  static const Color kiwiColada = Color(0xFFD8DE73); // 14-0443 TCX
+  static const Color sunnyLime = Color(0xFFE9F299); // 12-0741 TCX
+  static const Color brightMarigold = Color(0xFFFFA800); // 15-1164 TCX (Approx)
+  static const Color paradisePink = Color(0xFFE63E62); // 17-1755 TCX
+  static const Color blazingYellow = Color(0xFFFEE715); // 12-0643 TCX (Approx)
 
-  static const Color secondary = Color(0xFF00E5FF); // Neon Cyan (Accent)
-  static const Color accent = Color(0xFFCCFF00); // Lime Punch (High Energy)
+  // Semantic Aliases
+  static const Color primary = irisOrchid;
+  static const Color background = cloudDancer;
+  static const Color surface = Colors.white;
+  static const Color accent = capri;
+  static const Color error = paradisePink;
+  static const Color success = kiwiColada;
+  static const Color textPrimary = Color(
+    0xFF0F172A,
+  ); // Keep readable dark slate
+  static const Color textSecondary = Color(0xFF64748B);
 
-  static const Color background = Color(0xFF050505); // Deep Void
-  static const Color surface = Color(0xFF121212); // Obsidian
-  static const Color surfaceGlass = Color(0x1AFFFFFF); // Glassmorphism base
-
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFB0B0B0);
-
-  static const Color error = Color(0xFFFF5252);
-  static const Color success = Color(0xFF00E676);
-
-  static final ThemeData darkTheme = ThemeData(
+  static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
+    brightness: Brightness.light,
     scaffoldBackgroundColor: background,
     primaryColor: primary,
-    colorScheme: const ColorScheme.dark(
+    colorScheme: const ColorScheme.light(
       primary: primary,
-      secondary: secondary,
+      secondary: accent,
       surface: surface,
       error: error,
       onPrimary: Colors.white,
-      onSecondary: Colors.black,
+      onSecondary: Colors.white,
       onSurface: textPrimary,
       onError: Colors.white,
     ),
-    fontFamily: 'Pretendard', // Assuming used, or default
+    fontFamily: 'Pretendard',
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -51,9 +56,7 @@ class AppTheme {
         foregroundColor: Colors.white,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16), // Rounded Squircle-ish
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -65,11 +68,11 @@ class AppTheme {
       color: surface,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Colors.white.withOpacity(0.05)),
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: Colors.transparent),
       ),
     ),
-    iconTheme: const IconThemeData(color: textSecondary, size: 24),
+    iconTheme: const IconThemeData(color: textPrimary, size: 24),
   );
 
   // Gradient Styles

@@ -77,7 +77,7 @@
   "permissionRequired": "Permission Required",
   "permissionDeniedMessage": "Camera and microphone permissions were denied.\nPlease enable them in Settings.",
   "openSettings": "Open Settings",
-  "startWithAiConsultant": "Start after talking with AI Consultant",
+  "startWithAiConsultant": "Talk with AI Consultant",
   "apiKeySaved": "API Key saved.",
   "guardianSaved": "Guardian contact saved.",
   "age": "Age",
@@ -139,6 +139,8 @@
   "retry": "Retry",
   "progress": "Progress",
   "emptyProgressTitle": "No Records Yet",
+  "failedToLoadFeatured": "Failed to load Featured Program",
+  "failedToLoadProfile": "Failed to load user profile",
   "noRecordMessage": "Start your first workout to see stats",
   "medicalDisclaimerShort": "This app does not provide medical advice.\nStop immediately if you experience pain.",
   "aiChatInitialMessage": "Hello! What kind of workout would you like to do today?\nEx: \"I want a light lower body workout\", \"Focus on upper body\"",
@@ -161,7 +163,7 @@
       }
     }
   },
-  "viewDetail": "View Details",
+  "viewDetail": "Details",
   "startNow": "Start Now",
   "workoutComplete": "Workout Complete! 🎉",
   "returnHome": "Return to Home",
@@ -206,5 +208,13 @@
   "geminiApiKeyTitle": "Gemini API Key",
   "hackathonEdition": "Hackathon Edition",
   "downloadAndStart": "Download & Start",
-  "createWorkout": "Create Workout"
+  "createWorkout": "Create Workout",
+  "programs": "Programs",
+  "dailyHotCategories": "Daily Hot Categories",
+  "readyToWorkout": "Ready to Workout",
+  "pickAProgram": "Pick A Program",
+  "fullyCustomizableProgram": "Fully Customizable Program",
+  "joinTheFlow": "Get Set, Stay\nIgnite, Finish Proud.\nJoin The Flow.",
+  "members": "Members",
+  "hold": "HOLD"
 }

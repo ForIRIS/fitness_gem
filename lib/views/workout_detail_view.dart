@@ -5,13 +5,14 @@ import '../domain/entities/workout_curriculum.dart';
 import '../services/workout_model_service.dart';
 import '../domain/entities/workout_task.dart';
 import '../services/cache_service.dart';
-import 'package:shimmer/shimmer.dart';
+// Shimmer import removed
 import 'loading_view.dart';
 import 'camera_view.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../presentation/viewmodels/home_viewmodel.dart';
+import '../theme/app_theme.dart';
 
 class WorkoutDetailView extends ConsumerStatefulWidget {
   final WorkoutCurriculum curriculum;
@@ -29,14 +30,11 @@ class WorkoutDetailView extends ConsumerStatefulWidget {
 
 class _WorkoutDetailViewState extends ConsumerState<WorkoutDetailView> {
   late PageController _pageController;
-  late int _currentIndex;
-
   final _modelService = WorkoutModelService();
 
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialIndex;
     _pageController = PageController(
       initialPage: widget.initialIndex,
       viewportFraction: 0.92,
@@ -67,171 +65,108 @@ class _WorkoutDetailViewState extends ConsumerState<WorkoutDetailView> {
     final taskCount = widget.curriculum.workoutTasks.length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
-      body: Stack(
-        children: [
-          // Background Image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/fitness_bg.png',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  Container(color: Colors.black),
+      backgroundColor: AppTheme.background, // Cloud Dancer
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Section matching "Programs" layout
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Today\'s Program', // Matching the screenshot title
+                        style: GoogleFonts.outfit(
+                          // Using Outfit for clean look
+                          color: AppTheme.textPrimary,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                        color: AppTheme.textPrimary,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Pre-planned workout paired with audio guidance\nand expert coaching.', // Matching subtitle
+                    style: GoogleFonts.outfit(
+                      color: AppTheme.textSecondary,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          // Gradient Overlay
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withValues(alpha: 0.7),
-                    Colors.black.withValues(alpha: 0.5),
-                    Colors.black.withValues(alpha: 0.8),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+
+            // Content List
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
                 ),
+                itemCount: taskCount,
+                itemBuilder: (context, index) {
+                  final task = widget.curriculum.workoutTasks[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: WorkoutDetailCard(
+                      task: task,
+                      index: index,
+                      isActive: true, // Always active in list view
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SizedBox(
+          width: double.infinity,
+          child: FloatingActionButton.extended(
+            onPressed: _startWorkout,
+            backgroundColor: AppTheme.primary,
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            label: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 16,
+              ), // Restored comfortable touch target
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.play_arrow, size: 28, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    AppLocalizations.of(context)!.startWorkout,
+                    style: GoogleFonts.barlowCondensed(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-
-          SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back_ios,
-                          color: Colors.white,
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      Text(
-                        AppLocalizations.of(context)!.todayWorkout,
-                        style: GoogleFonts.barlowCondensed(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(width: 48), // Balance
-                    ],
-                  ),
-                ),
-
-                // PageView
-                Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: taskCount,
-                    onPageChanged: (index) {
-                      setState(() => _currentIndex = index);
-                    },
-                    itemBuilder: (context, index) {
-                      final task = widget.curriculum.workoutTasks[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: WorkoutDetailCard(
-                          task: task,
-                          index: index,
-                          isActive: index == _currentIndex,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                // Page Indicator
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16, top: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(taskCount, (index) {
-                      final isActive = index == _currentIndex;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: isActive ? 24 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? Colors.deepPurple
-                              : Colors.grey[700],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-
-                // Start Workout Button
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: GestureDetector(
-                      onTap: _startWorkout,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFFDC2626),
-                              Color(0xFFF87171),
-                            ], // Brand Red/Orange
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFDC2626).withOpacity(0.4),
-                              blurRadius: 16,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Container(
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.play_arrow,
-                                size: 28,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                AppLocalizations.of(context)!.startWorkout,
-                                style: GoogleFonts.barlowCondensed(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 1.0,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -301,34 +236,15 @@ class WorkoutDetailCard extends StatefulWidget {
 class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
-  bool _hasVideoError = false;
-  bool _isDescriptionExpanded = false;
-  int _retryCount = 0;
 
-  ImageProvider _getImageProvider(String? path) {
-    if (path == null || path.isEmpty) {
-      return const AssetImage('assets/images/fitness_bg.png');
-    }
-    if (path.startsWith('http')) {
-      return NetworkImage(path);
-    }
-    return AssetImage(path);
-  }
+  // Removed unused _getImageProvider
 
   @override
   void initState() {
     super.initState();
-    _initializeVideo();
-  }
-
-  @override
-  void didUpdateWidget(WorkoutDetailCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Play/Pause video based on active state
-    if (widget.isActive && _isVideoInitialized) {
-      _videoController?.play();
-    } else {
-      _videoController?.pause();
+    // Initialize video controller if URL is present - Keeping initialization but simplifying display
+    if (widget.task.exampleVideoUrl.isNotEmpty) {
+      _initializeVideo();
     }
   }
 
@@ -352,25 +268,11 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
       }
     } catch (e) {
       debugPrint('Video init error: $e');
-
-      // Note: Media URL refresh not supported with immutable entities
-      // The video will use the old URL until the card is recreated
-      // This is acceptable since URL refresh is a rare edge case
-      if (_retryCount == 0) {
-        _retryCount++;
-        debugPrint('Video initialization failed - URL may be expired');
-        debugPrint('Media URL refresh not supported with immutable entities');
-      }
-
-      // Note: Media URL refresh not supported with immutable entities
-      // The video will use the old URL until the card is recreated
-      // This is acceptable since URL refresh is a rare edge case
       debugPrint('Media URL refresh skipped - immutable entity limitation');
-      if (mounted) {
-        setState(() => _hasVideoError = true);
-      }
     }
   }
+
+  // Removed unused PageController and _currentIndex
 
   @override
   void dispose() {
@@ -380,390 +282,144 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine if it's maintenance/stretch
+    final bool isMaintenance =
+        (widget.task.reps <= 1 && !widget.task.isCountable) ||
+        widget.task.category.toLowerCase() == 'stretch';
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12), // Reduced margin
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08), // Glass effect
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.12),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              children: [
-                // Video Preview
-                _buildVideoPreview(),
-
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title & Badge Row (Compacted)
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.deepPurple,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '${widget.index + 1}',
-                                style: GoogleFonts.barlowCondensed(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.task.title,
-                                    style: GoogleFonts.barlowCondensed(
-                                      color: Colors.white,
-                                      fontSize: 28, // Larger title
-                                      fontWeight: FontWeight.w800, // Extra bold
-                                      height: 1.0,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  // Tags Inline
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 4,
-                                    children: [
-                                      _buildCompactTag(
-                                        widget.task.categoryDisplayName,
-                                        Colors.cyan.shade700,
-                                      ),
-                                      _buildCompactTag(
-                                        widget.task.difficultyDisplayName,
-                                        _getDifficultyColor(
-                                          widget.task.difficulty,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+      height: 180, // Fixed height for consistent list cards
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.primary, // Iris Orchid
+        borderRadius: BorderRadius.circular(32), // Large rounded corners
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primary.withOpacity(0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Content Layout
+          Row(
+            children: [
+              // Left Side: Text Info
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Tag (e.g. 5x5 / Sets)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
                         ),
-
-                        const SizedBox(height: 16),
-
-                        // Stats Grid (Compacted)
-                        _buildStatsGrid(),
-
-                        const SizedBox(height: 16),
-
-                        // Collapsible Description
-                        _buildExpandableSection(
-                          icon: Icons.info_outline,
-                          title: AppLocalizations.of(
-                            context,
-                          )!.workoutDescription,
-                          content: widget.task.description,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        child: Text(
+                          isMaintenance
+                              ? AppLocalizations.of(context)!.hold
+                              : '${widget.task.adjustedSets} Sets',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
 
-                        // Precautions / Tips (Always visible if present, but compact)
-                        if (widget.task.advice.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          _buildPrecautionSection(),
-                        ],
-                      ],
-                    ),
+                      // Title
+                      Text(
+                        widget.task.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          height: 1.1,
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      // Subtext / Description
+                      Text(
+                        isMaintenance
+                            ? 'Relax & Stretch'
+                            : '${widget.task.adjustedReps} Reps per set',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVideoPreview() {
-    return Container(
-      height: 180, // Slightly reduced height
-      width: double.infinity,
-      decoration: const BoxDecoration(color: Colors.black),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (_isVideoInitialized && _videoController != null)
-            FittedBox(
-              fit: BoxFit.cover,
-              child: SizedBox(
-                width: _videoController!.value.size.width,
-                height: _videoController!.value.size.height,
-                child: VideoPlayer(_videoController!),
               ),
-            )
-          else if (_hasVideoError || widget.task.exampleVideoUrl.isEmpty)
-            if (widget.task.thumbnail.isNotEmpty)
-              Image(
-                image: _getImageProvider(widget.task.thumbnail),
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.broken_image,
-                          size: 40,
-                          color: Colors.grey.shade600,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              )
-            else
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+
+              // Right Side: Visual (Video/Thumb)
+              Expanded(
+                flex: 2,
+                child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                    Icon(
-                      Icons.fitness_center,
-                      size: 40,
-                      color: Colors.grey.shade600,
+                    // Masked Image/Video
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(32),
+                        bottomRight: Radius.circular(32),
+                      ),
+                      child: _buildSimpleVisualPreview(),
+                    ),
+
+                    // Gradient Overlay to blend with purple
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              AppTheme.primary,
+                              AppTheme.primary.withOpacity(0.0),
+                            ],
+                            stops: const [0.0, 0.4],
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              )
-          else
-            Shimmer.fromColors(
-              baseColor: Colors.grey.shade900,
-              highlightColor: Colors.grey.shade800,
-              child: Container(color: Colors.black),
-            ),
-
-          // Gradient Overlay
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 40,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, const Color(0xFF1E1E2C)],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsGrid() {
-    final isTimeBased = widget.task.category == 'core';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildStatItem(
-              icon: Icons.repeat,
-              value: isTimeBased
-                  ? AppLocalizations.of(
-                      context,
-                    )!.estimatedTime(widget.task.timeoutSec)
-                  : '${widget.task.adjustedReps}',
-              label: isTimeBased
-                  ? AppLocalizations.of(
-                      context,
-                    )!.estimatedTime('').replaceAll(RegExp(r'[^가-힣a-zA-Z]'), '')
-                  : AppLocalizations.of(context)!.repsTotal.split(' ')[0],
-            ),
-            VerticalDivider(
-              color: Colors.white.withOpacity(0.1),
-              thickness: 1,
-              width: 20,
-              indent: 4,
-              endIndent: 4,
-            ),
-            _buildStatItem(
-              icon: Icons.layers,
-              value: '${widget.task.adjustedSets}',
-              label: AppLocalizations.of(context)!.sets,
-            ),
-            VerticalDivider(
-              color: Colors.white.withOpacity(0.1),
-              thickness: 1,
-              width: 20,
-              indent: 4,
-              endIndent: 4,
-            ),
-            _buildStatItem(
-              icon: Icons.timer_outlined,
-              value: '${widget.task.timeoutSec}s',
-              label: 'Time',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatItem({
-    required IconData icon,
-    required String value,
-    required String label,
-  }) {
-    return Column(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.deepPurple.shade300, size: 16),
-            const SizedBox(width: 4),
-            Text(
-              value,
-              style: GoogleFonts.barlowCondensed(
-                color: Colors.white,
-                fontSize: 22, // Prominent stats
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label.toUpperCase(),
-          style: GoogleFonts.barlow(
-            color: Colors.white54,
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExpandableSection({
-    required IconData icon,
-    required String title,
-    required String content,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () {
-            setState(() {
-              _isDescriptionExpanded = !_isDescriptionExpanded;
-            });
-          },
-          child: Row(
-            children: [
-              Icon(icon, color: Colors.grey.shade400, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: GoogleFonts.barlow(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              Icon(
-                _isDescriptionExpanded
-                    ? Icons.keyboard_arrow_up
-                    : Icons.keyboard_arrow_down,
-                color: Colors.grey.shade600,
-                size: 20,
               ),
             ],
           ),
-        ),
-        if (_isDescriptionExpanded) ...[
-          const SizedBox(height: 8),
-          Text(
-            content,
-            style: GoogleFonts.barlow(
-              color: Colors.white70,
-              fontSize: 15,
-              height: 1.5,
-            ),
-          ),
-        ] else ...[
-          const SizedBox(height: 4),
-          Text(
-            content,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.barlow(
-              color: Colors.white60,
-              fontSize: 15,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
 
-  Widget _buildPrecautionSection() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.orange.shade900.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.orange.shade700.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            color: Colors.orange.shade400,
-            size: 18,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              widget.task.advice,
-              style: TextStyle(
-                color: Colors.orange.shade100,
-                fontSize: 13,
-                height: 1.4,
+          // Circle Button (Decorative or Action)
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.5)),
+                color: Colors.white.withOpacity(0.2),
+              ),
+              child: const Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+                size: 20,
               ),
             ),
           ),
@@ -772,37 +428,33 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
     );
   }
 
-  Widget _buildCompactTag(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
+  // Simplified visual for the card
+  Widget _buildSimpleVisualPreview() {
+    if (_isVideoInitialized && _videoController != null) {
+      return FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: _videoController!.value.size.width,
+          height: _videoController!.value.size.height,
+          child: VideoPlayer(_videoController!),
         ),
-      ),
-    );
+      );
+    } else if (widget.task.thumbnail.isNotEmpty) {
+      return Image.network(
+        widget.task.thumbnail,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildPlaceholder(),
+      );
+    }
+    return _buildPlaceholder();
   }
 
-  Color _getDifficultyColor(int difficulty) {
-    switch (difficulty) {
-      case 1:
-        return Colors.green;
-      case 2:
-        return Colors.lightGreen;
-      case 3:
-        return Colors.orange;
-      case 4:
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
+  Widget _buildPlaceholder() {
+    return Container(
+      color: Colors.white.withOpacity(0.1),
+      child: Center(
+        child: Icon(Icons.fitness_center, color: Colors.white.withOpacity(0.3)),
+      ),
+    );
   }
 }

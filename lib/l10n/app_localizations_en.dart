@@ -232,7 +232,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openSettings => 'Open Settings';
 
   @override
-  String get startWithAiConsultant => 'Start after talking with AI Consultant';
+  String get startWithAiConsultant => 'Talk with AI Consultant';
 
   @override
   String get apiKeySaved => 'API Key saved.';
@@ -322,6 +322,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emptyProgressTitle => 'No Records Yet';
 
   @override
+  String get failedToLoadFeatured => 'Failed to load Featured Program';
+
+  @override
+  String get failedToLoadProfile => 'Failed to load user profile';
+
+  @override
   String get noRecordMessage => 'Start your first workout to see stats';
 
   @override
@@ -353,7 +359,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get viewDetail => 'View Details';
+  String get viewDetail => 'Details';
 
   @override
   String get startNow => 'Start Now';
@@ -472,4 +478,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createWorkout => 'Create Workout';
+
+  @override
+  String get programs => 'Programs';
+
+  @override
+  String get dailyHotCategories => 'Daily Hot Categories';
+
+  @override
+  String get readyToWorkout => 'Ready to Workout';
+
+  @override
+  String get pickAProgram => 'Pick A Program';
+
+  @override
+  String get fullyCustomizableProgram => 'Fully Customizable Program';
+
+  @override
+  String get joinTheFlow =>
+      'Get Set, Stay\nIgnite, Finish Proud.\nJoin The Flow.';
+
+  @override
+  String get members => 'Members';
+
+  @override
+  String get hold => 'HOLD';
 }

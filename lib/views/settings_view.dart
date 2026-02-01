@@ -32,6 +32,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   void initState() {
     super.initState();
     _loadApiKey();
+    // Auto-load data if missing
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewModel = ref.read(homeViewModelProvider);
+      if (viewModel.userProfile == null && !viewModel.isLoading) {
+        viewModel.loadData();
+      }
+    });
   }
 
   Future<void> _loadApiKey() async {
@@ -148,14 +155,54 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ),
 
           SafeArea(
-            child: viewModel.isLoading || profile == null
-                ? const Center(child: CircularProgressIndicator())
-                : Builder(
-                    builder: (context) {
-                      _initializeFromProfile(profile);
-                      return _buildContent(profile);
-                    },
-                  ),
+            child: Builder(
+              builder: (context) {
+                // Return Error/Retry view if profile missing and not loading
+                if (profile == null && !viewModel.isLoading) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Colors.redAccent,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          AppLocalizations.of(context)!.failedToLoadProfile,
+                          style: GoogleFonts.barlow(
+                            fontSize: 18,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () =>
+                              ref.read(homeViewModelProvider).loadData(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1A237E),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: Text(AppLocalizations.of(context)!.retry),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                // Show loader if actually loading
+                if (viewModel.isLoading || profile == null) {
+                  // If profile is null but isLoading is true, showing loader is correct
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                _initializeFromProfile(profile);
+                return _buildContent(profile);
+              },
+            ),
           ),
         ],
       ),
@@ -253,17 +300,17 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                           filled: true,
                           fillColor: Colors.grey.withOpacity(0.05),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(30),
                             borderSide: BorderSide.none,
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(30),
                             borderSide: BorderSide(
                               color: Colors.black.withOpacity(0.1),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(30),
                             borderSide: const BorderSide(
                               color: Color(0xFF5E35B1),
                             ),
@@ -291,7 +338,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF1A237E),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(30),
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
@@ -349,17 +396,17 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     filled: true,
                     fillColor: Colors.grey.withOpacity(0.05),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide(
                         color: Colors.black.withOpacity(0.1),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(30),
                       borderSide: const BorderSide(color: Color(0xFF5E35B1)),
                     ),
                     suffixIcon: IconButton(
@@ -381,7 +428,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF5E35B1),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -603,7 +650,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               elevation: canReinterview ? 4 : 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(30),
               ),
             ),
           ),

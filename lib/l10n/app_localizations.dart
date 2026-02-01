@@ -521,7 +521,7 @@ abstract class AppLocalizations {
   /// No description provided for @startWithAiConsultant.
   ///
   /// In en, this message translates to:
-  /// **'Start after talking with AI Consultant'**
+  /// **'Talk with AI Consultant'**
   String get startWithAiConsultant;
 
   /// No description provided for @apiKeySaved.
@@ -680,6 +680,18 @@ abstract class AppLocalizations {
   /// **'No Records Yet'**
   String get emptyProgressTitle;
 
+  /// No description provided for @failedToLoadFeatured.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load Featured Program'**
+  String get failedToLoadFeatured;
+
+  /// No description provided for @failedToLoadProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load user profile'**
+  String get failedToLoadProfile;
+
   /// No description provided for @noRecordMessage.
   ///
   /// In en, this message translates to:
@@ -731,7 +743,7 @@ abstract class AppLocalizations {
   /// No description provided for @viewDetail.
   ///
   /// In en, this message translates to:
-  /// **'View Details'**
+  /// **'Details'**
   String get viewDetail;
 
   /// No description provided for @startNow.
@@ -961,6 +973,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create Workout'**
   String get createWorkout;
+
+  /// No description provided for @programs.
+  ///
+  /// In en, this message translates to:
+  /// **'Programs'**
+  String get programs;
+
+  /// No description provided for @dailyHotCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Hot Categories'**
+  String get dailyHotCategories;
+
+  /// No description provided for @readyToWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to Workout'**
+  String get readyToWorkout;
+
+  /// No description provided for @pickAProgram.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick A Program'**
+  String get pickAProgram;
+
+  /// No description provided for @fullyCustomizableProgram.
+  ///
+  /// In en, this message translates to:
+  /// **'Fully Customizable Program'**
+  String get fullyCustomizableProgram;
+
+  /// No description provided for @joinTheFlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Set, Stay\nIgnite, Finish Proud.\nJoin The Flow.'**
+  String get joinTheFlow;
+
+  /// No description provided for @members.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get members;
+
+  /// No description provided for @hold.
+  ///
+  /// In en, this message translates to:
+  /// **'HOLD'**
+  String get hold;
 }
 
 class _AppLocalizationsDelegate

@@ -78,6 +78,51 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
           .toList();
     } catch (e) {
       debugPrint('Error fetching workout tasks by IDs: $e');
+
+      // Fallback for mock IDs used in fetchFeaturedProgramData
+      if (ids.contains('squat_04')) {
+        return [
+          const WorkoutTaskModel(
+            id: 'squat_04',
+            title: 'Air Squat',
+            description: 'Basic bodyweight squat',
+            advice: 'Keep chest up and weight on heels.',
+            category: 'squat',
+            difficulty: 1,
+            reps: 20,
+            sets: 3,
+            timeoutSec: 30,
+            durationSec: 120, // 2 mins
+            isCountable: true,
+          ),
+          const WorkoutTaskModel(
+            id: 'push_03',
+            title: 'Push-up',
+            description: 'Standard push-up',
+            advice: 'Maintain a straight line from head to heels.',
+            category: 'push',
+            difficulty: 2,
+            reps: 15,
+            sets: 3,
+            timeoutSec: 45,
+            durationSec: 90,
+            isCountable: true,
+          ),
+          const WorkoutTaskModel(
+            id: 'lunge_03',
+            title: 'Walking Lunge',
+            description: 'Bodyweight lunges while walking.',
+            advice: 'Step forward and lower hips.',
+            category: 'lunge',
+            difficulty: 2,
+            reps: 12,
+            sets: 3,
+            timeoutSec: 45,
+            durationSec: 150,
+            isCountable: true,
+          ),
+        ];
+      }
       return [];
     }
   }

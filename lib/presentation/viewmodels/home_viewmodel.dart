@@ -84,10 +84,10 @@ class HomeViewModel extends ChangeNotifier {
       }, (curriculum) => _todayCurriculum = curriculum);
 
       // Load hot categories
-      _loadHotCategories();
+      await _loadHotCategories();
 
       // Load featured program
-      _loadFeaturedProgram();
+      await _loadFeaturedProgram();
 
       // If no curriculum exists and we have a profile, generate one
       if (_todayCurriculum == null && _userProfile != null) {
@@ -123,13 +123,33 @@ class HomeViewModel extends ChangeNotifier {
     final result = await getFeaturedProgram.execute();
     result.fold(
       (failure) {
-        debugPrint('Failed to load featured program: ${failure.message}');
+        debugPrint(
+          'Failed to load featured program, using mock: ${failure.message}',
+        );
+        _setMockFeaturedProgram(); // Fallback
       },
       (program) {
-        _featuredProgram = program;
+        if (program != null) {
+          _featuredProgram = program;
+        } else {
+          _setMockFeaturedProgram();
+        }
       },
     );
     notifyListeners();
+  }
+
+  void _setMockFeaturedProgram() {
+    // Create a mock program if none exists
+    _featuredProgram = WorkoutCurriculum(
+      id: 'featured-mock',
+      title: 'Ignite Flow',
+      description: 'Get Set, Stay Ignite.',
+      workoutTasks: const [], // Empty list
+      createdAt: DateTime.now(),
+      thumbnail:
+          'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1350&q=80',
+    );
   }
 
   /// Generate a new curriculum

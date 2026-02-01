@@ -97,10 +97,10 @@ class UserProfileModel {
     return UserProfileModel(
       id: map['id'] ?? '',
       nickname: map['nickname'] ?? '',
-      age: map['age'] ?? 0,
+      age: _parseInt(map['age']),
       gender: map['gender'] ?? '',
-      height: (map['height'] ?? 0).toDouble(),
-      weight: (map['weight'] ?? 0).toDouble(),
+      height: _toDouble(map['height']),
+      weight: _toDouble(map['weight']),
       fitnessLevel: map['fitnessLevel'] ?? '',
       targetExercise: map['targetExercise'] ?? '',
       healthConditions: map['healthConditions'] ?? '',
@@ -152,4 +152,18 @@ class UserProfileModel {
 
   factory UserProfileModel.fromJson(String source) =>
       UserProfileModel.fromMap(json.decode(source));
+
+  static int _parseInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
 }
