@@ -15,7 +15,7 @@ import 'onboarding/onboarding_profile_page.dart';
 import 'onboarding/onboarding_exercise_page.dart';
 import 'onboarding/onboarding_guardian_page.dart';
 import 'ai_interview_view.dart';
-import 'home_view_refactored.dart' as home;
+import 'home_view.dart' as home;
 
 /// OnboardingView - Onboarding Screen
 class OnboardingView extends StatefulWidget {
@@ -625,7 +625,9 @@ class _OnboardingViewState extends State<OnboardingView> {
     final getApiKeyUseCase = getIt<GetApiKeyUseCase>();
     final setApiKeyUseCase = getIt<SetApiKeyUseCase>();
 
-    final currentKey = await getApiKeyUseCase.execute();
+    final result = await getApiKeyUseCase.execute();
+    String currentKey = '';
+    result.fold((l) => null, (r) => currentKey = r);
     final controller = TextEditingController(text: currentKey);
 
     if (!mounted) return;

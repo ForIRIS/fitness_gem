@@ -18,7 +18,7 @@ class WorkoutTaskModel {
   final int reps;
   final int sets;
   final int timeoutSec;
-  final int durationSec;
+  final int? durationSec;
   final bool isCountable;
   final String category;
   final int difficulty;
@@ -40,7 +40,7 @@ class WorkoutTaskModel {
     required this.reps,
     required this.sets,
     required this.timeoutSec,
-    this.durationSec = 0,
+    this.durationSec,
     this.isCountable = true,
     required this.category,
     required this.difficulty,
@@ -86,7 +86,7 @@ class WorkoutTaskModel {
       reps: entity.reps,
       sets: entity.sets,
       timeoutSec: entity.timeoutSec,
-      durationSec: entity.durationSec ?? 0,
+      durationSec: entity.durationSec,
       isCountable: entity.isCountable,
       thumbnail: entity.thumbnail,
       readyPoseImageUrl: entity.readyPoseImageUrl,
@@ -117,7 +117,7 @@ class WorkoutTaskModel {
       reps: map['reps'] ?? 10,
       sets: map['sets'] ?? 3,
       timeoutSec: map['timeout_sec'] ?? 60,
-      durationSec: map['duration_sec'] ?? 0,
+      durationSec: map['duration_sec'],
       isCountable: map['is_countable'] ?? true,
       category: map['category'] ?? 'squat',
       difficulty: map['difficulty'] ?? 1,
@@ -143,7 +143,7 @@ class WorkoutTaskModel {
       'reps': reps,
       'sets': sets,
       'timeout_sec': timeoutSec,
-      'duration_sec': durationSec,
+      if (durationSec != null) 'duration_sec': durationSec,
       'is_countable': isCountable,
       'category': category,
       'difficulty': difficulty,

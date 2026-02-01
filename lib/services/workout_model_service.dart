@@ -1,9 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
-import '../domain/entities/exercise_config.dart';
 import '../models/exercise_model_output.dart';
-import '../models/counting_mode.dart';
-import '../models/exercise_phase.dart';
 import '../utils/asset_utils.dart';
 import 'dart:io';
 

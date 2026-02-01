@@ -5,9 +5,10 @@ import 'l10n/app_localizations.dart';
 import 'firebase_options.dart';
 import 'dart:ui'; // For PointerDeviceKind
 import 'package:fitness_gem/theme/app_theme.dart';
-import 'views/home_view_refactored.dart' as home;
+import 'views/home_view.dart' as home;
 import 'views/onboarding_view.dart';
-import 'models/user_profile.dart';
+import 'domain/entities/user_profile.dart';
+import 'domain/usecases/user/get_user_profile.dart';
 import 'services/firebase_service.dart';
 import 'views/external_dashboard_view.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -30,8 +31,12 @@ void main() async {
   await setupDependencyInjection();
 
   // 프로필 존재 여부 확인
-  final profile = await UserProfile.load();
-  final bool showOnboarding = profile == null;
+  final profileResult = await getIt<GetUserProfileUseCase>().execute();
+  bool showOnboarding = true;
+  profileResult.fold(
+    (failure) => debugPrint('Initial profile load failed: ${failure.message}'),
+    (profile) => showOnboarding = (profile == null),
+  );
 
   runApp(ProviderScope(child: MainApp(showOnboarding: showOnboarding)));
 }

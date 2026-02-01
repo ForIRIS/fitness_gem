@@ -149,7 +149,7 @@ class _AIChatViewState extends State<AIChatView>
                   ChatMessage(
                     text: AppLocalizations.of(
                       context,
-                    )!.errorOccurred(failure.message!),
+                    )!.errorOccurred(failure.message ?? 'Unknown error'),
                     isUser: false,
                   ),
                 );
@@ -161,12 +161,12 @@ class _AIChatViewState extends State<AIChatView>
             if (mounted) {
               setState(() {
                 _messages.add(
-                  ChatMessage(text: response.message!, isUser: false),
+                  ChatMessage(text: response.message, isUser: false),
                 );
                 _isLoading = false;
               });
               if (_isTtsEnabled) {
-                _ttsService.speak(response.message!);
+                _ttsService.speak(response.message);
               }
             }
           },

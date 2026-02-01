@@ -12,7 +12,7 @@ class GetExerciseConfigUseCase
   GetExerciseConfigUseCase(this.repository);
 
   @override
-  Future<Either<Failure, ExerciseConfig>> call(
+  Future<Either<Failure, ExerciseConfig>> execute(
     GetExerciseConfigParams params,
   ) async {
     return await repository.getExerciseConfig(

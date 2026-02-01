@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:dartz/dartz.dart';
-import '../../core/error/failures.dart';
-import '../../core/usecases/usecase.dart';
-import '../../domain/repositories/ai_repository.dart';
-import '../../domain/entities/user_profile.dart';
+import '../../../core/error/failures.dart';
+import '../../../core/usecases/usecase.dart';
+import '../../repositories/ai_repository.dart';
+import '../../entities/user_profile.dart';
 
 class AnalyzeVideoSessionParams {
   final File rgbVideoFile;

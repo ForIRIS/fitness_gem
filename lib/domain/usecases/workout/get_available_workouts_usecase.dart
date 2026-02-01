@@ -11,7 +11,7 @@ class GetAvailableWorkoutsUseCase
   GetAvailableWorkoutsUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<WorkoutTask>>> call(
+  Future<Either<Failure, List<WorkoutTask>>> execute(
     GetAvailableWorkoutsParams params,
   ) async {
     return await repository.getAvailableWorkouts(

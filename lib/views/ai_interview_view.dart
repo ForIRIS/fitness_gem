@@ -10,7 +10,7 @@ import '../services/stt_service.dart';
 import '../services/firebase_service.dart';
 
 import 'package:google_fonts/google_fonts.dart';
-import 'home_view_refactored.dart' as home;
+import 'home_view.dart' as home;
 
 /// AIInterviewView - AI Interview Chat Screen
 class AIInterviewView extends StatefulWidget {
@@ -77,12 +77,13 @@ class _AIInterviewViewState extends State<AIInterviewView>
       if (!mounted) return;
 
       if (response != null) {
+        final nonNullResponse = response!;
         setState(() {
-          _messages.add(_ChatMessage(text: response!, isUser: false));
+          _messages.add(_ChatMessage(text: nonNullResponse, isUser: false));
           _isLoading = false;
         });
         if (_isTtsEnabled) {
-          _ttsService.speak(response);
+          _ttsService.speak(nonNullResponse);
         }
       } else {
         setState(() {
