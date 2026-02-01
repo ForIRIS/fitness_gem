@@ -7,7 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/exercise_config.dart';
-import '../models/workout_task.dart';
+import '../domain/entities/workout_task.dart';
+import '../data/models/workout_task_model.dart';
 import 'cache_service.dart';
 import 'firebase_service.dart';
 
@@ -78,6 +79,7 @@ class ExerciseService {
       sets: 3,
       timeoutSec: 60,
       difficulty: 2,
+      isCountable: true,
       advice: 'Step back and keep your front knee at 90 degrees.',
       thumbnail: '',
       readyPoseImageUrl: '',
@@ -104,6 +106,7 @@ class ExerciseService {
       sets: 3,
       timeoutSec: 60,
       difficulty: 2,
+      isCountable: true,
       advice: 'Step back and keep your front knee at 90 degrees.',
       thumbnail: '',
       readyPoseImageUrl: '',
@@ -147,7 +150,9 @@ class ExerciseService {
 
     try {
       final List<dynamic> jsonList = json.decode(jsonString);
-      return jsonList.map((e) => WorkoutTask.fromMap(e)).toList();
+      return jsonList
+          .map((e) => WorkoutTaskModel.fromMap(e).toEntity())
+          .toList();
     } catch (e) {
       debugPrint('Error parsing local workouts: $e');
       return [];
@@ -162,7 +167,9 @@ class ExerciseService {
     currentList.add(task);
 
     final prefs = await SharedPreferences.getInstance();
-    final jsonList = currentList.map((t) => t.toMap()).toList();
+    final jsonList = currentList
+        .map((t) => WorkoutTaskModel.fromEntity(t).toMap())
+        .toList();
     await prefs.setString(_localWorkoutsKey, json.encode(jsonList));
   }
 

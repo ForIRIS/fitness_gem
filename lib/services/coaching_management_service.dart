@@ -20,6 +20,7 @@ class CoachingMessage {
   int get hashCode => message.hashCode;
 }
 
+@deprecated
 class CoachingManagementService {
   static final CoachingManagementService _instance =
       CoachingManagementService._internal();

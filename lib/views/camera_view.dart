@@ -15,27 +15,29 @@ import '../utils/rep_counter.dart';
 import '../utils/pose_similarity.dart';
 import '../utils/form_rule_checker.dart';
 import '../services/tts_service.dart';
-import '../services/gemini_service.dart';
 import '../services/video_recorder.dart';
 import '../services/fall_detection_service.dart';
-import '../models/workout_curriculum.dart';
-import '../models/workout_task.dart';
-import '../models/exercise_config.dart';
-import '../models/user_profile.dart';
-import '../models/session_analysis.dart';
-import '../services/exercise_service.dart';
+import '../core/di/injection.dart';
+import '../domain/usecases/ai/analyze_video_session_usecase.dart';
+import '../domain/usecases/workout/get_exercise_config_usecase.dart';
+import '../domain/entities/workout_curriculum.dart';
+import '../domain/entities/workout_task.dart';
+import '../domain/entities/exercise_config.dart';
+import '../domain/entities/user_profile.dart';
+
 import '../services/workout_model_service.dart';
 import '../viewmodels/display_viewmodel.dart';
 import '../widgets/coaching_overlay.dart';
-import '../services/coaching_management_service.dart';
+import '../domain/services/coaching_manager.dart';
 import '../widgets/glass_dialog.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// CameraView - Workout Screen (Camera + Skeleton Overlay + UI)
 class CameraView extends StatefulWidget {
   final WorkoutCurriculum? curriculum;
+  final UserProfile? userProfile;
 
-  const CameraView({super.key, this.curriculum});
+  const CameraView({super.key, this.curriculum, this.userProfile});
 
   @override
   State<CameraView> createState() => _CameraViewState();
@@ -73,18 +75,20 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
   // Services
   final TTSService _ttsService = TTSService();
-  final GeminiService _geminiService = GeminiService();
+  final AnalyzeVideoSessionUseCase _analyzeVideoSession =
+      getIt<AnalyzeVideoSessionUseCase>();
   final VideoRecorder _videoRecorder = VideoRecorder();
 
   // Rep Counting
   RepCounter? _repCounter;
   ExerciseConfig? _exerciseConfig;
+  final GetExerciseConfigUseCase _getExerciseConfigUseCase =
+      getIt<GetExerciseConfigUseCase>();
 
   // User Profile
   UserProfile? _userProfile;
 
   // Analysis Results
-  final List<SetAnalysis> _setAnalyses = [];
 
   // Recording State
   bool _isRecording = false;
@@ -115,8 +119,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4';
 
   // 서비스
-  final ExerciseService _exerciseService = ExerciseService();
-  final CoachingManagementService _cms = CoachingManagementService();
+  late final CoachingManager _coachingManager = getIt<CoachingManager>();
   late final DisplayViewModel _displayViewModel;
 
   @override
@@ -131,6 +134,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     });
 
     _curriculum = widget.curriculum;
+    _initializeServices();
     _initializeWorkout();
     _initialize();
   }
@@ -146,59 +150,69 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     _countdownTimer?.cancel();
     _guideVideoController?.dispose();
     _ttsService.dispose();
-    _cms.dispose();
+    _coachingManager.dispose();
     super.dispose();
   }
 
-  void _initializeWorkout() {
-    if (_curriculum != null && _curriculum!.workoutTaskList.isNotEmpty) {
-      _currentTask = _curriculum!.currentTask;
-      _timeoutSeconds = _currentTask?.timeoutSec ?? 60;
+  Future<void> _initializeWorkout() async {
+    // Load curriculum data
+    if (_curriculum != null) {
+      if (_curriculum!.workoutTasks.isNotEmpty) {
+        _currentTask = _curriculum!.workoutTasks[0];
+        _timeoutSeconds = _currentTask?.timeoutSec ?? 60;
+        await _loadExerciseConfig();
 
-      // Load ExerciseConfig (Mock or Real)
-      _loadExerciseConfig();
+        // Set Real-time Form Feedback
+        _formRuleChecker.setExercise(_currentTask?.title ?? 'squat');
+      }
     }
   }
 
   Future<void> _loadExerciseConfig() async {
     if (_currentTask == null) return;
-
-    // TODO: Change to useMock: false later to use real data.
-    final config = await _exerciseService.getExerciseConfig(
-      _currentTask!,
-      useMock: true,
+    final result = await _getExerciseConfigUseCase.execute(
+      GetExerciseConfigParams(task: _currentTask!),
     );
 
-    if (config != null && mounted) {
-      setState(() {
-        _exerciseConfig = config;
-        _repCounter = RepCounter(
-          _exerciseConfig!,
-          onRepCountChanged: (newCount) {
-            if (mounted) {
-              setState(() {
-                _currentRep = newCount;
-                if (_currentRep >= (_currentTask?.adjustedReps ?? 10)) {
-                  _onSetComplete();
+    result.fold(
+      (failure) {
+        debugPrint('Failed to load exercise config: ${failure.message}');
+      },
+      (config) {
+        if (mounted) {
+          setState(() {
+            _exerciseConfig = config;
+            _repCounter = RepCounter(
+              _exerciseConfig!,
+              coachingManager: _coachingManager,
+              onRepCountChanged: (newCount) {
+                if (mounted) {
+                  setState(() {
+                    _currentRep = newCount;
+                    if (_currentRep >= (_currentTask?.adjustedReps ?? 10)) {
+                      _onSetComplete();
+                    }
+                  });
                 }
-              });
-            }
-          },
-        );
-      });
+              },
+            );
+          });
 
-      // Load native model if it's the sample or mock is enabled
-      final modelService = WorkoutModelService();
-      final modelLoaded = await modelService.loadSampleModel();
-      if (modelLoaded) {
-        debugPrint('Successfully loaded sample model for platform');
-      } else {
-        debugPrint('Failed to load sample model');
-      }
+          // Load native model
+          _loadNativeModel();
+        }
+      },
+    );
+  }
+
+  Future<void> _loadNativeModel() async {
+    final modelService = WorkoutModelService();
+    final modelLoaded = await modelService.loadSampleModel();
+    if (modelLoaded) {
+      debugPrint('Successfully loaded sample model for platform');
+    } else {
+      debugPrint('Failed to load sample model');
     }
-
-    // Set Real-time Form Feedback
-    _formRuleChecker.setExercise(_currentTask?.title ?? 'squat');
   }
 
   @override
@@ -301,9 +315,6 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     // Initialize TTS
     await _ttsService.initialize();
 
-    // Load User Profile
-    _userProfile = await UserProfile.load();
-
     // First Set Guide Audio
     if (_currentTask != null) {
       await _ttsService.speakWorkoutStart(_currentTask!.title);
@@ -318,6 +329,15 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _initializeServices() async {
+    // Services init
+
+    // User Profile is passed in constructor
+    if (widget.userProfile != null) {
+      _userProfile = widget.userProfile;
+    }
+  }
+
   Future<void> _startRecording() async {
     if (_controller == null || _isRecording) return;
 
@@ -328,6 +348,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   }
 
   Future<void> _stopRecordingAndAnalyze() async {
+    final languageCode = Localizations.localeOf(context).languageCode;
     if (!_isRecording) return;
 
     final result = await _videoRecorder.stopRecording();
@@ -337,30 +358,34 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       // Request Gemini Analysis
       await _ttsService.speakAnalyzing();
 
-      final analysisResult = await _geminiService.analyzeVideoSession(
-        rgbVideoFile: result.rgbFile,
-        controlNetVideoFile: result.controlNetFile ?? result.rgbFile,
-        profile: _userProfile!,
-        exerciseName: _currentTask!.title,
-        setNumber: _currentSet,
-        totalSets: _currentTask!.adjustedSets,
-        language: Localizations.localeOf(context).languageCode,
+      final analysisResultEither = await _analyzeVideoSession.execute(
+        AnalyzeVideoSessionParams(
+          rgbVideoFile: result.rgbFile,
+          controlNetVideoFile: result.controlNetFile ?? result.rgbFile,
+          profile: _userProfile!,
+          exerciseName: _currentTask!.title,
+          setNumber: _currentSet,
+          totalSets: _currentTask!.adjustedSets,
+          language: languageCode,
+        ),
       );
 
-      if (analysisResult != null) {
-        // Save Analysis Result
-        final setAnalysis = SetAnalysis.fromGeminiResponse(
-          _currentSet,
-          analysisResult,
-        );
-        _setAnalyses.add(setAnalysis);
-
-        // Play TTS Feedback
-        final ttsMessage = analysisResult['feedback']?['tts_message'];
-        if (ttsMessage != null && ttsMessage.isNotEmpty) {
-          await _ttsService.speak(ttsMessage);
-        }
-      }
+      analysisResultEither.fold(
+        (failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Analysis Failed: ${failure.toString()}')),
+          );
+        },
+        (analysisResult) {
+          if (analysisResult != null) {
+            // Speak Feedback
+            final feedbackText = analysisResult['feedback']?['tts_message'];
+            if (feedbackText != null) {
+              _ttsService.speak(feedbackText);
+            }
+          }
+        },
+      );
     }
   }
 
@@ -451,6 +476,8 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           final formFeedback = _formRuleChecker.checkForm(pose);
           if (formFeedback != null) {
             _ttsService.speakFormCorrection(formFeedback);
+            // Deliver feedback via CoachingManager
+            await _coachingManager.deliver(formFeedback);
           }
 
           // Send Data to External Display
@@ -575,9 +602,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     }
   }
 
-  /// TTS Warning (Throttled via CoachingManagementService)
+  /// TTS Warning (Throttled via CoachingManager)
   void _speakBodyNotVisibleThrottled() {
-    _cms.deliver('Show your full body');
+    _coachingManager.deliver('Show your full body');
   }
 
   /// Start Workout after Countdown Complete
@@ -619,7 +646,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
     if (_currentSet > maxSets) {
       // Move to Next Exercise
-      _curriculum?.moveToNextSet();
+      _curriculum = _curriculum?.moveToNextSet();
       _currentTask = _curriculum?.currentTask;
       _currentSet = 1;
 
@@ -731,7 +758,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           if (_isPaused) _buildPauseOverlay(),
 
           // 10. Coaching Overlay (New CMS-based)
-          const CoachingOverlay(),
+          CoachingOverlay(messageStream: _coachingManager.messageStream),
         ],
       ),
     );

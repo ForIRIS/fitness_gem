@@ -42,9 +42,7 @@ class _AIConsultantButtonState extends State<AIConsultantButton>
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(2), // Padding for border width
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14), // Outer radius
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
             child: ElevatedButton.icon(
               onPressed: widget.onPressed,
               icon: const Icon(Icons.auto_awesome, size: 20),
@@ -62,7 +60,7 @@ class _AIConsultantButtonState extends State<AIConsultantButton>
                 backgroundColor: Colors.amber,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(30),
                 ),
                 elevation: 0, // Remove elevation to blend with custom border
               ),
@@ -85,7 +83,7 @@ class _BorderPainter extends CustomPainter {
     // This aligns the border to occupy pixels 0..2
     final rect = Rect.fromLTWH(1, 1, size.width - 2, size.height - 2);
     // Radius should be 13 to match the center of the 2px gap (Outer 14, Inner 12)
-    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(13));
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(30));
     final path = Path()..addRRect(rrect);
 
     for (final metric in path.computeMetrics()) {

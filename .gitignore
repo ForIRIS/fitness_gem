@@ -76,3 +76,6 @@ key.properties
 
 assets/models/
 functions/
+
+# Agent configuration
+.agent/

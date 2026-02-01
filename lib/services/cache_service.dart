@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:archive/archive.dart';
-import '../models/workout_curriculum.dart';
-import '../models/workout_task.dart';
+import '../domain/entities/workout_curriculum.dart';
+import '../domain/entities/workout_task.dart';
 import 'firebase_service.dart';
 
 /// CacheService - Resource caching service
@@ -197,7 +197,7 @@ class CacheService {
   Future<bool> areAllCurriculumResourcesCached(
     WorkoutCurriculum curriculum,
   ) async {
-    for (final task in curriculum.workoutTaskList) {
+    for (final task in curriculum.workoutTasks) {
       if (!await isCached(task.exampleVideoUrl) &&
           task.exampleVideoUrl.isNotEmpty) {
         return false;

@@ -5,12 +5,14 @@ import 'l10n/app_localizations.dart';
 import 'firebase_options.dart';
 import 'dart:ui'; // For PointerDeviceKind
 import 'package:fitness_gem/theme/app_theme.dart';
-import 'views/home_view.dart';
+import 'views/home_view_refactored.dart' as home;
 import 'views/onboarding_view.dart';
 import 'models/user_profile.dart';
 import 'services/firebase_service.dart';
 import 'views/external_dashboard_view.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'core/di/injection.dart'; // Import DI setup
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,11 +26,14 @@ void main() async {
   // Firebase 서비스 초기화 (익명 로그인 등)
   await FirebaseService().initialize();
 
+  // Initialize dependency injection
+  await setupDependencyInjection();
+
   // 프로필 존재 여부 확인
   final profile = await UserProfile.load();
   final bool showOnboarding = profile == null;
 
-  runApp(MainApp(showOnboarding: showOnboarding));
+  runApp(ProviderScope(child: MainApp(showOnboarding: showOnboarding)));
 }
 
 class MainApp extends StatelessWidget {
@@ -64,8 +69,10 @@ class MainApp extends StatelessWidget {
       ),
 
       theme: AppTheme.darkTheme,
-      home: showOnboarding ? const OnboardingView() : const HomeView(),
+      initialRoute: '/',
       routes: {
+        '/': (context) =>
+            showOnboarding ? const OnboardingView() : const home.HomeView(),
         'external_dashboard': (context) => const ExternalDashboardView(),
       },
     );

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import '../services/coaching_management_service.dart';
+import '../domain/services/coaching_manager.dart';
 
 class CoachingOverlay extends StatefulWidget {
-  const CoachingOverlay({super.key});
+  final Stream<CoachingMessage?> messageStream;
+
+  const CoachingOverlay({super.key, required this.messageStream});
 
   @override
   State<CoachingOverlay> createState() => _CoachingOverlayState();
@@ -10,7 +12,6 @@ class CoachingOverlay extends StatefulWidget {
 
 class _CoachingOverlayState extends State<CoachingOverlay>
     with SingleTickerProviderStateMixin {
-  final CoachingManagementService _cms = CoachingManagementService();
   CoachingMessage? _currentMessage;
   late AnimationController _animationController;
   late Animation<double> _opacityAnimation;
@@ -28,7 +29,7 @@ class _CoachingOverlayState extends State<CoachingOverlay>
       end: 1.0,
     ).animate(_animationController);
 
-    _cms.messageStream.listen((message) {
+    widget.messageStream.listen((message) {
       if (!mounted) return;
 
       if (message != null) {

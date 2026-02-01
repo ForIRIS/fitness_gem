@@ -4,7 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../firebase_options.dart';
-import '../models/workout_task.dart';
+import '../domain/entities/workout_task.dart';
+import '../domain/entities/workout_curriculum.dart';
+import '../data/models/workout_task_model.dart';
 
 /// FirebaseService - Firebase 초기화 및 운동 라이브러리 관리
 class FirebaseService {
@@ -64,7 +66,7 @@ class FirebaseService {
       }
 
       return snapshot.docs
-          .map((doc) => WorkoutTask.fromMap(doc.data()))
+          .map((doc) => WorkoutTaskModel.fromMap(doc.data()).toEntity())
           .toList();
     } catch (e) {
       debugPrint('Error fetching workouts: $e');
@@ -99,7 +101,7 @@ class FirebaseService {
       }
 
       return snapshot.docs
-          .map((doc) => WorkoutTask.fromMap(doc.data()))
+          .map((doc) => WorkoutTaskModel.fromMap(doc.data()).toEntity())
           .toList();
     } catch (e) {
       debugPrint('Error searching workouts: $e');
@@ -137,7 +139,7 @@ class FirebaseService {
           .get();
 
       final fetched = snapshot.docs
-          .map((doc) => WorkoutTask.fromMap(doc.data()))
+          .map((doc) => WorkoutTaskModel.fromMap(doc.data()).toEntity())
           .toList();
 
       // 만약 Firestore에서 못 찾은 게 있으면 더미에서 찾기 (Mixed scenarios)
@@ -162,8 +164,9 @@ class FirebaseService {
   }
 
   /// Cloud Function을 통해 운동 미디어 URL(Signed URL) 요청
-  Future<void> requestTaskUrls(List<WorkoutTask> tasks) async {
-    if (tasks.isEmpty) return;
+  /// Returns updated tasks with URLs populated
+  Future<List<WorkoutTask>> requestTaskUrls(List<WorkoutTask> tasks) async {
+    if (tasks.isEmpty) return tasks;
 
     try {
       final taskIds = tasks.map((t) => t.id).toList();
@@ -172,45 +175,68 @@ class FirebaseService {
           .call({'task_ids': taskIds});
 
       final List<dynamic> taskUrls = result.data['task_urls'];
+      final updatedTasks = <WorkoutTask>[];
 
-      for (var taskData in taskUrls) {
-        final id = taskData['id'];
-        final task = tasks.firstWhere((t) => t.id == id);
-
-        task.updateMediaInfo(
-          newThumbnail: taskData['thumbnail'],
-          newReadyPoseImageUrl: taskData['readyPoseImageUrl'],
-          newExampleVideoUrl:
-              taskData['videoUrl'], // Map videoUrl to exampleVideoUrl
-          newGuideAudioUrl:
-              taskData['audioUrl'], // Map audioUrl to guideAudioUrl
-          newCoremlUrl: taskData['coremlUrl'],
-          newOnnxUrl: taskData['onnxUrl'],
+      for (var task in tasks) {
+        final taskData = taskUrls.firstWhere(
+          (data) => data['id'] == task.id,
+          orElse: () => null,
         );
 
-        // configureUrl update (WorkoutTask model needs this update if not already there)
-        if (taskData['configureUrl'] != null &&
-            taskData['configureUrl'].toString().isNotEmpty) {
-          task.configureUrl = taskData['configureUrl'];
+        if (taskData != null) {
+          // Create new task with updated URLs
+          updatedTasks.add(
+            WorkoutTask(
+              id: task.id,
+              title: task.title,
+              description: task.description,
+              advice: task.advice,
+              category: task.category,
+              difficulty: task.difficulty,
+              reps: task.reps,
+              sets: task.sets,
+              timeoutSec: task.timeoutSec,
+              durationSec: task.durationSec,
+              isCountable: task.isCountable,
+              thumbnail: taskData['thumbnail'] ?? task.thumbnail,
+              readyPoseImageUrl:
+                  taskData['readyPoseImageUrl'] ?? task.readyPoseImageUrl,
+              exampleVideoUrl: taskData['videoUrl'] ?? task.exampleVideoUrl,
+              configureUrl: taskData['configureUrl'] ?? task.configureUrl,
+              guideAudioUrl: taskData['audioUrl'] ?? task.guideAudioUrl,
+              coremlUrl: taskData['coremlUrl'] ?? task.coremlUrl,
+              onnxUrl: taskData['onnxUrl'] ?? task.onnxUrl,
+              adjustedReps: task.adjustedReps,
+              adjustedSets: task.adjustedSets,
+            ),
+          );
+        } else {
+          updatedTasks.add(task);
         }
       }
+
+      return updatedTasks;
     } catch (e) {
       debugPrint('Error calling requestTaskInfo: $e');
+      return tasks; // Return original tasks on error
     }
   }
 
   /// 더미 데이터 업로드 (개발용)
   Future<void> uploadDummyData() async {
-    final batch = FirebaseFirestore.instance.batch();
-    final collection = FirebaseFirestore.instance.collection('workouts');
-
-    for (final task in _dummyWorkoutTasks) {
-      final docRef = collection.doc(task.id);
-      batch.set(docRef, task.toMap());
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      for (final task in _dummyWorkoutTasks) {
+        final docRef = FirebaseFirestore.instance
+            .collection('workouts')
+            .doc(task.id);
+        batch.set(docRef, WorkoutTaskModel.fromEntity(task).toMap());
+      }
+      await batch.commit();
+      debugPrint('Dummy data uploaded successfully');
+    } catch (e) {
+      debugPrint('Error uploading dummy data: $e');
     }
-
-    await batch.commit();
-    debugPrint('Uploaded dummy data to Firestore');
   }
 
   /// Gemini에 전달할 운동 목록 텍스트
@@ -229,7 +255,97 @@ class FirebaseService {
     return buffer.toString();
   }
 
+  /// 일일 인기 카테고리 조회
+  Future<List<String>> fetchDailyHotCategories() async {
+    if (_isOffline) {
+      // 오프라인 모드일 경우 목업 데이터 반환
+      return mockDailyHotCategories;
+    }
+
+    try {
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('getDailyHotCategories')
+          .call();
+
+      final List<dynamic> categories = result.data['categories'];
+      return categories.map((e) => e.toString()).toList();
+    } catch (e) {
+      debugPrint('Error fetching daily hot categories: $e');
+      // 에러 발생 시 목업 데이터 반환
+      return mockDailyHotCategories;
+    }
+  }
+
+  /// 추천 프로그램 조회
+  Future<WorkoutCurriculum?> fetchFeaturedProgram() async {
+    try {
+      Map<String, dynamic> data;
+
+      if (_isOffline) {
+        data = mockFeaturedProgram;
+      } else {
+        try {
+          final result = await FirebaseFunctions.instance
+              .httpsCallable('getFeaturedProgram')
+              .call();
+          data = Map<String, dynamic>.from(result.data);
+        } catch (e) {
+          debugPrint('Error fetching featured program: $e');
+          data = mockFeaturedProgram;
+        }
+      }
+
+      final taskIds = (data['task_ids'] as List<dynamic>)
+          .map((e) => e.toString())
+          .toList();
+
+      final tasks = await fetchWorkoutTask(taskIds);
+
+      final orderedTasks = <WorkoutTask>[];
+      for (final id in taskIds) {
+        if (tasks.any((t) => t.id == id)) {
+          orderedTasks.add(tasks.firstWhere((t) => t.id == id));
+        }
+      }
+
+      return WorkoutCurriculum(
+        id: data['id'] ?? 'featured',
+        title: data['title'] ?? 'Featured Program',
+        description: data['description'] ?? '',
+        workoutTasks: orderedTasks,
+        createdAt: DateTime.now(),
+      );
+    } catch (e) {
+      debugPrint('Error creating featured program: $e');
+      return null;
+    }
+  }
+
   // ============ 더미 데이터 (16종 운동) ============
+
+  static const Map<String, dynamic> mockFeaturedProgram = {
+    'id': 'summer_shred_mock',
+    'title': 'Summer Shred Challenge (Mock)',
+    'description': 'High-intensity routine to burn calories and build muscle.',
+    'task_ids': [
+      'squat_04',
+      'push_03',
+      'lunge_03',
+      'core_03',
+      'squat_03',
+      'push_02',
+    ],
+    'imageUrl': 'assets/images/workouts/squat_04.png',
+  };
+
+  static const List<String> mockDailyHotCategories = [
+    'Upper Body',
+    'Build Strength',
+    'Beginner',
+    'Core Workout',
+    'Lower Body',
+    'HIIT Training',
+  ];
 
   static final List<WorkoutTask> _dummyWorkoutTasks = [
     // === 하체 (Squat) ===
@@ -239,7 +355,7 @@ class FirebaseService {
       description: 'Beginner-friendly squat using a chair or box',
       advice:
           'Place a chair or box behind you and practice sitting and standing up safely. Ensure your knees do not extend significantly past your toes.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/squat_01.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -257,7 +373,7 @@ class FirebaseService {
       description: 'Basic air squat',
       advice:
           'Keep your back straight and engage your core muscles. Maintain a neutral spine and focus on proper form to prevent injury.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/squat_02.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -275,7 +391,7 @@ class FirebaseService {
       description: 'One-legged squat with balance maintenance',
       advice:
           'Hold one leg and maintain balance. Adjust the back knee to touch the floor as if you were about to sit down.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/squat_03.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -293,7 +409,7 @@ class FirebaseService {
       description: 'High-intensity jump squat',
       advice:
           'Land softly on your knees to absorb impact. Land quietly by lightly jumping.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/squat_04.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -313,7 +429,7 @@ class FirebaseService {
       description: 'Wall push-up',
       advice:
           'Stand facing a wall with your hands shoulder-width apart. Lean forward until your chest touches the wall. Push back up to the starting position.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/push_01.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -331,7 +447,7 @@ class FirebaseService {
       description: 'Knee push-up',
       advice:
           'Stand with your knees bent and hands shoulder-width apart. Lower your body until your chest touches the floor. Push back up to the starting position.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/push_02.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -349,7 +465,7 @@ class FirebaseService {
       description: 'Standard push-up',
       advice:
           'Stand with your feet shoulder-width apart and hands shoulder-width apart. Lower your body until your chest touches the floor. Push back up to the starting position.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/push_03.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -367,7 +483,7 @@ class FirebaseService {
       description: 'Diamond push-up',
       advice:
           'Stand with your feet shoulder-width apart and hands shoulder-width apart. Lower your body until your chest touches the floor. Push back up to the starting position.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/push_04.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -387,7 +503,7 @@ class FirebaseService {
       description: 'Elbow plank',
       advice:
           'Maintain a straight line from head to heels. Engage your core and avoid letting your hips sag. Hold the position for the specified duration.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/core_01.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -406,7 +522,7 @@ class FirebaseService {
       description: 'High plank',
       advice:
           'Keep your body in a straight line with arms fully extended. Engage your core and maintain proper alignment. Hold for the specified duration.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/core_02.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -425,7 +541,7 @@ class FirebaseService {
       description: 'Side plank',
       advice:
           'Balance on one forearm with your body in a straight line. Stack your feet or stagger them for stability. Hold the position for the specified duration.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/core_03.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -444,7 +560,7 @@ class FirebaseService {
       description: 'Plank with leg lift',
       advice:
           'Start in a high plank position. Alternate lifting each leg while maintaining core stability. Hold the position for the specified duration.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/core_04.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -465,7 +581,7 @@ class FirebaseService {
       description: 'Static lunge',
       advice:
           'Keep your front knee aligned over your ankle. Lower your back knee toward the floor while maintaining an upright torso. Push through your front heel to return to starting position.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/lunge_01.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -483,7 +599,7 @@ class FirebaseService {
       description: 'Forward lunge',
       advice:
           'Step forward with one leg and lower your hips until both knees are bent at 90 degrees. Push back to the starting position. Alternate legs with each rep.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/lunge_02.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -501,7 +617,7 @@ class FirebaseService {
       description: 'Reverse lunge',
       advice:
           'Step backward with one leg and lower your hips until both knees are bent at 90 degrees. Push through your front heel to return to starting position. Alternate legs.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/lunge_03.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',
@@ -519,7 +635,7 @@ class FirebaseService {
       description: 'Walking lunge',
       advice:
           'Step forward into a lunge and continue walking forward, alternating legs with each step. Maintain balance and control throughout the movement.',
-      thumbnail: '',
+      thumbnail: 'assets/images/workouts/lunge_04.png',
       readyPoseImageUrl: '',
       exampleVideoUrl: '',
       configureUrl: '',

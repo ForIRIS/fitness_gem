@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingGuardianPage extends StatefulWidget {
   final bool fallDetectionEnabled;
@@ -31,43 +32,75 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.emergency, size: 60, color: Colors.orange),
-          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.orange.withOpacity(0.15),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.emergency, size: 64, color: Colors.orange),
+          ),
+          const SizedBox(height: 32),
           Text(
             AppLocalizations.of(context)!.safetySettings,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.barlowCondensed(
+              color: const Color(0xFF1A237E),
+              fontSize: 32,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context)!.safetyDescription,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white54, fontSize: 14),
+            style: GoogleFonts.barlow(color: Colors.black54, fontSize: 16),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 48),
 
           // Fall Detection Toggle
           Container(
             decoration: BoxDecoration(
-              color: Colors.grey[900],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white24),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: SwitchListTile(
               title: Text(
                 AppLocalizations.of(context)!.enableFallDetection,
-                style: const TextStyle(color: Colors.white),
+                style: GoogleFonts.barlow(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
               ),
               subtitle: Text(
                 AppLocalizations.of(context)!.fallDetectionDescription,
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                style: GoogleFonts.barlow(color: Colors.black45, fontSize: 13),
               ),
               value: widget.fallDetectionEnabled,
               onChanged: widget.onFallDetectionChanged,
-              activeThumbColor: Colors.deepPurple,
+              activeColor: const Color(0xFF5E35B1),
+              activeTrackColor: const Color(0xFFD1C4E9),
+              inactiveThumbColor: Colors.grey,
+              inactiveTrackColor: Colors.grey.withOpacity(0.2),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
             ),
           ),
 
@@ -78,56 +111,78 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
               controller: widget.guardianController,
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.guardianPhone,
-                labelStyle: const TextStyle(color: Colors.white54),
-                enabledBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white24),
+                labelStyle: GoogleFonts.barlow(color: Colors.black45),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
                 ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.deepPurple),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
                 ),
-                counterStyle: const TextStyle(color: Colors.white54),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF5E35B1),
+                    width: 1.5,
+                  ),
+                ),
+                counterStyle: GoogleFonts.barlow(color: Colors.black54),
               ),
               initialCountryCode:
                   Localizations.localeOf(context).countryCode ?? 'KR',
-              style: const TextStyle(color: Colors.white),
-              dropdownTextStyle: const TextStyle(color: Colors.white),
+              style: GoogleFonts.barlow(
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+              dropdownTextStyle: GoogleFonts.barlow(color: Colors.black87),
               dropdownIcon: const Icon(
                 Icons.arrow_drop_down,
-                color: Colors.white,
+                color: Colors.black54,
               ),
               onChanged: (phone) {
                 widget.onPhoneChanged(phone.completeNumber);
               },
               onCountryChanged: (country) {
-                // Country changed, but completeNumber updates in onChanged when text changes.
+                // Country changed
               },
             ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.verified_user_outlined,
-                  color: Colors.greenAccent,
-                  size: 14,
-                ),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    AppLocalizations.of(context)!.guardianStorageNotice,
-                    style: const TextStyle(
-                      color: Colors.greenAccent,
-                      fontSize: 12,
-                    ),
-                    textAlign: TextAlign.center,
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.verified_user_outlined,
+                    color: Colors.green,
+                    size: 20,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.guardianStorageNotice,
+                      style: GoogleFonts.barlow(
+                        color: Colors.green[800],
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               AppLocalizations.of(context)!.guardianPhoneDescription,
-              style: const TextStyle(color: Colors.white30, fontSize: 12),
+              style: GoogleFonts.barlow(color: Colors.black38, fontSize: 13),
+              textAlign: TextAlign.center,
             ),
           ],
         ],

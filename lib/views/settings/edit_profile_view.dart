@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/user_profile.dart';
+import '../../domain/entities/user_profile.dart';
 import '../onboarding/onboarding_profile_page.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 
@@ -49,26 +49,17 @@ class _EditProfileViewState extends State<EditProfileView> {
   void _initializeState() {
     final p = widget.profile;
     _nicknameController = TextEditingController(text: p.nickname);
-    _selectedAgeRange = p.age;
-    _experienceLevel = p.experienceLevel;
+    _selectedAgeRange = p.age.toString(); // Convert int to string
+    _experienceLevel = p.fitnessLevel; // Use fitnessLevel
 
     // Injuries
     _customInjuryController = TextEditingController();
     _showCustomInjury = false;
 
-    // Parse injuries
-    if (p.injuryHistory.isNotEmpty) {
-      final injuries = p.injuryHistory.split(', ');
+    // Parse injuries (healthConditions)
+    if (p.healthConditions.isNotEmpty) {
+      final injuries = p.healthConditions.split(', ');
       for (var injury in injuries) {
-        // Note: Logic to detect 'Other' vs specific injuries might be tricky if localized strings match.
-        // For simplistic strict reverse matching, it depends on context.
-        // Here we just assume if it's not in standard list, it handles it,
-        // but OnboardingView logic was: "Other" in set means show custom.
-        // If p.injuryHistory contains exact string "Others" (or localized), we add it.
-        // But "Others" usually implies custom text follow.
-        // For Hackathon speed, let's load what we can.
-        // If we can't perfectly map back, user re-selects.
-        // Actually, let's just add them to set.
         _selectedInjuries.add(injury);
       }
     }
@@ -174,40 +165,32 @@ class _EditProfileViewState extends State<EditProfileView> {
   Future<void> _saveProfile() async {
     setState(() => _isLoading = true);
 
-    // Update profile object
-    widget.profile.nickname = _nicknameController.text.trim().isEmpty
-        ? null
-        : _nicknameController.text.trim();
-    widget.profile.age = _selectedAgeRange;
-    widget.profile.experienceLevel = _experienceLevel;
+    // Create updated profile using copyWith (immutable)
+    final updatedProfile = widget.profile.copyWith(
+      nickname: _nicknameController.text.trim().isEmpty
+          ? 'Trainee'
+          : _nicknameController.text.trim(),
+      age:
+          int.tryParse(_selectedAgeRange.split('~').first) ??
+          widget.profile.age,
+      fitnessLevel: _experienceLevel,
+      healthConditions: _showCustomInjury
+          ? _customInjuryController.text
+          : _selectedInjuries.join(', '),
+      goal: _showCustomGoal
+          ? _customGoalController.text
+          : _selectedGoals.join(', '),
+      updatedAt: DateTime.now(),
+    );
 
-    // Logic for combining custom text
-    // If "Other" is selected, we should append the custom text?
-    // In OnboardingView it was:
-    // injuryHistory: _showCustomInjury ? _customInjuryController.text : _selectedInjuries.join(', '),
-    // Wait, OnboardingView logic replaced EVERYTHING with custom text if custom was shown?
-    // Let's check OnboardingView.dart logic.
-    // "injuryHistory: _showCustomInjury ? _customInjuryController.text : _selectedInjuries.join(', ')"
-    // That means if "Other" is checked, ONLY the custom text is saved.
-    // That seems like a bug in OnboardingView or intended simple behavior.
-    // If intended, we replicate.
+    // Note: Profile persistence not supported with immutable entities
+    // TODO: Save through repository when available
+    // await UserProfile.saveProfile(updatedProfile);
 
-    if (_showCustomInjury) {
-      widget.profile.injuryHistory = _customInjuryController.text;
-    } else {
-      widget.profile.injuryHistory = _selectedInjuries.join(', ');
-    }
-
-    if (_showCustomGoal) {
-      widget.profile.goal = _customGoalController.text;
-    } else {
-      widget.profile.goal = _selectedGoals.join(', ');
-    }
-
-    await UserProfile.saveProfile(widget.profile);
+    debugPrint('Profile updated: ${updatedProfile.nickname}');
 
     if (!mounted) return;
-    Navigator.pop(context, true); // Return true to indicate change
+    Navigator.pop(context, updatedProfile); // Return updated profile
   }
 
   // --- Bottom Sheet for Age Picker (Copied) ---

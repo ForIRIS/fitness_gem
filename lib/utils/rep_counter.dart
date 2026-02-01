@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
-import '../models/exercise_config.dart';
+import '../domain/entities/exercise_config.dart';
 import '../services/workout_model_service.dart';
-import '../services/coaching_management_service.dart';
+import '../domain/services/coaching_manager.dart';
+import '../models/exercise_model_output.dart';
 import 'pose_normalization.dart';
 import 'adaptive_one_euro_filter.dart';
 import '../models/counting_mode.dart';
@@ -12,7 +13,7 @@ import '../models/exercise_phase.dart';
 class RepCounter {
   final ExerciseConfig config;
   final WorkoutModelService _modelService;
-  final CoachingManagementService _cms;
+  final CoachingManager _coachingManager;
   final AdaptiveOneEuroFilter _smoothingFilter;
 
   // Settings
@@ -46,7 +47,7 @@ class RepCounter {
   final List<List<double>> _featureBuffer = [];
   final Map<String, List<double>> _movingAverageFeatures = {};
 
-  // Coaching callback (Consider deprecated in favor of CMS)
+  // Coaching callback (Consider deprecated in favor of CoachingManager)
   void Function(String)? onCoachingMessage;
 
   // Rep Count Callback
@@ -56,9 +57,9 @@ class RepCounter {
     this.config, {
     this.onRepCountChanged,
     WorkoutModelService? modelService,
-    CoachingManagementService? coachingService,
+    required CoachingManager coachingManager,
   }) : _modelService = modelService ?? WorkoutModelService(),
-       _cms = coachingService ?? CoachingManagementService(),
+       _coachingManager = coachingManager,
        _smoothingFilter = AdaptiveOneEuroFilter(
          profile: config.smoothingProfile,
          adaptive: true,
@@ -370,7 +371,7 @@ class RepCounter {
     }
 
     if (peakSkipped) {
-      _cms.deliver("Please follow the on-screen guide accurately.");
+      _coachingManager.deliver("Please follow the on-screen guide accurately.");
     }
   }
 
@@ -416,13 +417,15 @@ class RepCounter {
   ) {
     // If deviation score is very high, strictly warn
     if (output.deviationScore > 0.8) {
-      _cms.deliver("Movement looks uncertain. Please check your form.");
+      _coachingManager.deliver(
+        "Movement looks uncertain. Please check your form.",
+      );
     }
   }
 
   void _onLowConfidence() {
     // Triggered when model has low confidence for multiple frames
-    _cms.deliver("Please adjust your position or camera angle.");
+    _coachingManager.deliver("Please adjust your position or camera angle.");
   }
 
   void _analyzePoseQuality(ExerciseModelOutput output, String state) {
@@ -468,7 +471,7 @@ class RepCounter {
           // If any of the cue's target features are deviating, trigger it
           if (targetFeatures.any((f) => deviatingFeatures.contains(f))) {
             if (cueObj.containsKey('message')) {
-              _cms.deliver(cueObj['message']);
+              _coachingManager.deliver(cueObj['message']);
               return; // Deliver one message at a time
             }
           }
@@ -482,7 +485,7 @@ class RepCounter {
         if (cueData is Map && cueData.containsKey('movement')) {
           // This legacy path doesn't check features? Preserving old behavior just in case
           // or we can remove it if we are sure. Let's keep it safe.
-          _cms.deliver(cueData['movement']);
+          _coachingManager.deliver(cueData['movement']);
           return;
         }
       }

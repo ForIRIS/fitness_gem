@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
-import '../models/workout_curriculum.dart';
+import '../domain/entities/workout_curriculum.dart';
 import '../services/cache_service.dart';
 
 /// LoadingView - Resource Download Screen
@@ -42,7 +42,7 @@ class _LoadingViewState extends State<LoadingView> {
 
     // Calculate total resources (excluding empty URLs)
     int total = 0;
-    for (final _ in widget.curriculum.workoutTaskList) {
+    for (final _ in widget.curriculum.workoutTasks) {
       // Note: Initially URLs might be empty, but CacheService will fetch them.
       // We assume each task has 4 resources.
       // If we want a more accurate progress bar BEFORE fetching, we might need a different approach.
@@ -78,7 +78,7 @@ class _LoadingViewState extends State<LoadingView> {
 
     try {
       await cacheService.cacheWorkoutResources(
-        widget.curriculum.workoutTaskList,
+        widget.curriculum.workoutTasks,
         onProgress: (completed, totalItems, currentItem) {
           if (mounted) {
             setState(() {

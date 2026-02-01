@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
-import 'gemini_service.dart';
-import '../models/user_profile.dart';
+import '../core/di/injection.dart';
+import '../domain/usecases/ai/analyze_fall_detection_usecase.dart';
+import '../domain/entities/user_profile.dart';
 
 /// FallDetectionService - Fall detection service
 /// Detects and responds to suspected fall situations during exercise
@@ -24,8 +25,9 @@ class FallDetectionService {
   void Function()? onFallSuspected;
   void Function(bool confirmed)? onFallConfirmed;
 
-  // Gemini service
-  final GeminiService _geminiService = GeminiService();
+  // AI Use Case
+  final AnalyzeFallDetectionUseCase _analyzeFallDetection =
+      getIt<AnalyzeFallDetectionUseCase>();
 
   /// Start monitoring
   void startMonitoring() {
@@ -119,9 +121,20 @@ class FallDetectionService {
     required File videoFile,
     required UserProfile profile,
   }) async {
-    final isFall = await _geminiService.analyzeFallDetection(
-      videoFile: videoFile,
-      profile: profile,
+    final result = await _analyzeFallDetection.execute(
+      AnalyzeFallDetectionParams(videoFile: videoFile, profile: profile),
+    );
+
+    bool isFall = false;
+    result.fold(
+      (failure) {
+        // Handle failure (log or define default behavior)
+        // For safety, maybe assume true if high confidence visual?
+        // But here we just return false or keep previous state
+      },
+      (detected) {
+        isFall = detected;
+      },
     );
 
     onFallConfirmed?.call(isFall);

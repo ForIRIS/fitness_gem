@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
-import '../models/user_profile.dart';
-import '../models/workout_curriculum.dart';
-import '../models/workout_task.dart';
+import '../domain/entities/user_profile.dart';
+import '../domain/entities/workout_curriculum.dart';
+import '../domain/entities/workout_task.dart';
 import '../services/firebase_service.dart';
-import '../services/gemini_service.dart';
+import '../../core/di/injection.dart';
+import '../../domain/usecases/ai/chat_for_curriculum_usecase.dart';
+import '../../domain/usecases/ai/chat_with_image_usecase.dart';
 import 'workout_detail_view.dart';
 import 'loading_view.dart';
 import 'camera_view.dart';
 import '../services/tts_service.dart';
 import '../services/stt_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// AIChatView - AI Consultation Chat Screen
 class AIChatView extends StatefulWidget {
@@ -67,9 +70,27 @@ class _AIChatViewState extends State<AIChatView>
     await _sttService.initialize();
   }
 
-  // ... (Middle code omitted)
+  Future<void> _startListening() async {
+    final available = await _sttService.initialize();
+    if (available) {
+      setState(() => _isListening = true);
+      _sttService.startListening(
+        onResult: (text) {
+          setState(() {
+            _messageController.text = text;
+          });
+        },
+        languageCode: Localizations.localeOf(context).languageCode == 'ko'
+            ? 'ko-KR'
+            : 'en-US',
+      );
+    }
+  }
 
-  // ... (Middle code omitted)
+  Future<void> _stopListening() async {
+    setState(() => _isListening = false);
+    await _sttService.stopListening();
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -110,77 +131,127 @@ class _AIChatViewState extends State<AIChatView>
     _scrollToBottom();
 
     try {
-      final geminiService = GeminiService();
-
       if (imageToSend != null) {
-        final response = await geminiService.chatWithImage(
-          imageFile: imageToSend,
-          userMessage: message.isEmpty ? "이 사진에 대해 설명해줘" : message,
-          profile: widget.userProfile,
+        final chatWithImage = getIt<ChatWithImageUseCase>();
+        final result = await chatWithImage.execute(
+          ChatWithImageParams(
+            userMessage: message.isEmpty ? "Describe this image" : message,
+            imageFile: imageToSend,
+            profile: widget.userProfile,
+          ),
         );
 
-        if (mounted) {
-          setState(() {
-            _messages.add(ChatMessage(text: response.message, isUser: false));
-            _isLoading = false;
-          });
-          if (_isTtsEnabled) {
-            _ttsService.speak(response.message);
-          }
-        }
+        result.fold(
+          (failure) {
+            if (mounted) {
+              setState(() {
+                _messages.add(
+                  ChatMessage(
+                    text: AppLocalizations.of(
+                      context,
+                    )!.errorOccurred(failure.message!),
+                    isUser: false,
+                  ),
+                );
+                _isLoading = false;
+              });
+            }
+          },
+          (response) {
+            if (mounted) {
+              setState(() {
+                _messages.add(
+                  ChatMessage(text: response.message!, isUser: false),
+                );
+                _isLoading = false;
+              });
+              if (_isTtsEnabled) {
+                _ttsService.speak(response.message!);
+              }
+            }
+          },
+        );
       } else {
         final firebaseService = FirebaseService();
         final allWorkouts = await firebaseService.fetchWorkoutAllList();
 
-        final curriculum = await geminiService.chatForCurriculum(
-          userMessage: message,
-          profile: widget.userProfile,
-          availableWorkouts: allWorkouts,
-        );
-
-        if (curriculum != null) {
-          _suggestedCurriculum = curriculum;
-          setState(() {
-            _messages.add(
-              ChatMessage(
-                text: AppLocalizations.of(
-                  context,
-                )!.curriculumRecommendation(curriculum.title),
-                isUser: false,
-                curriculum: curriculum,
-              ),
-            );
-            _isLoading = false;
-          });
-          if (_isTtsEnabled) {
-            _ttsService.speak(
-              AppLocalizations.of(
-                context,
-              )!.curriculumRecommendation(curriculum.title),
-            );
-          }
-        } else {
-          setState(() {
-            _messages.add(
-              ChatMessage(
-                text: AppLocalizations.of(context)!.curriculumGenerationError,
-                isUser: false,
-              ),
-            );
-            _isLoading = false;
-          });
-        }
-      }
-    } catch (e) {
-      setState(() {
-        _messages.add(
-          ChatMessage(
-            text: AppLocalizations.of(context)!.errorOccurred(e),
-            isUser: false,
+        final chatForCurriculum = getIt<ChatForCurriculumUseCase>();
+        final result = await chatForCurriculum.execute(
+          ChatForCurriculumParams(
+            userMessage: message,
+            profile: widget.userProfile,
+            availableWorkouts: allWorkouts,
           ),
         );
-        _isLoading = false;
-      });
+
+        result.fold(
+          (failure) {
+            if (mounted) {
+              setState(() {
+                _messages.add(
+                  ChatMessage(
+                    text: AppLocalizations.of(
+                      context,
+                    )!.errorOccurred(failure.message),
+                    isUser: false,
+                  ),
+                );
+                _isLoading = false;
+              });
+            }
+          },
+          (curriculum) {
+            if (mounted) {
+              if (curriculum != null) {
+                _suggestedCurriculum = curriculum;
+                setState(() {
+                  _messages.add(
+                    ChatMessage(
+                      text: AppLocalizations.of(
+                        context,
+                      )!.curriculumRecommendation(curriculum.title),
+                      isUser: false,
+                      curriculum: curriculum,
+                    ),
+                  );
+                  _isLoading = false;
+                });
+                if (_isTtsEnabled) {
+                  _ttsService.speak(
+                    AppLocalizations.of(
+                      context,
+                    )!.curriculumRecommendation(curriculum.title),
+                  );
+                }
+              } else {
+                setState(() {
+                  _messages.add(
+                    ChatMessage(
+                      text: AppLocalizations.of(
+                        context,
+                      )!.curriculumGenerationError,
+                      isUser: false,
+                    ),
+                  );
+                  _isLoading = false;
+                });
+              }
+            }
+          },
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _messages.add(
+            ChatMessage(
+              text: AppLocalizations.of(context)!.errorOccurred(e.toString()),
+              isUser: false,
+            ),
+          );
+          _isLoading = false;
+        });
+      }
     }
     _scrollToBottom();
   }
@@ -223,19 +294,23 @@ class _AIChatViewState extends State<AIChatView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFFF3E5F5), // Light purple/pink
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           AppLocalizations.of(context)!.aiChat,
-          style: const TextStyle(color: Colors.white),
+          style: GoogleFonts.barlow(
+            color: const Color(0xFF1A237E),
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Color(0xFF1A237E)),
         actions: [
           IconButton(
             icon: Icon(
               _isTtsEnabled ? Icons.volume_up : Icons.volume_off,
-              color: Colors.white,
+              color: const Color(0xFF1A237E),
             ),
             onPressed: () {
               setState(() => _isTtsEnabled = !_isTtsEnabled);
@@ -246,27 +321,18 @@ class _AIChatViewState extends State<AIChatView>
       ),
       body: Stack(
         children: [
-          // Background Image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/fitness_bg.png',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  Container(color: Colors.black),
-            ),
-          ),
-          // Gradient Overlay
+          // Background Gradient
           Positioned.fill(
             child: Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.black.withValues(alpha: 0.7),
-                    Colors.black.withValues(alpha: 0.5),
-                    Colors.black.withValues(alpha: 0.8),
+                    Color(0xFFE1BEE7), // Lighter Purple
+                    Color(0xFFF3E5F5), // Base
+                    Color(0xFFE3F2FD), // Light Blue tint
                   ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
             ),
@@ -299,14 +365,38 @@ class _AIChatViewState extends State<AIChatView>
                   child: Row(
                     children: [
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: _confirmCurriculum,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF5E35B1), Color(0xFF9575CD)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF5E35B1).withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          child: Text(
-                            AppLocalizations.of(context)!.replaceWithCurriculum,
+                          child: ElevatedButton(
+                            onPressed: _confirmCurriculum,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                            child: Text(
+                              AppLocalizations.of(
+                                context,
+                              )!.replaceWithCurriculum,
+                              style: GoogleFonts.barlow(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -318,13 +408,20 @@ class _AIChatViewState extends State<AIChatView>
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05), // Glassmorphism
+                  color: Colors.white,
                   border: Border(
-                    top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                    top: BorderSide(color: Colors.black.withOpacity(0.05)),
                   ),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(24),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -376,7 +473,7 @@ class _AIChatViewState extends State<AIChatView>
                         IconButton(
                           icon: const Icon(
                             Icons.photo_library,
-                            color: Colors.grey,
+                            color: Colors.black54,
                           ),
                           onPressed: _pickImage,
                         ),
@@ -384,18 +481,20 @@ class _AIChatViewState extends State<AIChatView>
                         Expanded(
                           child: TextField(
                             controller: _messageController,
-                            style: const TextStyle(color: Colors.white),
+                            style: GoogleFonts.barlow(color: Colors.black87),
                             decoration: InputDecoration(
                               hintText: AppLocalizations.of(
                                 context,
                               )!.aiChatPlaceholder,
-                              hintStyle: const TextStyle(color: Colors.white38),
+                              hintStyle: GoogleFonts.barlow(
+                                color: Colors.black38,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(24),
                                 borderSide: BorderSide.none,
                               ),
                               filled: true,
-                              fillColor: Colors.grey[850],
+                              fillColor: const Color(0xFFF5F5F5),
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 12,
@@ -419,13 +518,15 @@ class _AIChatViewState extends State<AIChatView>
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: _isListening
-                                  ? Colors.red.withOpacity(0.2)
+                                  ? Colors.red.withOpacity(0.1)
                                   : Colors.transparent,
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               _isListening ? Icons.mic : Icons.mic_none,
-                              color: _isListening ? Colors.red : Colors.white,
+                              color: _isListening
+                                  ? Colors.red
+                                  : const Color(0xFF5E35B1),
                               size: 28,
                             ),
                           ),
@@ -434,7 +535,7 @@ class _AIChatViewState extends State<AIChatView>
                         IconButton(
                           onPressed: _isLoading ? null : _sendMessage,
                           icon: const Icon(Icons.send),
-                          color: Colors.deepPurple,
+                          color: const Color(0xFF5E35B1),
                           iconSize: 28,
                         ),
                       ],
@@ -464,13 +565,29 @@ class _AIChatViewState extends State<AIChatView>
           maxWidth: MediaQuery.of(context).size.width * 0.8,
         ),
         decoration: BoxDecoration(
-          color: message.isUser
-              ? Colors.deepPurple
-              : Colors.white.withValues(alpha: 0.1), // Glassmorphism for AI
-          borderRadius: BorderRadius.circular(16),
-          border: message.isUser
-              ? null
-              : Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          color: message.isUser ? null : Colors.white,
+          gradient: message.isUser
+              ? const LinearGradient(
+                  colors: [Color(0xFF5E35B1), Color(0xFF9575CD)],
+                )
+              : null,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: message.isUser
+                ? const Radius.circular(16)
+                : const Radius.circular(4),
+            bottomRight: message.isUser
+                ? const Radius.circular(4)
+                : const Radius.circular(16),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,14 +605,61 @@ class _AIChatViewState extends State<AIChatView>
                   ),
                 ),
               ),
-            Text(
-              message.text,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
-            ),
+            _buildParsedText(message.text, isUser: message.isUser),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildParsedText(String text, {required bool isUser}) {
+    final List<TextSpan> spans = [];
+    final RegExp regex = RegExp(r'\*\*(.*?)\*\*');
+    int lastMatchEnd = 0;
+
+    for (final Match match in regex.allMatches(text)) {
+      if (match.start > lastMatchEnd) {
+        spans.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: GoogleFonts.barlow(
+              color: isUser ? Colors.white : Colors.black87,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              height: 1.4,
+            ),
+          ),
+        );
+      }
+      spans.add(
+        TextSpan(
+          text: match.group(1),
+          style: GoogleFonts.barlow(
+            color: isUser ? Colors.white : Colors.black,
+            fontSize: 16,
+            fontWeight: FontWeight.w800, // Extra bold for visibility
+            height: 1.4,
+          ),
+        ),
+      );
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < text.length) {
+      spans.add(
+        TextSpan(
+          text: text.substring(lastMatchEnd),
+          style: GoogleFonts.barlow(
+            color: isUser ? Colors.white : Colors.black87,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            height: 1.4,
+          ),
+        ),
+      );
+    }
+
+    return RichText(text: TextSpan(children: spans));
   }
 
   Widget _buildCurriculumCard(ChatMessage message) {
@@ -509,13 +673,19 @@ class _AIChatViewState extends State<AIChatView>
           maxWidth: MediaQuery.of(context).size.width * 0.9,
         ),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade900],
+            colors: [Color(0xFF5E35B1), Color(0xFF7E57C2)],
           ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF5E35B1).withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -536,9 +706,10 @@ class _AIChatViewState extends State<AIChatView>
                       const SizedBox(width: 8),
                       Text(
                         AppLocalizations.of(context)!.aiConsultResult,
-                        style: const TextStyle(
+                        style: GoogleFonts.barlow(
                           color: Colors.white70,
                           fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -546,7 +717,7 @@ class _AIChatViewState extends State<AIChatView>
                   const SizedBox(height: 8),
                   Text(
                     curriculum.title,
-                    style: const TextStyle(
+                    style: GoogleFonts.barlow(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -554,8 +725,11 @@ class _AIChatViewState extends State<AIChatView>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'About ${curriculum.estimatedMinutes} min • ${curriculum.workoutTaskList.length} exercises',
-                    style: const TextStyle(color: Colors.white60, fontSize: 13),
+                    'About ${curriculum.estimatedMinutes} min • ${curriculum.workoutTasks.length} exercises',
+                    style: GoogleFonts.barlow(
+                      color: Colors.white70,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
@@ -567,10 +741,10 @@ class _AIChatViewState extends State<AIChatView>
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: curriculum.workoutTaskList.length,
+                itemCount: curriculum.workoutTasks.length,
                 itemBuilder: (context, index) {
                   return _buildMiniWorkoutCard(
-                    curriculum.workoutTaskList[index],
+                    curriculum.workoutTasks[index],
                     index,
                   );
                 },
@@ -606,8 +780,8 @@ class _AIChatViewState extends State<AIChatView>
                       icon: const Icon(Icons.play_arrow, size: 20),
                       label: Text(AppLocalizations.of(context)!.startNow),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF5E35B1),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -629,9 +803,9 @@ class _AIChatViewState extends State<AIChatView>
       width: 120,
       margin: const EdgeInsets.only(right: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -642,12 +816,12 @@ class _AIChatViewState extends State<AIChatView>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.deepPurple.shade300,
+                color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 '${index + 1}',
-                style: const TextStyle(
+                style: GoogleFonts.barlow(
                   color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -657,10 +831,10 @@ class _AIChatViewState extends State<AIChatView>
             const SizedBox(height: 8),
             Text(
               task.title,
-              style: const TextStyle(
+              style: GoogleFonts.barlow(
                 color: Colors.white,
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.bold,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -668,7 +842,7 @@ class _AIChatViewState extends State<AIChatView>
             const SizedBox(height: 4),
             Text(
               '${task.adjustedSets} Sets x ${task.adjustedReps} Reps',
-              style: const TextStyle(color: Colors.white54, fontSize: 11),
+              style: GoogleFonts.barlow(color: Colors.white70, fontSize: 11),
             ),
           ],
         ),
@@ -686,8 +860,15 @@ class _AIChatViewState extends State<AIChatView>
           maxWidth: MediaQuery.of(context).size.width * 0.9,
         ),
         decoration: BoxDecoration(
-          color: Colors.grey[850],
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -761,9 +942,9 @@ class _AIChatViewState extends State<AIChatView>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.grey.shade800,
-                Colors.grey.shade600, // Bright part
-                Colors.grey.shade800,
+                Colors.grey.shade100,
+                Colors.grey.shade50, // Bright part
+                Colors.grey.shade100,
               ],
               stops: [
                 (offset - 0.1).clamp(0.0, 1.0),
@@ -782,7 +963,7 @@ class _AIChatViewState extends State<AIChatView>
       width: 120,
       margin: const EdgeInsets.only(right: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
@@ -802,28 +983,6 @@ class _AIChatViewState extends State<AIChatView>
     );
   }
 
-  Future<void> _startListening() async {
-    final available = await _sttService.initialize();
-    if (available) {
-      setState(() => _isListening = true);
-      _sttService.startListening(
-        onResult: (text) {
-          setState(() {
-            _messageController.text = text;
-          });
-        },
-        languageCode: Localizations.localeOf(context).languageCode == 'ko'
-            ? 'ko-KR'
-            : 'en-US',
-      );
-    }
-  }
-
-  Future<void> _stopListening() async {
-    setState(() => _isListening = false);
-    await _sttService.stopListening();
-  }
-
   @override
   void dispose() {
     _messageController.dispose();
@@ -836,13 +995,13 @@ class _AIChatViewState extends State<AIChatView>
 class ChatMessage {
   final String text;
   final bool isUser;
-  final WorkoutCurriculum? curriculum;
   final String? imagePath;
+  final WorkoutCurriculum? curriculum;
 
   ChatMessage({
     required this.text,
     required this.isUser,
-    this.curriculum,
     this.imagePath,
+    this.curriculum,
   });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingPermissionsPage extends StatefulWidget {
   final VoidCallback onNext;
@@ -48,19 +49,29 @@ class _OnboardingPermissionsPageState extends State<OnboardingPermissionsPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Spacer(),
-          Icon(
-            isAllGranted ? Icons.check_circle_outline : Icons.security,
-            size: 80,
-            color: isAllGranted ? Colors.greenAccent : Colors.deepPurple,
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: isAllGranted
+                  ? Colors.green.withOpacity(0.1)
+                  : const Color(0xFF5E35B1).withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isAllGranted ? Icons.check_circle : Icons.security,
+              size: 80,
+              color: isAllGranted ? Colors.green : const Color(0xFF5E35B1),
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Text(
             isAllGranted
                 ? AppLocalizations.of(context)!.permissionGrantedTitle
                 : AppLocalizations.of(context)!.permissionTitle,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.barlowCondensed(
+              color: const Color(0xFF1A237E),
+              fontSize: 32,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -70,7 +81,11 @@ class _OnboardingPermissionsPageState extends State<OnboardingPermissionsPage> {
                 ? AppLocalizations.of(context)!.permissionGrantedMessage
                 : AppLocalizations.of(context)!.permissionMessage,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white70, fontSize: 16),
+            style: GoogleFonts.barlow(
+              color: Colors.black54,
+              fontSize: 16,
+              height: 1.5,
+            ),
           ),
           const Spacer(),
           // Main Button - Full Width
@@ -101,28 +116,38 @@ class _OnboardingPermissionsPageState extends State<OnboardingPermissionsPage> {
 
                         if ((cameraPermanentlyDenied || micPermanentlyDenied) &&
                             mounted) {
-                          debugPrint('Showing settings dialog...');
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              backgroundColor: Colors.grey[900],
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
                               title: Text(
                                 AppLocalizations.of(
                                   context,
                                 )!.permissionRequired,
-                                style: const TextStyle(color: Colors.white),
+                                style: GoogleFonts.barlow(
+                                  color: const Color(0xFF1A237E),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               content: Text(
                                 AppLocalizations.of(
                                   context,
                                 )!.permissionDeniedMessage,
-                                style: const TextStyle(color: Colors.white70),
+                                style: GoogleFonts.barlow(
+                                  color: Colors.black54,
+                                ),
                               ),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
                                   child: Text(
                                     AppLocalizations.of(context)!.cancel,
+                                    style: GoogleFonts.barlow(
+                                      color: Colors.black54,
+                                    ),
                                   ),
                                 ),
                                 ElevatedButton(
@@ -130,8 +155,16 @@ class _OnboardingPermissionsPageState extends State<OnboardingPermissionsPage> {
                                     Navigator.pop(context);
                                     openAppSettings();
                                   },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF5E35B1),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
                                   child: Text(
                                     AppLocalizations.of(context)!.openSettings,
+                                    style: GoogleFonts.barlow(),
                                   ),
                                 ),
                               ],
@@ -145,13 +178,18 @@ class _OnboardingPermissionsPageState extends State<OnboardingPermissionsPage> {
                 isAllGranted
                     ? AppLocalizations.of(context)!.next
                     : AppLocalizations.of(context)!.grantPermission,
+                style: GoogleFonts.barlow(fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: isAllGranted
                     ? Colors.green
-                    : Colors.deepPurple,
+                    : const Color(0xFF5E35B1),
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: const TextStyle(fontSize: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
               ),
             ),
           ),
@@ -163,7 +201,10 @@ class _OnboardingPermissionsPageState extends State<OnboardingPermissionsPage> {
                 onPressed: widget.onNext,
                 child: Text(
                   AppLocalizations.of(context)!.skip,
-                  style: const TextStyle(color: Colors.white54, fontSize: 14),
+                  style: GoogleFonts.barlow(
+                    color: Colors.black45,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
@@ -173,10 +214,10 @@ class _OnboardingPermissionsPageState extends State<OnboardingPermissionsPage> {
 
           TextButton.icon(
             onPressed: widget.onShowApiKeyDialog,
-            icon: const Icon(Icons.key, size: 16, color: Colors.white30),
+            icon: const Icon(Icons.key, size: 16, color: Colors.black26),
             label: Text(
               AppLocalizations.of(context)!.enterApiKeyHackathon,
-              style: const TextStyle(color: Colors.white30, fontSize: 12),
+              style: GoogleFonts.barlow(color: Colors.black26, fontSize: 12),
             ),
           ),
 

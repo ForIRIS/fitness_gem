@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fitness_gem/models/exercise_config.dart';
+import 'package:fitness_gem/domain/entities/exercise_config.dart';
 import 'package:fitness_gem/utils/rep_counter.dart';
 import 'package:fitness_gem/services/workout_model_service.dart';
-import 'package:fitness_gem/services/coaching_management_service.dart';
-import 'package:fitness_gem/models/exercise_config.dart'
-    show ExerciseModelOutput;
+import 'package:fitness_gem/domain/services/coaching_manager.dart';
+import 'package:fitness_gem/domain/interfaces/feedback_output.dart';
+import 'package:fitness_gem/models/exercise_model_output.dart';
 
 class ManualMockWorkoutModelService implements WorkoutModelService {
   @override
@@ -25,7 +25,12 @@ class ManualMockWorkoutModelService implements WorkoutModelService {
   Future<bool> loadSampleModel() async => true;
 }
 
-class MockCoachingManagementService implements CoachingManagementService {
+class MockFeedbackOutput implements FeedbackOutput {
+  @override
+  Future<void> speak(String message) async {}
+}
+
+class MockCoachingManager implements CoachingManager {
   @override
   Future<void> deliver(String message, {String? audioUrl}) async {}
 
@@ -38,11 +43,11 @@ class MockCoachingManagementService implements CoachingManagementService {
 
 void main() {
   late ManualMockWorkoutModelService mockModelService;
-  late MockCoachingManagementService mockCms;
+  late MockCoachingManager mockCoachingManager;
 
   setUp(() {
     mockModelService = ManualMockWorkoutModelService();
-    mockCms = MockCoachingManagementService();
+    mockCoachingManager = MockCoachingManager();
   });
 
   group('RepCounter SEQUENTIAL Mode', () {
@@ -70,7 +75,7 @@ void main() {
       repCounter = RepCounter(
         config,
         modelService: mockModelService,
-        coachingService: mockCms,
+        coachingManager: mockCoachingManager,
       );
     });
 
@@ -103,7 +108,7 @@ void main() {
       repCounter = RepCounter(
         config,
         modelService: mockModelService,
-        coachingService: mockCms,
+        coachingManager: mockCoachingManager,
       );
     });
 
@@ -140,7 +145,7 @@ void main() {
       repCounter = RepCounter(
         config,
         modelService: mockModelService,
-        coachingService: mockCms,
+        coachingManager: mockCoachingManager,
       );
     });
 
@@ -189,7 +194,7 @@ void main() {
       repCounter = RepCounter(
         config,
         modelService: mockModelService,
-        coachingService: mockCms,
+        coachingManager: mockCoachingManager,
       );
     });
 
