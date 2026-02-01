@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import '../../domain/entities/workout_curriculum.dart';
+import '../../domain/entities/featured_program.dart';
 import '../../domain/entities/workout_task.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/workout_repository.dart';
@@ -93,7 +94,7 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
-  Future<Either<Failure, WorkoutCurriculum?>> getFeaturedProgram() async {
+  Future<Either<Failure, FeaturedProgram?>> getFeaturedProgram() async {
     try {
       final data = await remoteDataSource.fetchFeaturedProgramData();
 
@@ -124,7 +125,24 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
         createdAt: DateTime.now(),
       );
 
-      return Right(curriculum);
+      final featuredProgram = FeaturedProgram(
+        id: data['id'] ?? 'featured',
+        title: data['title'] ?? 'Featured Program',
+        slogan: data['slogan'] ?? 'Get Set, Stay Ignite.',
+        description: data['description'] ?? '',
+        imageUrl: data['imageUrl'] ?? '',
+        membersCount: data['membersCount'] ?? '0',
+        rating: (data['rating'] as num?)?.toDouble() ?? 5.0,
+        difficulty: (data['difficulty'] ?? 1).toString(),
+        userAvatars:
+            (data['userAvatars'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+        workoutCurriculum: curriculum,
+      );
+
+      return Right(featuredProgram);
     } catch (e) {
       return Left(ServerFailure('Failed to fetch featured program: $e'));
     }

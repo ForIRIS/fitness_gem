@@ -605,7 +605,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeUser.
   ///
   /// In en, this message translates to:
-  /// **'Hello {name}'**
+  /// **'Hi {name}'**
   String welcomeUser(String name);
 
   /// No description provided for @welcomeUserTier.

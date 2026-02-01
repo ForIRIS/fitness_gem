@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:archive/archive_io.dart';
 
 class AssetUtils {
   /// Copies an asset file to a local temporary directory and returns the absolute path.
@@ -23,7 +24,43 @@ class AssetUtils {
     return file.path;
   }
 
-  /// Copies all files in a directory asset to a local directory (recursive simulation)
-  /// Note: Flutter assets don't support directory listing easily, so we usually
-  /// call getAssetPath for specific known files.
+  /// Unzips an asset zip file to a local temporary directory and returns the path to the unzipped content.
+  /// [assetPath] is the path to the zip asset (e.g., assets/models/model.zip)
+  /// [targetDirName] is the expected directory name inside the zip (or where to extract)
+  static Future<String> unzipAssetToTemp(
+    String assetPath,
+    String targetDirName,
+  ) async {
+    final byteData = await rootBundle.load(assetPath);
+    final tempDir = await getTemporaryDirectory();
+    final targetDir = Directory('${tempDir.path}/$targetDirName');
+
+    // If already exists, might want to return cached, but for now overwrite to be safe or check hash
+    if (await targetDir.exists()) {
+      // Optional: return targetDir.path;
+      // For dev/debugging, let's re-extract to ensure fresh model
+      await targetDir.delete(recursive: true);
+    }
+
+    final archive = ZipDecoder().decodeBytes(
+      byteData.buffer.asUint8List(
+        byteData.offsetInBytes,
+        byteData.lengthInBytes,
+      ),
+    );
+
+    for (final file in archive) {
+      final filename = file.name;
+      if (file.isFile) {
+        final data = file.content as List<int>;
+        final outFile = File('${tempDir.path}/$filename');
+        await outFile.parent.create(recursive: true);
+        await outFile.writeAsBytes(data);
+      } else {
+        await Directory('${tempDir.path}/$filename').create(recursive: true);
+      }
+    }
+
+    return targetDir.path;
+  }
 }

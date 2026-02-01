@@ -133,39 +133,63 @@ class _WorkoutDetailViewState extends ConsumerState<WorkoutDetailView> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: SizedBox(
-          width: double.infinity,
-          child: FloatingActionButton.extended(
-            onPressed: _startWorkout,
-            backgroundColor: AppTheme.primary,
-            elevation: 8,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+      floatingActionButton: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A2E), // Dark background like HomeView
+          borderRadius: BorderRadius.circular(40),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
-            label: Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 16,
-              ), // Restored comfortable touch target
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.play_arrow, size: 28, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Text(
-                    AppLocalizations.of(context)!.startWorkout,
-                    style: GoogleFonts.barlowCondensed(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 1.0,
-                    ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: _startWorkout,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
                   ),
-                ],
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF667eea),
+                        Color(0xFF764ba2),
+                      ], // Purple gradient
+                    ),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.play_arrow_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        AppLocalizations.of(context)!.startWorkout,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -288,14 +312,21 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
         widget.task.category.toLowerCase() == 'stretch';
 
     return Container(
-      height: 180, // Fixed height for consistent list cards
+      height: 180,
       margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
-        color: AppTheme.primary, // Iris Orchid
-        borderRadius: BorderRadius.circular(32), // Large rounded corners
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFB08CDD),
+            Color(0xFF9670BF),
+          ], // Soft Purple Gradient
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primary.withOpacity(0.3),
+            color: const Color(0xFF9670BF).withOpacity(0.3),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -303,123 +334,97 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
       ),
       child: Stack(
         children: [
-          // Content Layout
-          Row(
-            children: [
-              // Left Side: Text Info
-              Expanded(
-                flex: 3,
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Tag (e.g. 5x5 / Sets)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          isMaintenance
-                              ? AppLocalizations.of(context)!.hold
-                              : '${widget.task.adjustedSets} Sets',
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Title
-                      Text(
-                        widget.task.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          height: 1.1,
-                        ),
-                      ),
-
-                      const Spacer(),
-
-                      // Subtext / Description
-                      Text(
-                        isMaintenance
-                            ? 'Relax & Stretch'
-                            : '${widget.task.adjustedReps} Reps per set',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Right Side: Visual (Video/Thumb)
-              Expanded(
-                flex: 2,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // Masked Image/Video
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topRight: Radius.circular(32),
-                        bottomRight: Radius.circular(32),
-                      ),
-                      child: _buildSimpleVisualPreview(),
-                    ),
-
-                    // Gradient Overlay to blend with purple
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              AppTheme.primary,
-                              AppTheme.primary.withOpacity(0.0),
-                            ],
-                            stops: const [0.0, 0.4],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          // 1. Right-side Image (masked)
+          Positioned(
+            right: -20,
+            bottom: 0,
+            top: 20,
+            width: 160,
+            child: _buildSimpleVisualPreview(),
           ),
 
-          // Circle Button (Decorative or Action)
+          // 2. Content Overlay (Text)
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Tag (Pill shape)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    isMaintenance
+                        ? AppLocalizations.of(context)!.hold
+                        : '${widget.task.adjustedSets} Sets',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Title
+                SizedBox(
+                  width:
+                      180, // Constrain width to avoid overlapping image too much
+                  child: Text(
+                    widget.task.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      height: 1.1,
+                    ),
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Subtext / Reps
+                Text(
+                  isMaintenance
+                      ? 'Relax & Stretch'
+                      : '${widget.task.adjustedReps} Reps per set',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 3. Circular Arrow Button
           Positioned(
-            bottom: 20,
-            right: 20,
+            bottom: 24,
+            right: 24,
             child: Container(
-              width: 40,
-              height: 40,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withOpacity(0.5)),
-                color: Colors.white.withOpacity(0.2),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1,
+                ),
+                color: Colors.white.withOpacity(0.1),
               ),
               child: const Icon(
-                Icons.arrow_forward,
+                Icons.arrow_forward_rounded,
                 color: Colors.white,
-                size: 20,
+                size: 24,
               ),
             ),
           ),

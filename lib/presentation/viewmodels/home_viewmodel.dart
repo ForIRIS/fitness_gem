@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import '../../domain/entities/workout_curriculum.dart';
 import '../../domain/entities/user_profile.dart';
+import '../../domain/entities/featured_program.dart';
 import '../../domain/usecases/workout/get_today_curriculum.dart';
 import '../../domain/usecases/workout/generate_curriculum.dart';
 import '../../domain/usecases/workout/save_curriculum.dart';
@@ -47,7 +48,7 @@ class HomeViewModel extends ChangeNotifier {
   WorkoutCurriculum? _todayCurriculum;
   UserProfile? _userProfile;
   List<String> _hotCategories = [];
-  WorkoutCurriculum? _featuredProgram;
+  FeaturedProgram? _featuredProgram;
   bool _isLoading = false;
   bool _isGenerating = false;
   bool _isHotCategoriesLoading = false;
@@ -57,7 +58,7 @@ class HomeViewModel extends ChangeNotifier {
   WorkoutCurriculum? get todayCurriculum => _todayCurriculum;
   UserProfile? get userProfile => _userProfile;
   List<String> get hotCategories => _hotCategories;
-  WorkoutCurriculum? get featuredProgram => _featuredProgram;
+  FeaturedProgram? get featuredProgram => _featuredProgram;
   bool get isLoading => _isLoading;
   bool get isGenerating => _isGenerating;
   bool get isHotCategoriesLoading => _isHotCategoriesLoading;
@@ -141,14 +142,23 @@ class HomeViewModel extends ChangeNotifier {
 
   void _setMockFeaturedProgram() {
     // Create a mock program if none exists
-    _featuredProgram = WorkoutCurriculum(
+    // This is a minimal mock, ideally it should match the full mock structure
+    _featuredProgram = const FeaturedProgram(
       id: 'featured-mock',
       title: 'Ignite Flow',
+      slogan: 'Get Set, Stay Ignite.',
       description: 'Get Set, Stay Ignite.',
-      workoutTasks: const [], // Empty list
-      createdAt: DateTime.now(),
-      thumbnail:
-          'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1350&q=80',
+      imageUrl: 'assets/images/workouts/squat_04.png',
+      membersCount: '5.8k+',
+      rating: 5.0,
+      difficulty: '3',
+      userAvatars: [
+        'https://i.pravatar.cc/150?img=12',
+        'https://i.pravatar.cc/150?img=24',
+        'https://i.pravatar.cc/150?img=33',
+      ],
+      workoutCurriculum:
+          null, // Mock curriculum if needed, but null handles error gracefully
     );
   }
 
@@ -185,12 +195,19 @@ class HomeViewModel extends ChangeNotifier {
 
   /// Set featured program as today's curriculum
   Future<void> setFeaturedAsToday() async {
-    if (_featuredProgram == null) return;
+    if (_featuredProgram == null ||
+        _featuredProgram!.workoutCurriculum == null) {
+      // If we have a featured program but no curriculum (e.g. presentation only),
+      // we might want to fetch it or handle error. For now, just return.
+      debugPrint('No curriculum available in featured program');
+      return;
+    }
 
-    _todayCurriculum = _featuredProgram;
+    final curriculum = _featuredProgram!.workoutCurriculum!;
+    _todayCurriculum = curriculum;
 
     // Save to local storage
-    final result = await saveCurriculum.execute(_featuredProgram!);
+    final result = await saveCurriculum.execute(curriculum);
     result.fold(
       (failure) {
         debugPrint('Failed to save curriculum: ${failure.message}');

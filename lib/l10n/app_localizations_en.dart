@@ -277,7 +277,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String welcomeUser(String name) {
-    return 'Hello $name';
+    return 'Hi $name';
   }
 
   @override

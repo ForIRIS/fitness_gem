@@ -336,6 +336,15 @@ class FirebaseService {
       'push_02',
     ],
     'imageUrl': 'assets/images/workouts/squat_04.png',
+    'slogan': 'Get Set, Stay Ignite.',
+    'membersCount': '5.8k+',
+    'rating': 5.0,
+    'difficulty': 3,
+    'userAvatars': [
+      'https://i.pravatar.cc/150?img=12',
+      'https://i.pravatar.cc/150?img=24',
+      'https://i.pravatar.cc/150?img=33',
+    ],
   };
 
   static const List<String> mockDailyHotCategories = [

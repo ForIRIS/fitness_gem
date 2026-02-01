@@ -92,7 +92,7 @@
   "saveApiKey": "Save API Key",
   "welcomeMessage": "Hello, {age}-year-old {level} member!",
   "welcomeTrainee": "Hello Trainee",
-  "welcomeUser": "Hello {name}",
+  "welcomeUser": "Hi {name}",
   "@welcomeUser": {
     "placeholders": {
       "name": {

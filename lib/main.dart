@@ -7,7 +7,7 @@ import 'dart:ui'; // For PointerDeviceKind
 import 'package:fitness_gem/theme/app_theme.dart';
 import 'views/home_view.dart' as home;
 import 'views/onboarding_view.dart';
-import 'domain/entities/user_profile.dart';
+
 import 'domain/usecases/user/get_user_profile.dart';
 import 'services/firebase_service.dart';
 import 'views/external_dashboard_view.dart';

@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import '../entities/workout_curriculum.dart';
+import '../entities/featured_program.dart';
 import '../entities/workout_task.dart';
 import '../entities/user_profile.dart';
 import '../../core/error/failures.dart';
@@ -23,7 +24,7 @@ abstract class WorkoutRepository {
   Future<Either<Failure, List<String>>> getDailyHotCategories();
 
   /// Get featured program from server
-  Future<Either<Failure, WorkoutCurriculum?>> getFeaturedProgram();
+  Future<Either<Failure, FeaturedProgram?>> getFeaturedProgram();
 
   /// Get workout tasks by category
   Future<Either<Failure, List<WorkoutTask>>> getWorkoutTasksByCategory(

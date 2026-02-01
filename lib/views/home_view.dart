@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shimmer/shimmer.dart';
 import '../services/cache_service.dart';
 import '../presentation/viewmodels/home_viewmodel.dart';
 import 'camera_view.dart';
@@ -98,29 +99,34 @@ class _HomeViewState extends ConsumerState<HomeView> {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4F7), // Cloud Dancer approx
       body: SafeArea(
-        child: viewModel.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: () => ref.read(homeViewModelProvider).loadData(),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    children: [
-                      _buildHeader(viewModel),
-                      const SizedBox(height: 24),
-                      _buildDailyStats(viewModel),
-                      const SizedBox(height: 24),
-                      _buildCategoryChips(viewModel),
-                      const SizedBox(height: 24),
-                      if (viewModel.featuredProgram != null)
-                        _buildFeaturedProgramCard(viewModel),
-                      const SizedBox(height: 24),
-                      _buildRecentActivity(),
-                      const SizedBox(height: 100),
-                    ],
-                  ),
-                ),
-              ),
+        child: RefreshIndicator(
+          onRefresh: () => ref.read(homeViewModelProvider).loadData(),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                _buildHeader(viewModel),
+                const SizedBox(height: 24),
+                viewModel.isLoading
+                    ? _buildShimmerDailyStats()
+                    : _buildDailyStats(viewModel),
+                const SizedBox(height: 24),
+                viewModel.isLoading || viewModel.isHotCategoriesLoading
+                    ? _buildShimmerCategoryChips()
+                    : _buildCategoryChips(viewModel),
+                const SizedBox(height: 24),
+                viewModel.isLoading
+                    ? _buildShimmerFeaturedProgram()
+                    : (viewModel.featuredProgram != null
+                          ? _buildFeaturedProgramCard(viewModel)
+                          : const SizedBox.shrink()),
+                const SizedBox(height: 24),
+                _buildRecentActivity(),
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
+        ),
       ),
       floatingActionButton: _buildFloatingBottomNav(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -128,6 +134,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
   }
 
   Widget _buildHeader(HomeViewModel viewModel) {
+    final nickname = viewModel.userProfile?.nickname;
+    final displayName = (nickname != null && nickname.isNotEmpty)
+        ? nickname
+        : 'Trainee';
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
       child: Row(
@@ -138,9 +149,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppLocalizations.of(
-                    context,
-                  )!.welcomeUser(viewModel.userProfile?.nickname ?? 'User'),
+                  AppLocalizations.of(context)!.welcomeUser(displayName),
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     color: AppTheme.textSecondary, // Slate 500
@@ -199,6 +208,83 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
+  // Shimmer Widgets
+  Widget _buildShimmerDailyStats() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: Container(
+          height: 220,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerCategoryChips() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(width: 150, height: 16, color: Colors.white),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 48,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 4,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Shimmer.fromColors(
+                    baseColor: Colors.grey[300]!,
+                    highlightColor: Colors.grey[100]!,
+                    child: Container(
+                      width: 100,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerFeaturedProgram() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: Container(
+          height: 420,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Real Widgets
   Widget _buildDailyStats(HomeViewModel viewModel) {
     final curriculum = viewModel.todayCurriculum;
 
@@ -472,7 +558,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
       );
     }
 
-    // final program = viewModel.featuredProgram!; // Unused in new design
+    final program = viewModel.featuredProgram!;
+    final isNetworkImage = program.imageUrl.startsWith('http');
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
@@ -505,16 +593,15 @@ class _HomeViewState extends ConsumerState<HomeView> {
           child: Stack(
             children: [
               // 1. Workout Image (Dynamic Placement)
-              // Using lunge_01 as per request to use existing assets
-              Positioned(
-                right: -40,
-                top: 60,
-                bottom: 0,
-                child: Image.asset(
-                  'assets/images/workouts/lunge_01.png',
-                  fit: BoxFit.contain,
+              if (program.imageUrl.isNotEmpty)
+                Positioned(
+                  right: -40,
+                  top: 60,
+                  bottom: 0,
+                  child: isNetworkImage
+                      ? Image.network(program.imageUrl, fit: BoxFit.contain)
+                      : Image.asset(program.imageUrl, fit: BoxFit.contain),
                 ),
-              ),
 
               // 1.5 Blur Gradient Effect (Bottom-Center)
               Positioned.fill(
@@ -535,25 +622,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 ),
               ),
 
-              // Optional: Backdrop filter for true "blur" if supported performantly
-              // Keeping it simple with gradient first as "blur gradient" often means soft fade
-              // If true frost is needed:
-              /*
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 200,
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(color: Colors.transparent),
-                  ),
-                ),
-              ),
-              */
-
               // 2. Content Overlay
               Padding(
                 padding: const EdgeInsets.all(28),
@@ -569,7 +637,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              AppLocalizations.of(context)!.pickAProgram,
+                              program.title,
                               style: GoogleFonts.outfit(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -578,9 +646,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              AppLocalizations.of(
-                                context,
-                              )!.fullyCustomizableProgram,
+                              program.slogan,
                               style: GoogleFonts.outfit(
                                 color: Colors.white.withOpacity(0.8),
                                 fontSize: 12,
@@ -588,7 +654,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                             ),
                           ],
                         ),
-                        // Dot Indicator (Replcaing Star Rating)
+                        // Star/Dot Rating
                         Row(
                           children: List.generate(
                             5,
@@ -597,11 +663,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
                               width: index == 4 ? 8 : 4,
                               height: index == 4 ? 8 : 4,
                               decoration: BoxDecoration(
-                                color: index == 4
-                                    ? Colors.transparent
-                                    : Colors.white.withOpacity(0.6),
+                                color: index < program.rating
+                                    ? Colors.white.withOpacity(0.6)
+                                    : Colors.transparent,
                                 shape: BoxShape.circle,
-                                border: index == 4
+                                border: index >= program.rating
                                     ? Border.all(
                                         color: Colors.white,
                                         width: 1.5,
@@ -623,34 +689,37 @@ class _HomeViewState extends ConsumerState<HomeView> {
                           width: 60,
                           height: 24,
                           child: Stack(
-                            children: List.generate(3, (index) {
-                              return Positioned(
-                                left: index * 16.0,
-                                child: Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 1,
-                                    ),
-                                    color: Colors.grey[300],
-                                    image: const DecorationImage(
-                                      image: NetworkImage(
-                                        'https://i.pravatar.cc/150?img=12',
-                                      ), // Use mock or viewModel profile
-                                      fit: BoxFit.cover,
+                            children: List.generate(
+                              program.userAvatars.length.clamp(0, 3),
+                              (index) {
+                                return Positioned(
+                                  left: index * 16.0,
+                                  child: Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 1,
+                                      ),
+                                      color: Colors.grey[300],
+                                      image: DecorationImage(
+                                        image: NetworkImage(
+                                          program.userAvatars[index],
+                                        ),
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
-                            }),
+                                );
+                              },
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '5.8k+\n${AppLocalizations.of(context)!.members}',
+                          '${program.membersCount}\n${AppLocalizations.of(context)!.members}',
                           style: GoogleFonts.outfit(
                             color: Colors.white,
                             fontSize: 10,
@@ -663,9 +732,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
                     // Main Title Description
                     SizedBox(
-                      width: 200, // Constrain width to wrap text nicely
+                      width: 250, // Constrain width to wrap text nicely
                       child: Text(
-                        'Get Set, Stay\nIgnite, Finish Proud.\nJoin The Flow.',
+                        program.description,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.outfit(
                           color: Colors.white,
                           fontSize: 26,

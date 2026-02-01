@@ -23,6 +23,7 @@ import 'package:fitness_gem/domain/usecases/workout/get_today_curriculum.dart'
 import 'package:fitness_gem/domain/usecases/workout/save_curriculum.dart'
     as _i11;
 import 'package:mockito/mockito.dart' as _i1;
+import 'package:fitness_gem/domain/entities/featured_program.dart' as _i15;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -203,6 +204,8 @@ class MockGetDailyHotCategoriesUseCase extends _i1.Mock
           as _i6.Future<_i3.Either<_i7.Failure, List<String>>>);
 }
 
+// ... imports
+
 /// A class which mocks [GetFeaturedProgramUseCase].
 ///
 /// See the documentation for Mockito's code generation for more information.
@@ -224,20 +227,20 @@ class MockGetFeaturedProgramUseCase extends _i1.Mock
           as _i2.WorkoutRepository);
 
   @override
-  _i6.Future<_i3.Either<_i7.Failure, _i8.WorkoutCurriculum?>> execute() =>
+  _i6.Future<_i3.Either<_i7.Failure, _i15.FeaturedProgram?>> execute() =>
       (super.noSuchMethod(
             Invocation.method(#execute, []),
             returnValue:
                 _i6.Future<
-                  _i3.Either<_i7.Failure, _i8.WorkoutCurriculum?>
+                  _i3.Either<_i7.Failure, _i15.FeaturedProgram?>
                 >.value(
-                  _FakeEither_1<_i7.Failure, _i8.WorkoutCurriculum?>(
+                  _FakeEither_1<_i7.Failure, _i15.FeaturedProgram?>(
                     this,
                     Invocation.method(#execute, []),
                   ),
                 ),
           )
-          as _i6.Future<_i3.Either<_i7.Failure, _i8.WorkoutCurriculum?>>);
+          as _i6.Future<_i3.Either<_i7.Failure, _i15.FeaturedProgram?>>);
 }
 
 /// A class which mocks [GetUserProfileUseCase].
