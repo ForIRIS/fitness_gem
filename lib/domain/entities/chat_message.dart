@@ -5,11 +5,13 @@ class ChatMessage {
   final bool isUser;
   final String? imagePath;
   final WorkoutCurriculum? curriculum;
+  final bool isError;
 
   ChatMessage({
     required this.text,
     required this.isUser,
     this.imagePath,
     this.curriculum,
+    this.isError = false,
   });
 }

@@ -983,7 +983,7 @@ abstract class AppLocalizations {
   /// No description provided for @dailyHotCategories.
   ///
   /// In en, this message translates to:
-  /// **'Daily Hot Categories'**
+  /// **'Daily Hot Programs'**
   String get dailyHotCategories;
 
   /// No description provided for @readyToWorkout.

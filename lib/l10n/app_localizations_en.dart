@@ -483,7 +483,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get programs => 'Programs';
 
   @override
-  String get dailyHotCategories => 'Daily Hot Categories';
+  String get dailyHotCategories => 'Daily Hot Programs';
 
   @override
   String get readyToWorkout => 'Ready to Workout';

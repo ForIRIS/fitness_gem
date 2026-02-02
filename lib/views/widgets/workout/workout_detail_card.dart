@@ -324,14 +324,14 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
         return Image.network(
           widget.task.thumbnail,
           fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
+          alignment: Alignment.topLeft,
           errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
         );
       } else {
         return Image.asset(
           widget.task.thumbnail,
           fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
+          alignment: Alignment.topLeft,
           errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
         );
       }
@@ -340,7 +340,7 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
       return Image.asset(
         'assets/images/workouts/${widget.task.id}.png',
         fit: BoxFit.cover,
-        alignment: Alignment.topCenter,
+        alignment: Alignment.topLeft,
         errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
       );
     }

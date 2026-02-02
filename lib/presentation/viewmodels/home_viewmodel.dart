@@ -52,7 +52,12 @@ class HomeViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool _isGenerating = false;
   bool _isHotCategoriesLoading = false;
+  bool _isFeaturedLoading = false;
   String? _errorMessage;
+
+  // Initialize with a default category if needed, or null
+  // Based on user request, 'Build Strength' seems to be the default A case
+  String _selectedCategory = 'Build Strength';
 
   // Getters
   WorkoutCurriculum? get todayCurriculum => _todayCurriculum;
@@ -62,9 +67,22 @@ class HomeViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isGenerating => _isGenerating;
   bool get isHotCategoriesLoading => _isHotCategoriesLoading;
+  bool get isFeaturedLoading => _isFeaturedLoading;
   String? get errorMessage => _errorMessage;
+  String get selectedCategory => _selectedCategory;
 
-  /// Load all data for home screen
+  /// Select a category and update featured program
+  Future<void> selectCategory(String category) async {
+    debugPrint('HomeViewModel: User selected category: $category');
+    if (_selectedCategory == category) return;
+
+    _selectedCategory = category;
+    notifyListeners();
+
+    // Reload featured program for the new category
+    await _loadFeaturedProgram();
+  }
+
   /// Load all data for home screen
   Future<void> loadData() async {
     _isLoading = true;
@@ -146,6 +164,12 @@ class HomeViewModel extends ChangeNotifier {
       },
       (categories) {
         _hotCategories = categories;
+
+        // Ensure selected category is valid if categories loaded
+        if (categories.isNotEmpty && !categories.contains(_selectedCategory)) {
+          _selectedCategory = categories.first;
+        }
+
         _isHotCategoriesLoading = false;
       },
     );
@@ -154,7 +178,15 @@ class HomeViewModel extends ChangeNotifier {
 
   /// Load featured program
   Future<void> _loadFeaturedProgram() async {
-    final result = await getFeaturedProgram.execute();
+    debugPrint(
+      'HomeViewModel: Loading featured program for category: $_selectedCategory',
+    );
+
+    _isFeaturedLoading = true;
+    notifyListeners();
+
+    // Pass the selected category to the use case
+    final result = await getFeaturedProgram.execute(_selectedCategory);
     result.fold(
       (failure) {
         debugPrint(
@@ -164,31 +196,31 @@ class HomeViewModel extends ChangeNotifier {
       },
       (program) {
         if (program != null) {
+          debugPrint('HomeViewModel: Loaded program: ${program.title}');
           _featuredProgram = program;
         } else {
+          debugPrint('HomeViewModel: Loaded program is NULL');
           _setMockFeaturedProgram();
         }
       },
     );
+    _isFeaturedLoading = false;
     notifyListeners();
   }
 
   void _setMockFeaturedProgram() {
-    // Create a mock program if none exists
-    // This is a minimal mock, ideally it should match the full mock structure
-    _featuredProgram = const FeaturedProgram(
-      id: 'featured-mock',
-      title: 'Ignite Flow',
+    // If the repository fails, we still need a visual program to show
+    _featuredProgram = FeaturedProgram(
+      id: 'mock_fallback',
+      title: 'Workout Program',
       slogan: 'Get Set, Stay Ignite.',
-      description: 'Get Set, Stay Ignite.',
-      imageUrl: 'assets/images/workouts/squat_04.png',
-      membersCount: '5.8k+',
+      description: 'Choose a category to see featured challenges.',
+      imageUrl: 'assets/images/workouts/squat_01.png',
+      membersCount: '0',
       rating: 5.0,
-      difficulty: '3',
-      userAvatars: [], // Removed unreliable network images
-
-      workoutCurriculum:
-          null, // Mock curriculum if needed, but null handles error gracefully
+      difficulty: '1',
+      userAvatars: [],
+      workoutCurriculum: null,
     );
   }
 

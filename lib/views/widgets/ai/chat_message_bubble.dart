@@ -9,6 +9,7 @@ class ChatMessageBubble extends StatelessWidget {
   final ChatMessage message;
   final Function(WorkoutCurriculum) onConfirmCurriculum;
   final Function(WorkoutCurriculum) onViewCurriculumDetail;
+  final VoidCallback? onRetry;
   final double maxWidth;
 
   const ChatMessageBubble({
@@ -16,6 +17,7 @@ class ChatMessageBubble extends StatelessWidget {
     required this.message,
     required this.onConfirmCurriculum,
     required this.onViewCurriculumDetail,
+    this.onRetry,
     required this.maxWidth,
   });
 
@@ -78,6 +80,36 @@ class ChatMessageBubble extends StatelessWidget {
                 ),
               ),
             _buildParsedText(message.text, isUser: message.isUser),
+            if (message.isError && onRetry != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12.0),
+                child: SizedBox(
+                  height: 36,
+                  child: ElevatedButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(
+                      Icons.refresh,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                    label: const Text(
+                      "Retry",
+                      style: TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 0,
+                      ),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

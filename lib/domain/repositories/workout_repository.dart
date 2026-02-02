@@ -24,7 +24,9 @@ abstract class WorkoutRepository {
   Future<Either<Failure, List<String>>> getDailyHotCategories();
 
   /// Get featured program from server
-  Future<Either<Failure, FeaturedProgram?>> getFeaturedProgram();
+  Future<Either<Failure, FeaturedProgram?>> getFeaturedProgram([
+    String? category,
+  ]);
 
   /// Get workout tasks by category
   Future<Either<Failure, List<WorkoutTask>>> getWorkoutTasksByCategory(

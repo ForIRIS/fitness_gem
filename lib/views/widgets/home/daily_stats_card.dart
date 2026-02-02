@@ -103,48 +103,52 @@ class DailyStatsCard extends StatelessWidget {
                     // Small Exercise Thumbnails and Estimated Time
                     Row(
                       children: [
-                        SizedBox(
-                          height: 45, // Smaller thumbnails
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            scrollDirection: Axis.horizontal,
-                            itemCount: curriculum!.workoutTasks.length,
-                            itemBuilder: (context, index) {
-                              final task = curriculum!.workoutTasks[index];
-                              return Container(
-                                width: 45,
-                                margin: const EdgeInsets.only(right: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(30),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.3),
+                        Expanded(
+                          child: SizedBox(
+                            height: 45, // Smaller thumbnails
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              scrollDirection: Axis.horizontal,
+                              itemCount: curriculum!.workoutTasks.length,
+                              itemBuilder: (context, index) {
+                                final task = curriculum!.workoutTasks[index];
+                                return Container(
+                                  width: 45,
+                                  margin: const EdgeInsets.only(right: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(30),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                    ),
+                                    image: task.thumbnail.isNotEmpty
+                                        ? DecorationImage(
+                                            image: NetworkImage(task.thumbnail),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
                                   ),
-                                  image: task.thumbnail.isNotEmpty
-                                      ? DecorationImage(
-                                          image: NetworkImage(task.thumbnail),
-                                          fit: BoxFit.cover,
-                                        )
-                                      : null,
-                                ),
-                                child: task.thumbnail.isNotEmpty
-                                    ? null
-                                    : Center(
-                                        child: Text(
-                                          task.title,
-                                          textAlign: TextAlign.center,
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 9,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
+                                  child: task.thumbnail.isNotEmpty
+                                      ? null
+                                      : Center(
+                                          child: Text(
+                                            task.title,
+                                            textAlign: TextAlign.center,
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 9,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                              );
-                            },
+                                );
+                              },
+                            ),
                           ),
                         ),
-                        const Spacer(),
+                        const SizedBox(width: 16),
                         RichText(
                           text: TextSpan(
                             children: [

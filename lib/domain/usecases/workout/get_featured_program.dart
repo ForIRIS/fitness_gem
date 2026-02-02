@@ -6,13 +6,12 @@ import '../../../core/error/failures.dart';
 import '../../../core/usecases/usecase.dart';
 
 /// Use case to get featured program
-class GetFeaturedProgramUseCase implements NoParamsUseCase<FeaturedProgram?> {
+class GetFeaturedProgramUseCase {
   final WorkoutRepository repository;
 
   GetFeaturedProgramUseCase(this.repository);
 
-  @override
-  Future<Either<Failure, FeaturedProgram?>> execute() async {
-    return await repository.getFeaturedProgram();
+  Future<Either<Failure, FeaturedProgram?>> execute([String? category]) async {
+    return await repository.getFeaturedProgram(category);
   }
 }

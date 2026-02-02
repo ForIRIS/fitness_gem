@@ -16,6 +16,7 @@ import 'widgets/home/daily_stats_card.dart';
 import 'widgets/home/category_chips.dart';
 import 'widgets/home/featured_program_card.dart';
 import 'widgets/home/home_shimmer_widgets.dart';
+import 'featured_program_detail_view.dart';
 
 /// HomeView - Dashboard Screen (Refactored with Riverpod)
 class HomeView extends ConsumerStatefulWidget {
@@ -142,23 +143,67 @@ class _HomeViewState extends ConsumerState<HomeView> {
                         },
                       ),
                 const SizedBox(height: 24),
-                viewModel.isLoading || viewModel.isHotCategoriesLoading
-                    ? const ShimmerCategoryChips()
-                    : CategoryChips(
-                        categories: viewModel.hotCategories,
-                        isLoading: viewModel.isHotCategoriesLoading,
-                      ),
-                const SizedBox(height: 24),
-                viewModel.isLoading
-                    ? const ShimmerFeaturedProgram()
-                    : FeaturedProgramCard(
-                        program: viewModel.featuredProgram,
-                        onApply: () {
-                          viewModel.setFeaturedAsToday();
-                        },
-                        onRetry: () =>
-                            ref.read(homeViewModelProvider).loadData(),
-                      ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Container(
+                    padding: EdgeInsets
+                        .zero, //const EdgeInsets.symmetric(vertical: 20),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(32),
+                      // Optional: Add a subtle shadow if it helps separation, or keep flat
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 16),
+                        viewModel.isLoading || viewModel.isHotCategoriesLoading
+                            ? const ShimmerCategoryChips()
+                            : CategoryChips(
+                                categories: viewModel.hotCategories,
+                                isLoading: viewModel.isHotCategoriesLoading,
+                                selectedCategory: viewModel.selectedCategory,
+                                onCategorySelected: (category) {
+                                  viewModel.selectCategory(category);
+                                },
+                              ),
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 0),
+                          child:
+                              viewModel.isLoading || viewModel.isFeaturedLoading
+                              ? const ShimmerFeaturedProgram()
+                              : FeaturedProgramCard(
+                                  program: viewModel.featuredProgram,
+                                  onRetry: () => ref
+                                      .read(homeViewModelProvider)
+                                      .loadData(),
+                                  onTapCard: () {
+                                    if (viewModel.featuredProgram != null) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              FeaturedProgramDetailView(
+                                                program:
+                                                    viewModel.featuredProgram!,
+                                              ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 24),
                 _buildRecentActivity(),
                 const SizedBox(height: 100),
@@ -227,6 +272,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.fitness_center, color: Colors.white, size: 20),

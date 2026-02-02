@@ -102,17 +102,32 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
-  Future<Either<Failure, FeaturedProgram?>> getFeaturedProgram() async {
+  Future<Either<Failure, FeaturedProgram?>> getFeaturedProgram([
+    String? category,
+  ]) async {
     try {
-      final data = await remoteDataSource.fetchFeaturedProgramData();
+      debugPrint(
+        'WorkoutRepo: Getting featured program for category: $category',
+      );
+      final data = await remoteDataSource.fetchFeaturedProgramData(category);
 
-      final taskIds = (data['task_ids'] as List<dynamic>)
-          .map((e) => e.toString())
-          .toList();
+      final taskIds =
+          (data['task_ids'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [];
+
+      debugPrint('WorkoutRepo: Fetching ${taskIds.length} tasks: $taskIds');
+
+      if (taskIds.isEmpty) {
+        debugPrint('WorkoutRepo: No task IDs provided');
+        return const Right(null);
+      }
 
       final tasks = await remoteDataSource.fetchWorkoutTasksByIds(taskIds);
 
       if (tasks.isEmpty) {
+        debugPrint('WorkoutRepo: No tasks found for IDs: $taskIds');
         return const Right(null);
       }
 

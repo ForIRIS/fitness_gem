@@ -40,7 +40,7 @@ class ShimmerCategoryChips extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 48,
+            height: 36,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: 4,
@@ -52,7 +52,7 @@ class ShimmerCategoryChips extends StatelessWidget {
                     highlightColor: Colors.grey[100]!,
                     child: Container(
                       width: 100,
-                      height: 40,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),

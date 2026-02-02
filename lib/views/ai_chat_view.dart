@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:async'; // Added for TimeoutException
 import 'package:image_picker/image_picker.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../domain/entities/user_profile.dart';
@@ -10,6 +11,7 @@ import '../services/firebase_service.dart';
 import '../../core/di/injection.dart';
 import '../../domain/usecases/ai/chat_for_curriculum_usecase.dart';
 import '../../domain/usecases/ai/chat_with_image_usecase.dart';
+import '../../domain/usecases/user/update_user_profile.dart';
 import 'workout_detail_view.dart';
 import '../services/tts_service.dart';
 import '../services/stt_service.dart';
@@ -41,11 +43,22 @@ class _AIChatViewState extends State<AIChatView> {
 
   bool _isTtsEnabled = true;
   bool _isListening = false;
+
   bool _hasInput = false;
+
+  // Retry Logic State
+  String? _lastUserMessage;
+  File? _lastImage;
+
+  // Profile Update State
+  late UserProfile _currentUserProfile;
+  String? _awaitingProfileField; // 'fitness level' or 'goal'
+  String? _pendingUserMessage; // The original request that triggered validation
 
   @override
   void initState() {
     super.initState();
+    _currentUserProfile = widget.userProfile;
     _messageController.addListener(_onTextChanged);
     _initializeServices();
     // ... (rest of initState logic)
@@ -118,6 +131,10 @@ class _AIChatViewState extends State<AIChatView> {
 
     final imageToSend = _selectedImage;
 
+    // Save for retry
+    _lastUserMessage = message;
+    _lastImage = imageToSend;
+
     setState(() {
       _messages.add(
         ChatMessage(text: message, isUser: true, imagePath: imageToSend?.path),
@@ -127,131 +144,265 @@ class _AIChatViewState extends State<AIChatView> {
       _selectedImage = null;
     });
     _messageController.clear();
+    // 1. Handle Profile Update Loop
+    if (_awaitingProfileField != null) {
+      await _handleProfileUpdateResponse(message);
+      return;
+    }
+
     _scrollToBottom();
 
+    // 2. Validate User Profile before proceeding
+    final missingFields = _validateUserProfile();
+    if (missingFields.isNotEmpty) {
+      _pendingUserMessage = message; // Save original request
+      _promptForMissingInfo(missingFields);
+      return;
+    }
+
+    _executeRequest(message, imageToSend);
+  }
+
+  Future<void> _retryLastRequest() async {
+    if (_lastUserMessage == null && _lastImage == null) return;
+
+    // Remove last error message if it exists to avoid clutter?
+    // Optionally: _messages.removeLast();
+
+    setState(() {
+      _isLoading = true;
+      _suggestedCurriculum = null;
+    });
+    _scrollToBottom();
+
+    await _executeRequest(_lastUserMessage ?? '', _lastImage);
+  }
+
+  Future<void> _executeRequest(String message, File? imageToSend) async {
     try {
       if (imageToSend != null) {
         final chatWithImage = getIt<ChatWithImageUseCase>();
+        // Image analysis typically takes longer, but we can also wrap it if needed.
+        // For now, focusing curriculum generation timeout as requested.
         final result = await chatWithImage.execute(
           ChatWithImageParams(
             userMessage: message.isEmpty ? "Describe this image" : message,
             imageFile: imageToSend,
-            profile: widget.userProfile,
+            profile: _currentUserProfile,
           ),
         );
 
         result.fold(
-          (failure) {
-            if (mounted) {
-              setState(() {
-                _messages.add(
-                  ChatMessage(
-                    text: AppLocalizations.of(
-                      context,
-                    )!.errorOccurred(failure.message ?? 'Unknown error'),
-                    isUser: false,
-                  ),
-                );
-                _isLoading = false;
-              });
-            }
-          },
-          (response) {
-            if (mounted) {
-              setState(() {
-                _messages.add(
-                  ChatMessage(text: response.message, isUser: false),
-                );
-                _isLoading = false;
-              });
-              if (_isTtsEnabled) {
-                _ttsService.speak(response.message);
-              }
-            }
-          },
+          (failure) => _handleError(failure.message ?? 'Unknown error'),
+          (response) => _handleSuccess(response.message),
         );
       } else {
-        final firebaseService = FirebaseService();
-        final allWorkouts = await firebaseService.fetchWorkoutAllList();
-
-        final chatForCurriculum = getIt<ChatForCurriculumUseCase>();
-        final result = await chatForCurriculum.execute(
-          ChatForCurriculumParams(
-            userMessage: message,
-            profile: widget.userProfile,
-            availableWorkouts: allWorkouts,
-          ),
-        );
-
-        result.fold(
-          (failure) {
-            if (mounted) {
-              setState(() {
-                _messages.add(
-                  ChatMessage(
-                    text: AppLocalizations.of(
-                      context,
-                    )!.errorOccurred(failure.message),
-                    isUser: false,
-                  ),
-                );
-                _isLoading = false;
-              });
-            }
-          },
-          (curriculum) {
-            if (mounted) {
-              if (curriculum != null) {
-                _suggestedCurriculum = curriculum;
-                setState(() {
-                  _messages.add(
-                    ChatMessage(
-                      text: AppLocalizations.of(
-                        context,
-                      )!.curriculumRecommendation(curriculum.title),
-                      isUser: false,
-                      curriculum: curriculum,
-                    ),
-                  );
-                  _isLoading = false;
-                });
-                if (_isTtsEnabled) {
-                  _ttsService.speak(
-                    AppLocalizations.of(
-                      context,
-                    )!.curriculumRecommendation(curriculum.title),
-                  );
-                }
-              } else {
-                setState(() {
-                  _messages.add(
-                    ChatMessage(
-                      text: AppLocalizations.of(
-                        context,
-                      )!.curriculumGenerationError,
-                      isUser: false,
-                    ),
-                  );
-                  _isLoading = false;
-                });
-              }
-            }
-          },
-        );
+        // Curriculum Generation Flow
+        await _generateCurriculumWithTimeout(message);
       }
     } catch (e) {
-      if (mounted) {
+      _handleError(e.toString());
+    }
+  }
+
+  Map<String, String> _validateUserProfile() {
+    final missing = <String, String>{};
+    final p = _currentUserProfile;
+
+    // Check critical fields
+    if (p.fitnessLevel.isEmpty || p.fitnessLevel == 'Unknown') {
+      missing['Fitness Level'] = 'fitness level';
+    }
+    if (p.goal.isEmpty || p.goal == 'Unknown') {
+      missing['Goal'] = 'fitness goal';
+    }
+    // Injury history is optional but good to know being empty is fine.
+
+    return missing;
+  }
+
+  Future<void> _handleProfileUpdateResponse(String value) async {
+    if (_awaitingProfileField == null) return;
+
+    final field = _awaitingProfileField!; // 'fitness level' or 'goal'
+
+    // Simple heuristic mapping could go here, but for now we accept free text
+    // or we could add chips for selection later.
+
+    UserProfile updatedProfile = _currentUserProfile;
+    if (field == 'fitness level') {
+      // Normalize if possible, but taking user input for now
+      updatedProfile = updatedProfile.copyWith(fitnessLevel: value);
+    } else if (field == 'fitness goal') {
+      updatedProfile = updatedProfile.copyWith(goal: value);
+    }
+
+    // Persist
+    final updateUseCase = getIt<UpdateUserProfileUseCase>();
+    final result = await updateUseCase.execute(updatedProfile);
+
+    result.fold(
+      (failure) {
+        _handleError("Failed to update profile: ${failure.message}");
+        // Don't clear awaiting state so they can try again?
+        // Or maybe clear it and let them restart the flow.
+        // Let's keep asking until we get it or they exit.
+      },
+      (successProfile) {
         setState(() {
+          _currentUserProfile = successProfile;
+          _awaitingProfileField = null; // Clear waiting state
           _messages.add(
             ChatMessage(
-              text: AppLocalizations.of(context)!.errorOccurred(e.toString()),
+              text:
+                  "Got it! I've updated your $field. Now, back to your workout request.",
               isUser: false,
             ),
           );
-          _isLoading = false;
         });
-      }
+
+        // Proceed with original request if exists
+        if (_pendingUserMessage != null) {
+          // Short delay for better UX
+          Future.delayed(const Duration(milliseconds: 1000), () {
+            if (mounted) {
+              // Check validation again just in case there are MULTIPLE missing fields
+              final missing = _validateUserProfile();
+              if (missing.isNotEmpty) {
+                _promptForMissingInfo(missing);
+              } else {
+                _executeRequest(_pendingUserMessage!, null);
+                _pendingUserMessage = null;
+              }
+            }
+          });
+        }
+      },
+    );
+  }
+
+  void _promptForMissingInfo(Map<String, String> missingFields) {
+    setState(() {
+      _isLoading = false;
+    });
+
+    // Pick the first missing field to ask about
+    final firstMissingKey = missingFields.keys.first;
+    final firstMissingValue = missingFields[firstMissingKey]!;
+
+    setState(() {
+      _awaitingProfileField = firstMissingValue;
+    });
+
+    // final missingList = missingFields.values.join(', '); // Ask one by one
+    final responseText =
+        "I need a bit more info to create the best plan for you. "
+        "What is your current $firstMissingValue?";
+
+    setState(() {
+      _messages.add(ChatMessage(text: responseText, isUser: false));
+    });
+    if (_isTtsEnabled) _ttsService.speak(responseText);
+    _scrollToBottom();
+  }
+
+  Future<void> _generateCurriculumWithTimeout(String userMessage) async {
+    final firebaseService = FirebaseService();
+    // Progress 1
+    _addProgressMessage("Analyzing your profile...");
+
+    try {
+      final allWorkouts = await firebaseService.fetchWorkoutAllList();
+
+      // Progress 2
+      if (mounted) _addProgressMessage("Selecting appropriate exercises...");
+
+      final chatForCurriculum = getIt<ChatForCurriculumUseCase>();
+
+      // Execute with Timeout
+      final result = await chatForCurriculum
+          .execute(
+            ChatForCurriculumParams(
+              userMessage: userMessage,
+              profile: _currentUserProfile,
+              availableWorkouts: allWorkouts,
+            ),
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw TimeoutException('Curriculum generation took too long.');
+            },
+          );
+
+      result.fold((failure) => _handleError(failure.message), (curriculum) {
+        if (curriculum != null) {
+          _suggestedCurriculum = curriculum;
+          // Progress 3 - Finalizing
+          _handleSuccess(
+            AppLocalizations.of(
+              context,
+            )!.curriculumRecommendation(curriculum.title),
+            curriculum: curriculum,
+          );
+        } else {
+          _handleError(AppLocalizations.of(context)!.curriculumGenerationError);
+        }
+      });
+    } on TimeoutException catch (_) {
+      _handleError(
+        "The AI is taking too long to respond. Please try again or simplify your request.",
+        isTimeout: true,
+      );
+    } catch (e) {
+      _handleError(e.toString());
     }
+  }
+
+  void _addProgressMessage(String status) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(status),
+        duration: const Duration(milliseconds: 1500),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFF5E35B1).withValues(alpha: 0.8),
+      ),
+    );
+  }
+
+  void _handleError(String message, {bool isTimeout = false}) {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _messages.add(
+        ChatMessage(
+          text: isTimeout
+              ? "$message \n\nTap 'Retry' to try again."
+              : AppLocalizations.of(context)!.errorOccurred(message),
+          isUser: false,
+          isError: true, // Enable retry button
+        ),
+      );
+    });
+    if (_isTtsEnabled) {
+      _ttsService.speak(
+        "Something went wrong. ${isTimeout ? 'The request timed out.' : 'Please try again.'}",
+      );
+    }
+    _scrollToBottom();
+  }
+
+  void _handleSuccess(String text, {WorkoutCurriculum? curriculum}) {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _messages.add(
+        ChatMessage(text: text, isUser: false, curriculum: curriculum),
+      );
+    });
+    if (_isTtsEnabled) _ttsService.speak(text);
     _scrollToBottom();
   }
 
@@ -338,6 +489,7 @@ class _AIChatViewState extends State<AIChatView> {
                       message: _messages[index],
                       onConfirmCurriculum: _confirmCurriculum,
                       onViewCurriculumDetail: _viewCurriculumDetail,
+                      onRetry: _retryLastRequest,
                       maxWidth: MediaQuery.of(context).size.width * 0.8,
                     );
                   },
