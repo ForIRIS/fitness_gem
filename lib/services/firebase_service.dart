@@ -40,7 +40,7 @@ class FirebaseService {
         debugPrint('Signed in anonymously: ${auth.currentUser?.uid}');
       }
     } catch (e) {
-      debugPrint('Anonymous sign in failed: $e');
+      debugPrint('Anonymous sign in failed: $e (Falling back to offline mode)');
       _isOffline = true; // 실패 시 오프라인 모드 활성화
     }
   }

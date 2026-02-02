@@ -152,6 +152,11 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
 
   @override
   Future<Map<String, dynamic>> fetchFeaturedProgramData() async {
+    // If not authenticated, return mock data immediately
+    if (_auth.currentUser == null) {
+      return _getMockFeaturedProgramData();
+    }
+
     try {
       final result = await _functions
           .httpsCallable('getFeaturedProgram')
@@ -160,32 +165,31 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
       return Map<String, dynamic>.from(result.data);
     } catch (e) {
       debugPrint('Error fetching featured program: $e');
-      // Return mock data on error
-      return {
-        'id': 'summer_shred_mock',
-        'title': 'Summer Shred Challenge',
-        'description':
-            'High-intensity routine to burn calories and build muscle.',
-        'task_ids': [
-          'squat_04',
-          'push_03',
-          'lunge_03',
-          'core_03',
-          'squat_03',
-          'push_02',
-        ],
-        'imageUrl': 'assets/images/workouts/squat_04.png',
-        'slogan': 'Get Set, Stay Ignite.',
-        'membersCount': '5.8k+',
-        'rating': 5.0,
-        'difficulty': 3,
-        'userAvatars': [
-          'https://i.pravatar.cc/150?img=12',
-          'https://i.pravatar.cc/150?img=24',
-          'https://i.pravatar.cc/150?img=33',
-        ],
-      };
+      return _getMockFeaturedProgramData();
     }
+  }
+
+  Map<String, dynamic> _getMockFeaturedProgramData() {
+    return {
+      'id': 'summer_shred_mock',
+      'title': 'Summer Shred Challenge',
+      'description':
+          'High-intensity routine to burn calories and build muscle.',
+      'task_ids': [
+        'squat_04',
+        'push_03',
+        'lunge_03',
+        'core_03',
+        'squat_03',
+        'push_02',
+      ],
+      'imageUrl': 'assets/images/workouts/squat_04.png',
+      'slogan': 'Get Set, Stay Ignite.',
+      'membersCount': '5.8k+',
+      'rating': 5.0,
+      'difficulty': 3,
+      'userAvatars': [], // Removed unreliable network images
+    };
   }
 
   @override

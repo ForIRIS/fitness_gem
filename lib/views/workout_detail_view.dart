@@ -5,7 +5,6 @@ import '../domain/entities/workout_curriculum.dart';
 import '../services/workout_model_service.dart';
 import '../domain/entities/workout_task.dart';
 import '../services/cache_service.dart';
-// Shimmer import removed
 import 'loading_view.dart';
 import 'camera_view.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,6 +12,7 @@ import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../presentation/viewmodels/home_viewmodel.dart';
 import '../theme/app_theme.dart';
+import 'ai_chat_view.dart';
 
 class WorkoutDetailView extends ConsumerStatefulWidget {
   final WorkoutCurriculum curriculum;
@@ -58,6 +58,21 @@ class _WorkoutDetailViewState extends ConsumerState<WorkoutDetailView> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _openAIChat() {
+    final userProfile = ref.read(homeViewModelProvider).userProfile;
+    if (userProfile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please wait for profile to load')),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => AIChatView(userProfile: userProfile)),
+    );
   }
 
   @override
@@ -189,6 +204,22 @@ class _WorkoutDetailViewState extends ConsumerState<WorkoutDetailView> {
                 ),
               ),
             ),
+            const SizedBox(width: 12), // Spacing
+            GestureDetector(
+              onTap: _openAIChat,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.brightMarigold,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -260,13 +291,12 @@ class WorkoutDetailCard extends StatefulWidget {
 class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
-
-  // Removed unused _getImageProvider
+  bool _isExpanded = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize video controller if URL is present - Keeping initialization but simplifying display
+    // Initialize video controller if URL is present
     if (widget.task.exampleVideoUrl.isNotEmpty) {
       _initializeVideo();
     }
@@ -296,12 +326,16 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
     }
   }
 
-  // Removed unused PageController and _currentIndex
-
   @override
   void dispose() {
     _videoController?.dispose();
     super.dispose();
+  }
+
+  void _toggleExpansion() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+    });
   }
 
   @override
@@ -311,8 +345,29 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
         (widget.task.reps <= 1 && !widget.task.isCountable) ||
         widget.task.category.toLowerCase() == 'stretch';
 
-    return Container(
-      height: 180,
+    // Format Subtitle
+    String subtitleText;
+    final int validTime =
+        widget.task.durationSec ??
+        widget.task.timeoutSec; // Prefer duration, fallback to timeout
+    final int displayTime = validTime > 0
+        ? validTime
+        : 60; // Default to 60 if both 0
+
+    if (isMaintenance) {
+      subtitleText = 'Relax & Stretch';
+    } else if (widget.task.reps == 0) {
+      // Duration only task
+      subtitleText = '$displayTime Sec per set';
+    } else {
+      // Reps + Duration task
+      subtitleText =
+          '${widget.task.adjustedReps} Reps / $displayTime Sec per set';
+    }
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -332,99 +387,173 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
           ),
         ],
       ),
+      // No fixed height, let it grow
       child: Stack(
         children: [
-          // 1. Right-side Image (masked)
-          Positioned(
-            right: -20,
-            bottom: 0,
-            top: 20,
-            width: 160,
-            child: _buildSimpleVisualPreview(),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min, // Hug content
+            children: [
+              // 1. Main Content (Collapsed View)
+              SizedBox(
+                height: 180, // Keep collapsed height consistent for layout
+                child: Stack(
+                  children: [
+                    // Right-side Image (masked)
+                    Positioned(
+                      right: -20,
+                      bottom: 0,
+                      top: 20,
+                      width: 160,
+                      child: _buildSimpleVisualPreview(),
+                    ),
+                    // Content Overlay (Text)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Tag (Pill shape)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              isMaintenance
+                                  ? AppLocalizations.of(context)!.hold
+                                  : '${widget.task.adjustedSets} Sets',
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Title
+                          SizedBox(
+                            width: 180,
+                            child: Text(
+                              widget.task.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.w700,
+                                height: 1.1,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // Subtext / Reps
+                          Text(
+                            subtitleText,
+                            style: GoogleFonts.outfit(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 2. Expanded Content (Description & Advice)
+              if (_isExpanded)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    24,
+                    0,
+                    24,
+                    70,
+                  ), // Bottom padding for arrow safety
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Divider(color: Colors.white24),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Description',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.task.description,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Expert Advice',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.task.advice,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+            ],
           ),
 
-          // 2. Content Overlay (Text)
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Tag (Pill shape)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    isMaintenance
-                        ? AppLocalizations.of(context)!.hold
-                        : '${widget.task.adjustedSets} Sets',
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Title
-                SizedBox(
-                  width:
-                      180, // Constrain width to avoid overlapping image too much
-                  child: Text(
-                    widget.task.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      height: 1.1,
-                    ),
-                  ),
-                ),
-
-                const Spacer(),
-
-                // Subtext / Reps
-                Text(
-                  isMaintenance
-                      ? 'Relax & Stretch'
-                      : '${widget.task.adjustedReps} Reps per set',
-                  style: GoogleFonts.outfit(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 3. Circular Arrow Button
+          // 3. Circular Arrow Button (Toggle Trigger)
           Positioned(
             bottom: 24,
             right: 24,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
-                  width: 1,
+            child: GestureDetector(
+              onTap: _toggleExpansion,
+              child: AnimatedRotation(
+                duration: const Duration(milliseconds: 300),
+                turns: _isExpanded ? 0.25 : 0.0, // Rotate 90 deg down
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 1,
+                    ),
+                    color: _isExpanded
+                        ? Colors.white.withOpacity(0.25)
+                        : Colors.white.withOpacity(0.1),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
-                color: Colors.white.withOpacity(0.1),
-              ),
-              child: const Icon(
-                Icons.arrow_forward_rounded,
-                color: Colors.white,
-                size: 24,
               ),
             ),
           ),
@@ -445,13 +574,27 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
         ),
       );
     } else if (widget.task.thumbnail.isNotEmpty) {
-      return Image.network(
-        widget.task.thumbnail,
+      if (widget.task.thumbnail.startsWith('http')) {
+        return Image.network(
+          widget.task.thumbnail,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildPlaceholder(),
+        );
+      } else {
+        return Image.asset(
+          widget.task.thumbnail,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildPlaceholder(),
+        );
+      }
+    } else {
+      // Fallback: Try to use ID to find local asset
+      return Image.asset(
+        'assets/images/workouts/${widget.task.id}.png',
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => _buildPlaceholder(),
       );
     }
-    return _buildPlaceholder();
   }
 
   Widget _buildPlaceholder() {

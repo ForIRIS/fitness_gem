@@ -152,11 +152,8 @@ class HomeViewModel extends ChangeNotifier {
       membersCount: '5.8k+',
       rating: 5.0,
       difficulty: '3',
-      userAvatars: [
-        'https://i.pravatar.cc/150?img=12',
-        'https://i.pravatar.cc/150?img=24',
-        'https://i.pravatar.cc/150?img=33',
-      ],
+      userAvatars: [], // Removed unreliable network images
+
       workoutCurriculum:
           null, // Mock curriculum if needed, but null handles error gracefully
     );
