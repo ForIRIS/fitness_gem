@@ -26,7 +26,7 @@ class _OnboardingExercisePageState extends State<OnboardingExercisePage> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF5E35B1).withOpacity(0.15),
+                  color: const Color(0xFF5E35B1).withValues(alpha: 0.15),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -116,14 +116,14 @@ class _OnboardingExercisePageState extends State<OnboardingExercisePage> {
                       fontSize: 16,
                     ),
                     elevation: isSelected ? 4 : 0,
-                    shadowColor: const Color(0xFF5E35B1).withOpacity(0.4),
+                    shadowColor: const Color(0xFF5E35B1).withValues(alpha: 0.4),
                     padding: const EdgeInsets.all(4),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                       side: BorderSide(
                         color: isSelected
                             ? Colors.transparent
-                            : const Color(0xFF5E35B1).withOpacity(0.2),
+                            : const Color(0xFF5E35B1).withValues(alpha: 0.2),
                       ),
                     ),
                     onSelected: (selected) {

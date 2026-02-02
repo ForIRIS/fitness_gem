@@ -65,24 +65,54 @@ class HomeViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   /// Load all data for home screen
+  /// Load all data for home screen
   Future<void> loadData() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
+    debugPrint('HomeViewModel: Loading dashboard data...');
+
     try {
       // Load user profile
       final profileResult = await getUserProfile.execute();
-      profileResult.fold((failure) {
-        debugPrint('Failed to load profile: ${failure.message}');
-        _errorMessage = failure.message;
-      }, (profile) => _userProfile = profile);
+      profileResult.fold(
+        (failure) {
+          debugPrint(
+            'HomeViewModel: Failed to load profile: ${failure.message}',
+          );
+          _errorMessage = failure.message;
+        },
+        (profile) {
+          if (profile != null) {
+            debugPrint('HomeViewModel: Loaded profile for ${profile.nickname}');
+            _userProfile = profile;
+          } else {
+            debugPrint('HomeViewModel: Loaded profile is null.');
+            _userProfile = null;
+          }
+        },
+      );
 
       // Load today's curriculum
       final curriculumResult = await getTodayCurriculum.execute();
-      curriculumResult.fold((failure) {
-        debugPrint('Failed to load curriculum: ${failure.message}');
-      }, (curriculum) => _todayCurriculum = curriculum);
+      curriculumResult.fold(
+        (failure) {
+          debugPrint(
+            'HomeViewModel: Failed to load curriculum: ${failure.message}',
+          );
+        },
+        (curriculum) {
+          if (curriculum != null) {
+            debugPrint(
+              'HomeViewModel: Loaded existing curriculum: ${curriculum.title}',
+            );
+          } else {
+            debugPrint('HomeViewModel: No existing curriculum found.');
+          }
+          _todayCurriculum = curriculum;
+        },
+      );
 
       // Load hot categories
       await _loadHotCategories();
@@ -92,6 +122,7 @@ class HomeViewModel extends ChangeNotifier {
 
       // If no curriculum exists and we have a profile, generate one
       if (_todayCurriculum == null && _userProfile != null) {
+        debugPrint('HomeViewModel: Generating new curriculum...');
         await generateNewCurriculum();
       }
     } finally {
@@ -108,7 +139,9 @@ class HomeViewModel extends ChangeNotifier {
     final result = await getDailyHotCategories.execute();
     result.fold(
       (failure) {
-        debugPrint('Failed to load hot categories: ${failure.message}');
+        debugPrint(
+          'HomeViewModel: Failed to load hot categories: ${failure.message}',
+        );
         _isHotCategoriesLoading = false;
       },
       (categories) {
@@ -125,7 +158,7 @@ class HomeViewModel extends ChangeNotifier {
     result.fold(
       (failure) {
         debugPrint(
-          'Failed to load featured program, using mock: ${failure.message}',
+          'HomeViewModel: Failed to load featured program, using mock: ${failure.message}',
         );
         _setMockFeaturedProgram(); // Fallback
       },
@@ -172,16 +205,32 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint('HomeViewModel: Generating curriculum for profile...');
       final result = await generateCurriculum.execute(_userProfile!);
 
       result.fold(
         (failure) {
           _errorMessage = 'Failed to generate curriculum: ${failure.message}';
-          debugPrint(_errorMessage);
+          debugPrint('HomeViewModel: $_errorMessage');
         },
-        (curriculum) {
+        (curriculum) async {
           _todayCurriculum = curriculum;
           _errorMessage = null;
+          debugPrint(
+            'HomeViewModel: Generated curriculum: ${curriculum.title}',
+          );
+
+          // Save to local storage
+          debugPrint('HomeViewModel: Saving generated curriculum...');
+          final saveResult = await saveCurriculum.execute(curriculum);
+          saveResult.fold(
+            (failure) => debugPrint(
+              'HomeViewModel: Failed to save generated curriculum: ${failure.message}',
+            ),
+            (_) => debugPrint(
+              'HomeViewModel: Generated curriculum saved successfully',
+            ),
+          );
         },
       );
     } finally {
@@ -196,7 +245,7 @@ class HomeViewModel extends ChangeNotifier {
         _featuredProgram!.workoutCurriculum == null) {
       // If we have a featured program but no curriculum (e.g. presentation only),
       // we might want to fetch it or handle error. For now, just return.
-      debugPrint('No curriculum available in featured program');
+      debugPrint('HomeViewModel: No curriculum available in featured program');
       return;
     }
 
@@ -204,13 +253,43 @@ class HomeViewModel extends ChangeNotifier {
     _todayCurriculum = curriculum;
 
     // Save to local storage
+    debugPrint(
+      'HomeViewModel: Saving featured program as today\'s curriculum...',
+    );
     final result = await saveCurriculum.execute(curriculum);
     result.fold(
       (failure) {
-        debugPrint('Failed to save curriculum: ${failure.message}');
+        debugPrint(
+          'HomeViewModel: Failed to save curriculum: ${failure.message}',
+        );
       },
       (_) {
-        debugPrint('Featured program set as today\'s curriculum');
+        debugPrint(
+          'HomeViewModel: Featured program set as today\'s curriculum',
+        );
+      },
+    );
+
+    notifyListeners();
+  }
+
+  /// Update today's curriculum with a new one (e.g. from AI)
+  Future<void> updateTodayCurriculum(WorkoutCurriculum curriculum) async {
+    _todayCurriculum = curriculum;
+    debugPrint(
+      'HomeViewModel: Updating today\'s curriculum: ${curriculum.title}',
+    );
+
+    // Save to local storage
+    final result = await saveCurriculum.execute(curriculum);
+    result.fold(
+      (failure) {
+        debugPrint(
+          'HomeViewModel: Failed to save updated curriculum: ${failure.message}',
+        );
+      },
+      (_) {
+        debugPrint('HomeViewModel: Updated today\'s curriculum successfully');
       },
     );
 

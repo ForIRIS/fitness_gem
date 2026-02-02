@@ -103,26 +103,46 @@ class WorkoutTaskModel {
   /// Create from JSON map
   factory WorkoutTaskModel.fromMap(Map<String, dynamic> map) {
     return WorkoutTaskModel(
-      id: map['id'] ?? '',
-      title: map['title'] ?? '',
-      description: map['description'] ?? '',
-      advice: map['advice'] ?? '',
-      thumbnail: map['thumbnail'] ?? '',
-      readyPoseImageUrl: map['readyPoseImageUrl'] ?? '',
-      exampleVideoUrl: map['exampleVideoUrl'] ?? '',
-      configureUrl: map['configureUrl'] ?? '',
-      guideAudioUrl: map['guideAudioUrl'] ?? '',
-      coremlUrl: map['coremlUrl'] ?? '',
-      onnxUrl: map['onnxUrl'] ?? '',
-      reps: map['reps'] ?? 10,
-      sets: map['sets'] ?? 3,
-      timeoutSec: map['timeout_sec'] ?? 60,
-      durationSec: map['duration_sec'],
-      isCountable: map['is_countable'] ?? true,
-      category: map['category'] ?? 'squat',
-      difficulty: map['difficulty'] ?? 1,
-      adjustedReps: map['adjustedReps'],
-      adjustedSets: map['adjustedSets'],
+      id: map['id']?.toString() ?? '',
+      title: map['title']?.toString() ?? '',
+      description: map['description']?.toString() ?? '',
+      advice: map['advice']?.toString() ?? '',
+      thumbnail: map['thumbnail']?.toString() ?? '',
+      readyPoseImageUrl:
+          (map['ready_pose_image_url'] ?? map['readyPoseImageUrl'])
+              ?.toString() ??
+          '',
+      exampleVideoUrl:
+          (map['example_video_url'] ?? map['exampleVideoUrl'])?.toString() ??
+          '',
+      configureUrl:
+          (map['configure_url'] ?? map['configureUrl'])?.toString() ?? '',
+      guideAudioUrl:
+          (map['guide_audio_url'] ?? map['guideAudioUrl'])?.toString() ?? '',
+      coremlUrl: (map['coreml_url'] ?? map['coremlUrl'])?.toString() ?? '',
+      onnxUrl: (map['onnx_url'] ?? map['onnxUrl'])?.toString() ?? '',
+      reps: int.tryParse(map['reps']?.toString() ?? '10') ?? 10,
+      sets: int.tryParse(map['sets']?.toString() ?? '3') ?? 3,
+      timeoutSec:
+          int.tryParse(
+            (map['timeout_sec'] ?? map['timeoutSec'])?.toString() ?? '60',
+          ) ??
+          60,
+      durationSec: int.tryParse(
+        (map['duration_sec'] ?? map['durationSec'])?.toString() ?? '',
+      ),
+      isCountable:
+          map['is_countable'] ??
+          map['isCountable'] ??
+          (map['isCountable'] == null),
+      category: map['category']?.toString() ?? 'squat',
+      difficulty: int.tryParse(map['difficulty']?.toString() ?? '1') ?? 1,
+      adjustedReps: int.tryParse(
+        (map['adjusted_reps'] ?? map['adjustedReps'])?.toString() ?? '',
+      ),
+      adjustedSets: int.tryParse(
+        (map['adjusted_sets'] ?? map['adjustedSets'])?.toString() ?? '',
+      ),
     );
   }
 

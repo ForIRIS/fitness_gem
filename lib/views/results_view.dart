@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/session_analysis.dart';
-import '../models/workout_curriculum_model.dart';
+import '../domain/entities/workout_curriculum.dart';
 
 /// ResultsView - Session completion results screen
 class ResultsView extends StatefulWidget {
   final List<SetAnalysis> setAnalyses;
-  final WorkoutCurriculumModel curriculum;
+  final WorkoutCurriculum curriculum;
 
   const ResultsView({
     super.key,
@@ -41,7 +41,7 @@ class _ResultsViewState extends State<ResultsView> {
                 widget.setAnalyses.length)
             .round();
 
-    _totalReps = widget.curriculum.workoutTaskList
+    _totalReps = widget.curriculum.workoutTasks
         .map((t) => t.adjustedReps * t.adjustedSets)
         .reduce((a, b) => a + b);
   }

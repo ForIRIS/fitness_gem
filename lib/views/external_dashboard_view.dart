@@ -77,7 +77,7 @@ class _ExternalDashboardViewState extends State<ExternalDashboardView> {
                         Shadow(
                           blurRadius: 20,
                           color: _isGoodPose
-                              ? Colors.green.withOpacity(0.5)
+                              ? Colors.green.withValues(alpha: 0.5)
                               : Colors.black,
                         ),
                       ],
@@ -90,8 +90,8 @@ class _ExternalDashboardViewState extends State<ExternalDashboardView> {
               Container(
                 padding: const EdgeInsets.all(48),
                 color: _isGoodPose
-                    ? Colors.green.withOpacity(0.1)
-                    : Colors.red.withOpacity(0.1),
+                    ? Colors.green.withValues(alpha: 0.1)
+                    : Colors.red.withValues(alpha: 0.1),
                 child: Text(
                   _feedback,
                   style: TextStyle(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/workout_curriculum_model.dart';
 
@@ -23,18 +24,30 @@ class WorkoutLocalDataSourceImpl implements WorkoutLocalDataSource {
   Future<WorkoutCurriculumModel?> getCurriculum() async {
     final jsonString = sharedPreferences.getString(_curriculumKey);
     if (jsonString != null) {
-      return WorkoutCurriculumModel.fromJson(jsonString);
+      debugPrint(
+        'LocalDS: Found cached curriculum JSON length: ${jsonString.length}',
+      );
+      try {
+        return WorkoutCurriculumModel.fromJson(jsonString);
+      } catch (e) {
+        debugPrint('LocalDS: Failed to parse cached curriculum: $e');
+        return null;
+      }
     }
+    debugPrint('LocalDS: No cached curriculum found in prefs');
     return null;
   }
 
   @override
   Future<void> saveCurriculum(WorkoutCurriculumModel curriculum) async {
+    debugPrint('LocalDS: Saving curriculum to prefs...');
     await sharedPreferences.setString(_curriculumKey, curriculum.toJson());
+    debugPrint('LocalDS: Saved curriculum to prefs successfully');
   }
 
   @override
   Future<void> clearCurriculum() async {
+    debugPrint('LocalDS: Clearing curriculum from prefs');
     await sharedPreferences.remove(_curriculumKey);
   }
 }

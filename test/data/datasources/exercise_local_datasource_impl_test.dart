@@ -1,12 +1,12 @@
-import 'dart:convert';
+// import 'dart:convert'; // Unused
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
+// import 'package:mockito/mockito.dart'; // Unused
 import 'package:mockito/annotations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fitness_gem/data/datasources/exercise_local_datasource_impl.dart';
 import 'package:fitness_gem/services/cache_service.dart';
 import 'package:fitness_gem/domain/entities/workout_task.dart';
-import 'package:fitness_gem/data/models/workout_task_model.dart';
+// import 'package:fitness_gem/data/models/workout_task_model.dart'; // Unused
 
 // Generate mock for CacheService
 @GenerateMocks([CacheService])

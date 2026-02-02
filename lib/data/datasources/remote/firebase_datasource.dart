@@ -3,7 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../../models/workout_task_model.dart';
-import '../../models/workout_curriculum_model.dart';
+import '../../../core/constants/mock_data.dart';
 
 /// Remote data source for Firebase operations
 abstract class FirebaseDataSource {
@@ -35,12 +35,21 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
           .where('category', isEqualTo: category.toLowerCase())
           .get();
 
+      if (snapshot.docs.isEmpty) {
+        debugPrint('Firestore workouts empty for $category, using mock data');
+        return mockWorkoutTasks
+            .where((t) => t.category.toLowerCase() == category.toLowerCase())
+            .toList();
+      }
+
       return snapshot.docs
           .map((doc) => WorkoutTaskModel.fromMap(doc.data()))
           .toList();
     } catch (e) {
-      debugPrint('Error fetching workout tasks: $e');
-      return [];
+      debugPrint('Error fetching workout tasks: $e, using mock data');
+      return mockWorkoutTasks
+          .where((t) => t.category.toLowerCase() == category.toLowerCase())
+          .toList();
     }
   }
 
@@ -65,6 +74,10 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
             snapshot.docs.map((doc) => WorkoutTaskModel.fromMap(doc.data())),
           );
         }
+
+        if (allTasks.isEmpty) {
+          return mockWorkoutTasks.where((t) => ids.contains(t.id)).toList();
+        }
         return allTasks;
       }
 
@@ -73,57 +86,16 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
           .where('id', whereIn: ids)
           .get();
 
+      if (snapshot.docs.isEmpty) {
+        return mockWorkoutTasks.where((t) => ids.contains(t.id)).toList();
+      }
+
       return snapshot.docs
           .map((doc) => WorkoutTaskModel.fromMap(doc.data()))
           .toList();
     } catch (e) {
-      debugPrint('Error fetching workout tasks by IDs: $e');
-
-      // Fallback for mock IDs used in fetchFeaturedProgramData
-      if (ids.contains('squat_04')) {
-        return [
-          const WorkoutTaskModel(
-            id: 'squat_04',
-            title: 'Air Squat',
-            description: 'Basic bodyweight squat',
-            advice: 'Keep chest up and weight on heels.',
-            category: 'squat',
-            difficulty: 1,
-            reps: 20,
-            sets: 3,
-            timeoutSec: 30,
-            durationSec: 120, // 2 mins
-            isCountable: true,
-          ),
-          const WorkoutTaskModel(
-            id: 'push_03',
-            title: 'Push-up',
-            description: 'Standard push-up',
-            advice: 'Maintain a straight line from head to heels.',
-            category: 'push',
-            difficulty: 2,
-            reps: 15,
-            sets: 3,
-            timeoutSec: 45,
-            durationSec: 90,
-            isCountable: true,
-          ),
-          const WorkoutTaskModel(
-            id: 'lunge_03',
-            title: 'Walking Lunge',
-            description: 'Bodyweight lunges while walking.',
-            advice: 'Step forward and lower hips.',
-            category: 'lunge',
-            difficulty: 2,
-            reps: 12,
-            sets: 3,
-            timeoutSec: 45,
-            durationSec: 150,
-            isCountable: true,
-          ),
-        ];
-      }
-      return [];
+      debugPrint('Error fetching workout tasks by IDs: $e, using mock data');
+      return mockWorkoutTasks.where((t) => ids.contains(t.id)).toList();
     }
   }
 
@@ -138,7 +110,6 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
       return categories.map((e) => e.toString()).toList();
     } catch (e) {
       debugPrint('Error fetching daily hot categories: $e');
-      // Return mock data on error
       return [
         'Upper Body',
         'Build Strength',
@@ -152,7 +123,6 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
 
   @override
   Future<Map<String, dynamic>> fetchFeaturedProgramData() async {
-    // If not authenticated, return mock data immediately
     if (_auth.currentUser == null) {
       return _getMockFeaturedProgramData();
     }
@@ -176,19 +146,19 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
       'description':
           'High-intensity routine to burn calories and build muscle.',
       'task_ids': [
-        'squat_04',
-        'push_03',
-        'lunge_03',
-        'core_03',
-        'squat_03',
+        'squat_01',
+        'push_01',
+        'core_01',
+        'squat_02',
         'push_02',
+        'core_02',
       ],
-      'imageUrl': 'assets/images/workouts/squat_04.png',
+      'imageUrl': 'assets/images/workouts/squat_01.png',
       'slogan': 'Get Set, Stay Ignite.',
       'membersCount': '5.8k+',
       'rating': 5.0,
       'difficulty': 3,
-      'userAvatars': [], // Removed unreliable network images
+      'userAvatars': [],
     };
   }
 
@@ -202,11 +172,7 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
         'task_ids': taskIds,
       });
 
-      final List<dynamic> taskUrls = result.data['task_urls'];
-
-      // Note: This method would need to update the tasks
-      // In a pure architecture, we might return the URLs instead
-      // For now, keeping it simple
+      final List<dynamic> taskUrls = result.data['task_urls'] ?? [];
       debugPrint('Received task URLs: ${taskUrls.length}');
     } catch (e) {
       debugPrint('Error requesting task URLs: $e');

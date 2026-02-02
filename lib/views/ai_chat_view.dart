@@ -4,17 +4,19 @@ import 'package:image_picker/image_picker.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../domain/entities/user_profile.dart';
 import '../domain/entities/workout_curriculum.dart';
-import '../domain/entities/workout_task.dart';
+// workout_task import removed
 import '../services/firebase_service.dart';
+
 import '../../core/di/injection.dart';
 import '../../domain/usecases/ai/chat_for_curriculum_usecase.dart';
 import '../../domain/usecases/ai/chat_with_image_usecase.dart';
 import 'workout_detail_view.dart';
-import 'loading_view.dart';
-import 'camera_view.dart';
 import '../services/tts_service.dart';
 import '../services/stt_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../domain/entities/chat_message.dart';
+import 'widgets/ai/chat_message_bubble.dart';
+import 'widgets/ai/shimmer_curriculum_card.dart';
 
 /// AIChatView - AI Consultation Chat Screen
 class AIChatView extends StatefulWidget {
@@ -26,8 +28,7 @@ class AIChatView extends StatefulWidget {
   State<AIChatView> createState() => _AIChatViewState();
 }
 
-class _AIChatViewState extends State<AIChatView>
-    with SingleTickerProviderStateMixin {
+class _AIChatViewState extends State<AIChatView> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
@@ -40,19 +41,14 @@ class _AIChatViewState extends State<AIChatView>
 
   bool _isTtsEnabled = true;
   bool _isListening = false;
-
-  late AnimationController _shimmerController;
+  bool _hasInput = false;
 
   @override
   void initState() {
     super.initState();
-    // Shimmer Animation Controller (Infinite Loop)
-    _shimmerController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat();
-
+    _messageController.addListener(_onTextChanged);
     _initializeServices();
+    // ... (rest of initState logic)
 
     // Initial Message
     _messages.add(
@@ -71,18 +67,20 @@ class _AIChatViewState extends State<AIChatView>
   }
 
   Future<void> _startListening() async {
+    final languageCode = Localizations.localeOf(context).languageCode;
     final available = await _sttService.initialize();
     if (available) {
+      if (!mounted) return;
       setState(() => _isListening = true);
       _sttService.startListening(
         onResult: (text) {
-          setState(() {
-            _messageController.text = text;
-          });
+          if (mounted) {
+            setState(() {
+              _messageController.text = text;
+            });
+          }
         },
-        languageCode: Localizations.localeOf(context).languageCode == 'ko'
-            ? 'ko-KR'
-            : 'en-US',
+        languageCode: languageCode == 'ko' ? 'ko-KR' : 'en-US',
       );
     }
   }
@@ -109,6 +107,7 @@ class _AIChatViewState extends State<AIChatView>
     if (image != null) {
       setState(() {
         _selectedImage = File(image.path);
+        _hasInput = true; // Image counts as input
       });
     }
   }
@@ -256,9 +255,14 @@ class _AIChatViewState extends State<AIChatView>
     _scrollToBottom();
   }
 
-  void _confirmCurriculum() {
-    if (_suggestedCurriculum != null) {
-      Navigator.pop(context, _suggestedCurriculum);
+  void _confirmCurriculum([WorkoutCurriculum? curriculum]) {
+    final targetCurriculum = curriculum ?? _suggestedCurriculum;
+    if (targetCurriculum != null) {
+      Navigator.pop(context, targetCurriculum);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No curriculum selected to replace')),
+      );
     }
   }
 
@@ -269,26 +273,6 @@ class _AIChatViewState extends State<AIChatView>
         builder: (context) => WorkoutDetailView(curriculum: curriculum),
       ),
     );
-  }
-
-  void _startWorkout(WorkoutCurriculum curriculum) async {
-    // Navigate to Resource Caching Screen
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => LoadingView(curriculum: curriculum),
-      ),
-    );
-
-    // Navigate to Workout Screen upon caching completion
-    if (result == true && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CameraView(curriculum: curriculum),
-        ),
-      );
-    }
   }
 
   @override
@@ -348,9 +332,14 @@ class _AIChatViewState extends State<AIChatView>
                   itemCount: _messages.length + (_isLoading ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (_isLoading && index == _messages.length) {
-                      return _buildShimmerCurriculumCard();
+                      return const ShimmerCurriculumCard();
                     }
-                    return _buildMessageBubble(_messages[index]);
+                    return ChatMessageBubble(
+                      message: _messages[index],
+                      onConfirmCurriculum: _confirmCurriculum,
+                      onViewCurriculumDetail: _viewCurriculumDetail,
+                      maxWidth: MediaQuery.of(context).size.width * 0.8,
+                    );
                   },
                 ),
               ),
@@ -373,7 +362,9 @@ class _AIChatViewState extends State<AIChatView>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF5E35B1).withOpacity(0.3),
+                                color: const Color(
+                                  0xFF5E35B1,
+                                ).withValues(alpha: 0.3),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -406,20 +397,16 @@ class _AIChatViewState extends State<AIChatView>
 
               // Input Field
               Container(
-                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border: Border(
-                    top: BorderSide(color: Colors.black.withOpacity(0.05)),
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
-                  ),
+                  borderRadius: BorderRadius.circular(34),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -4),
+                      color: const Color(0xFF5E35B1).withValues(alpha: 0.1),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
@@ -447,8 +434,14 @@ class _AIChatViewState extends State<AIChatView>
                                   top: 4,
                                   right: 4,
                                   child: GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _selectedImage = null),
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedImage = null;
+                                        _hasInput = _messageController.text
+                                            .trim()
+                                            .isNotEmpty;
+                                      });
+                                    },
                                     child: Container(
                                       padding: const EdgeInsets.all(4),
                                       decoration: const BoxDecoration(
@@ -473,7 +466,7 @@ class _AIChatViewState extends State<AIChatView>
                         IconButton(
                           icon: const Icon(
                             Icons.photo_library,
-                            color: Colors.black54,
+                            color: Color(0xFF5E35B1), // Make icon active color
                           ),
                           onPressed: _pickImage,
                         ),
@@ -500,44 +493,52 @@ class _AIChatViewState extends State<AIChatView>
                                 vertical: 12,
                               ),
                             ),
-                            // Allow empty text when image is selected
+                            // Update state on every change to ensure button visibility
+                            onChanged: (text) {
+                              setState(() {
+                                _hasInput = text.trim().isNotEmpty;
+                              });
+                            },
                             onSubmitted: (_) {
-                              if (_messageController.text.trim().isNotEmpty ||
-                                  _selectedImage != null) {
+                              if (_hasInput || _selectedImage != null) {
                                 _sendMessage();
                               }
                             },
                           ),
                         ),
                         const SizedBox(width: 8),
-                        // Voice Input Button
-                        GestureDetector(
-                          onLongPressStart: (_) => _startListening(),
-                          onLongPressEnd: (_) => _stopListening(),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: _isListening
-                                  ? Colors.red.withOpacity(0.1)
-                                  : Colors.transparent,
-                              shape: BoxShape.circle,
+
+                        // Dynamic Button: Mic or Send
+                        if (!_hasInput && _selectedImage == null)
+                          // Voice Input Button (Show only when no input)
+                          GestureDetector(
+                            onLongPressStart: (_) => _startListening(),
+                            onLongPressEnd: (_) => _stopListening(),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: _isListening
+                                    ? Colors.red.withValues(alpha: 0.1)
+                                    : Colors.transparent,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                _isListening ? Icons.mic : Icons.mic_none,
+                                color: _isListening
+                                    ? Colors.red
+                                    : const Color(0xFF5E35B1),
+                                size: 28,
+                              ),
                             ),
-                            child: Icon(
-                              _isListening ? Icons.mic : Icons.mic_none,
-                              color: _isListening
-                                  ? Colors.red
-                                  : const Color(0xFF5E35B1),
-                              size: 28,
-                            ),
+                          )
+                        else
+                          // Send Button (Show only when input exists)
+                          IconButton(
+                            onPressed: _isLoading ? null : _sendMessage,
+                            icon: const Icon(Icons.send),
+                            color: const Color(0xFF5E35B1),
+                            iconSize: 28,
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          onPressed: _isLoading ? null : _sendMessage,
-                          icon: const Icon(Icons.send),
-                          color: const Color(0xFF5E35B1),
-                          iconSize: 28,
-                        ),
                       ],
                     ),
                   ],
@@ -550,458 +551,17 @@ class _AIChatViewState extends State<AIChatView>
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message) {
-    // Display as Card if message contains curriculum
-    if (message.curriculum != null) {
-      return _buildCurriculumCard(message);
-    }
-
-    return Align(
-      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(14),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
-        ),
-        decoration: BoxDecoration(
-          color: message.isUser ? null : Colors.white,
-          gradient: message.isUser
-              ? const LinearGradient(
-                  colors: [Color(0xFF5E35B1), Color(0xFF9575CD)],
-                )
-              : null,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: message.isUser
-                ? const Radius.circular(16)
-                : const Radius.circular(4),
-            bottomRight: message.isUser
-                ? const Radius.circular(4)
-                : const Radius.circular(16),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (message.imagePath != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.file(
-                    File(message.imagePath!),
-                    height: 150,
-                    width: 200, // Limit width for better look in bubble
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            _buildParsedText(message.text, isUser: message.isUser),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildParsedText(String text, {required bool isUser}) {
-    final List<TextSpan> spans = [];
-    final RegExp regex = RegExp(r'\*\*(.*?)\*\*');
-    int lastMatchEnd = 0;
-
-    for (final Match match in regex.allMatches(text)) {
-      if (match.start > lastMatchEnd) {
-        spans.add(
-          TextSpan(
-            text: text.substring(lastMatchEnd, match.start),
-            style: GoogleFonts.barlow(
-              color: isUser ? Colors.white : Colors.black87,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              height: 1.4,
-            ),
-          ),
-        );
-      }
-      spans.add(
-        TextSpan(
-          text: match.group(1),
-          style: GoogleFonts.barlow(
-            color: isUser ? Colors.white : Colors.black,
-            fontSize: 16,
-            fontWeight: FontWeight.w800, // Extra bold for visibility
-            height: 1.4,
-          ),
-        ),
-      );
-      lastMatchEnd = match.end;
-    }
-
-    if (lastMatchEnd < text.length) {
-      spans.add(
-        TextSpan(
-          text: text.substring(lastMatchEnd),
-          style: GoogleFonts.barlow(
-            color: isUser ? Colors.white : Colors.black87,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            height: 1.4,
-          ),
-        ),
-      );
-    }
-
-    return RichText(text: TextSpan(children: spans));
-  }
-
-  Widget _buildCurriculumCard(ChatMessage message) {
-    final curriculum = message.curriculum!;
-
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.9,
-        ),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF5E35B1), Color(0xFF7E57C2)],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF5E35B1).withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.auto_awesome,
-                        color: Colors.amber,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        AppLocalizations.of(context)!.aiConsultResult,
-                        style: GoogleFonts.barlow(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    curriculum.title,
-                    style: GoogleFonts.barlow(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'About ${curriculum.estimatedMinutes} min • ${curriculum.workoutTasks.length} exercises',
-                    style: GoogleFonts.barlow(
-                      color: Colors.white70,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Workout Mini Cards (Horizontal Scroll)
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: curriculum.workoutTasks.length,
-                itemBuilder: (context, index) {
-                  return _buildMiniWorkoutCard(
-                    curriculum.workoutTasks[index],
-                    index,
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Action Buttons
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _viewCurriculumDetail(curriculum),
-                      icon: const Icon(Icons.visibility, size: 18),
-                      label: Text(AppLocalizations.of(context)!.viewDetail),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.white38),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _startWorkout(curriculum),
-                      icon: const Icon(Icons.play_arrow, size: 20),
-                      label: Text(AppLocalizations.of(context)!.startNow),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF5E35B1),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMiniWorkoutCard(WorkoutTask task, int index) {
-    return Container(
-      width: 120,
-      margin: const EdgeInsets.only(right: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                '${index + 1}',
-                style: GoogleFonts.barlow(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              task.title,
-              style: GoogleFonts.barlow(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${task.adjustedSets} Sets x ${task.adjustedReps} Reps',
-              style: GoogleFonts.barlow(color: Colors.white70, fontSize: 11),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Shimmer Effect Curriculum Loading Card
-  Widget _buildShimmerCurriculumCard() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.9,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Shimmer
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildShimmerBox(width: 120, height: 16),
-                  const SizedBox(height: 12),
-                  _buildShimmerBox(width: 180, height: 20),
-                  const SizedBox(height: 8),
-                  _buildShimmerBox(width: 140, height: 14),
-                ],
-              ),
-            ),
-
-            // Mini Cards Shimmer
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: 3,
-                itemBuilder: (context, index) {
-                  return _buildShimmerMiniCard();
-                },
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Buttons Shimmer
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Row(
-                children: [
-                  Expanded(child: _buildShimmerBox(height: 44)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildShimmerBox(height: 44)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShimmerBox({double? width, required double height}) {
-    return AnimatedBuilder(
-      animation: _shimmerController,
-      builder: (context, child) {
-        // Create gradient movement effect using 0.0 ~ 1.0 value
-        // When value changes 0 -> 1, gradient stops also move
-        final value = _shimmerController.value;
-        const double range = 0.5; // Gradient width
-
-        // Move range: -range ~ 1.0 + range
-        final offset = (value * (1 + range * 2)) - range;
-
-        return Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.grey.shade100,
-                Colors.grey.shade50, // Bright part
-                Colors.grey.shade100,
-              ],
-              stops: [
-                (offset - 0.1).clamp(0.0, 1.0),
-                offset.clamp(0.0, 1.0),
-                (offset + 0.1).clamp(0.0, 1.0),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildShimmerMiniCard() {
-    return Container(
-      width: 120,
-      margin: const EdgeInsets.only(right: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildShimmerBox(width: 24, height: 20),
-            const SizedBox(height: 8),
-            _buildShimmerBox(width: 80, height: 14),
-            const SizedBox(height: 4),
-            _buildShimmerBox(width: 60, height: 12),
-          ],
-        ),
-      ),
-    );
+  void _onTextChanged() {
+    setState(() {
+      _hasInput = _messageController.text.trim().isNotEmpty;
+    });
   }
 
   @override
   void dispose() {
+    _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
     _scrollController.dispose();
-    _shimmerController.dispose();
     super.dispose();
   }
-}
-
-class ChatMessage {
-  final String text;
-  final bool isUser;
-  final String? imagePath;
-  final WorkoutCurriculum? curriculum;
-
-  ChatMessage({
-    required this.text,
-    required this.isUser,
-    this.imagePath,
-    this.curriculum,
-  });
 }

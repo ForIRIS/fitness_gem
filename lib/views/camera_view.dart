@@ -12,11 +12,11 @@ import '../utils/camera_utils.dart';
 import '../utils/pose_painter.dart';
 import '../utils/one_euro_filter.dart';
 import '../utils/rep_counter.dart';
-import '../utils/pose_similarity.dart';
+// import '../utils/pose_similarity.dart'; // Unused
 import '../utils/form_rule_checker.dart';
 import '../services/tts_service.dart';
 import '../services/video_recorder.dart';
-import '../services/fall_detection_service.dart';
+// import '../services/fall_detection_service.dart'; // Unused
 import '../core/di/injection.dart';
 import '../domain/usecases/ai/analyze_video_session_usecase.dart';
 import '../domain/usecases/workout/get_exercise_config_usecase.dart';
@@ -24,6 +24,7 @@ import '../domain/entities/workout_curriculum.dart';
 import '../domain/entities/workout_task.dart';
 import '../domain/entities/exercise_config.dart';
 import '../domain/entities/user_profile.dart';
+import '../domain/usecases/workout/save_curriculum.dart';
 
 import '../services/workout_model_service.dart';
 import '../viewmodels/display_viewmodel.dart';
@@ -93,14 +94,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   // Recording State
   bool _isRecording = false;
 
-  // Fall Detection
-  final FallDetectionService _fallDetectionService = FallDetectionService();
-  final bool _showFallConfirmDialog = false;
+  // Fall Detection - Removed unused
 
-  // Ready Pose Detection
-  List<Point3D>? _readyPoseReference;
-  final double _poseSimilarity = 0.0;
-  static const double _readyPoseThreshold = 0.8; // 80% similarity
+  // Ready Pose Detection - Removed unused
 
   // Body Visibility and Countdown
   bool _isFullBodyVisible = false;
@@ -158,7 +154,10 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     // Load curriculum data
     if (_curriculum != null) {
       if (_curriculum!.workoutTasks.isNotEmpty) {
-        _currentTask = _curriculum!.workoutTasks[0];
+        // Resume from saved progress
+        _currentTask = _curriculum!.currentTask ?? _curriculum!.workoutTasks[0];
+        _currentSet = _curriculum!.currentSetIndex + 1;
+
         _timeoutSeconds = _currentTask?.timeoutSec ?? 60;
         await _loadExerciseConfig();
 
@@ -641,25 +640,29 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     await _ttsService.speakRestStart(10);
 
     // Prepare Next Set/Example
-    _currentSet++;
-    final maxSets = _currentTask?.adjustedSets ?? 3;
+    _curriculum = _curriculum?.moveToNextSet();
 
-    if (_currentSet > maxSets) {
-      // Move to Next Exercise
-      _curriculum = _curriculum?.moveToNextSet();
-      _currentTask = _curriculum?.currentTask;
-      _currentSet = 1;
+    // Save progress to local storage
+    if (_curriculum != null) {
+      final saveCurriculum = getIt<SaveCurriculumUseCase>();
+      await saveCurriculum.execute(_curriculum!);
+    }
 
-      // Reload ExerciseConfig
+    _currentSet = (_curriculum?.currentSetIndex ?? 0) + 1;
+    final previousTaskId = _currentTask?.id;
+    _currentTask = _curriculum?.currentTask;
+
+    if (_currentTask == null || _curriculum?.isCompleted == true) {
+      // All Workouts Complete
+      await _ttsService.speakWorkoutComplete();
+      _showCompletionDialog();
+      return;
+    }
+
+    // Reload config if task changed
+    if (_currentTask?.id != previousTaskId) {
       _loadExerciseConfig();
       _repCounter?.reset();
-
-      if (_currentTask == null || _curriculum?.isCompleted == true) {
-        // All Workouts Complete
-        await _ttsService.speakWorkoutComplete();
-        _showCompletionDialog();
-        return;
-      }
     }
 
     // Next Set after Rest
@@ -836,9 +839,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             border: Border.all(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               width: 1.0,
             ),
             borderRadius: BorderRadius.circular(12),
@@ -861,8 +864,11 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.2),
-            border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+            color: Colors.black.withValues(alpha: 0.2),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 1,
+            ),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -919,7 +925,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         color: Colors.black54,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -1038,8 +1044,11 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.2),
-            border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+            color: Colors.black.withValues(alpha: 0.2),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 1,
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: IntrinsicWidth(
@@ -1201,7 +1210,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          color: Colors.black.withOpacity(0.4),
+          color: Colors.black.withValues(alpha: 0.4),
           child: Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1237,7 +1246,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          color: Colors.black.withOpacity(0.6),
+          color: Colors.black.withValues(alpha: 0.6),
           child: Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,

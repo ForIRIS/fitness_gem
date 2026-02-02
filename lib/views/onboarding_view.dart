@@ -6,6 +6,7 @@ import '../domain/entities/user_profile.dart';
 import '../core/di/injection.dart';
 import '../domain/usecases/ai/get_api_key_usecase.dart';
 import '../domain/usecases/ai/set_api_key_usecase.dart';
+import '../domain/usecases/user/update_user_profile.dart'; // Added
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 
@@ -305,7 +306,7 @@ class _OnboardingViewState extends State<OnboardingView> {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF5E35B1).withOpacity(0.3),
+            color: const Color(0xFF5E35B1).withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -400,7 +401,7 @@ class _OnboardingViewState extends State<OnboardingView> {
         Positioned.fill(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-            child: Container(color: Colors.black.withOpacity(0.2)),
+            child: Container(color: Colors.black.withValues(alpha: 0.2)),
           ),
         ),
         Center(
@@ -408,11 +409,11 @@ class _OnboardingViewState extends State<OnboardingView> {
             margin: const EdgeInsets.all(24),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
+              color: Colors.white.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -503,10 +504,23 @@ class _OnboardingViewState extends State<OnboardingView> {
       updatedAt: now,
     );
 
-    // Note: Profile persistence not supported with immutable entities
-    // The profile will be passed to views through navigation
-    // TODO: Implement profile repository when available
-    // await profile.save();
+    // Save profile to local storage using UseCase
+    try {
+      final updateUserProfile = getIt<UpdateUserProfileUseCase>();
+      debugPrint('Onboarding: Saving profile for ${profile.nickname}...');
+      final result = await updateUserProfile.execute(profile);
+
+      result.fold(
+        (failure) => debugPrint(
+          'Onboarding: Failed to save profile: ${failure.message}',
+        ),
+        (savedProfile) => debugPrint(
+          'Onboarding: Profile saved successfully: ${savedProfile.nickname}',
+        ),
+      );
+    } catch (e) {
+      debugPrint('Onboarding: Error saving profile: $e');
+    }
 
     debugPrint('Onboarding complete - Profile created: ${profile.nickname}');
 

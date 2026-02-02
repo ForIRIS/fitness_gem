@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:fitness_gem/l10n/app_localizations.dart';
-import 'package:video_player/video_player.dart';
+// app_localizations import removed if truly unused, but wait, it IS used in _startWorkout text.
+// Let me double check if it's used.
+// "AppLocalizations.of(context)!.startWorkout" is used in WorkoutActionButtons which was extracted.
+// So yes, it IS unused in WorkoutDetailView now.
+// google_fonts is also unused in WorkoutDetailView as Text styles are in sub-widgets.
 import '../domain/entities/workout_curriculum.dart';
 import '../services/workout_model_service.dart';
-import '../domain/entities/workout_task.dart';
+// workout_task import removed
 import '../services/cache_service.dart';
 import 'loading_view.dart';
 import 'camera_view.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'dart:ui';
+// google_fonts import removed
+// dart:ui import removed
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../presentation/viewmodels/home_viewmodel.dart';
 import '../theme/app_theme.dart';
 import 'ai_chat_view.dart';
+import 'widgets/workout/workout_detail_card.dart';
+import 'widgets/workout/workout_header.dart';
+import 'widgets/workout/workout_action_buttons.dart';
 
 class WorkoutDetailView extends ConsumerStatefulWidget {
   final WorkoutCurriculum curriculum;
@@ -60,8 +66,10 @@ class _WorkoutDetailViewState extends ConsumerState<WorkoutDetailView> {
     super.dispose();
   }
 
-  void _openAIChat() {
-    final userProfile = ref.read(homeViewModelProvider).userProfile;
+  void _openAIChat() async {
+    final viewModel = ref.read(homeViewModelProvider);
+    final userProfile = viewModel.userProfile;
+
     if (userProfile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please wait for profile to load')),
@@ -69,10 +77,32 @@ class _WorkoutDetailViewState extends ConsumerState<WorkoutDetailView> {
       return;
     }
 
-    Navigator.push(
+    // Capture context before async gap if needed, or check mounted after
+    if (!mounted) return;
+
+    final newCurriculum = await Navigator.push<WorkoutCurriculum>(
       context,
       MaterialPageRoute(builder: (_) => AIChatView(userProfile: userProfile)),
     );
+
+    debugPrint('AIChatView returned curriculum: ${newCurriculum?.title}');
+
+    if (newCurriculum != null && mounted) {
+      // Update global state
+      debugPrint('Updating global state with new curriculum...');
+      await viewModel.updateTodayCurriculum(newCurriculum);
+
+      if (!mounted) return; // Check again before using context
+
+      // Replace current view with the new curriculum
+      debugPrint('Replacing view with new curriculum...');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => WorkoutDetailView(curriculum: newCurriculum),
+        ),
+      );
+    }
   }
 
   @override
@@ -85,50 +115,17 @@ class _WorkoutDetailViewState extends ConsumerState<WorkoutDetailView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Section matching "Programs" layout
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Today\'s Program', // Matching the screenshot title
-                        style: GoogleFonts.outfit(
-                          // Using Outfit for clean look
-                          color: AppTheme.textPrimary,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                        color: AppTheme.textPrimary,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Pre-planned workout paired with audio guidance\nand expert coaching.', // Matching subtitle
-                    style: GoogleFonts.outfit(
-                      color: AppTheme.textSecondary,
-                      fontSize: 14,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Header Section
+            const WorkoutHeader(),
 
             // Content List
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 12,
+                  bottom: 100,
                 ),
                 itemCount: taskCount,
                 itemBuilder: (context, index) {
@@ -148,80 +145,9 @@ class _WorkoutDetailViewState extends ConsumerState<WorkoutDetailView> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 24),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A1A2E), // Dark background like HomeView
-          borderRadius: BorderRadius.circular(40),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: _startWorkout,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF667eea),
-                        Color(0xFF764ba2),
-                      ], // Purple gradient
-                    ),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.play_arrow_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        AppLocalizations.of(context)!.startWorkout,
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12), // Spacing
-            GestureDetector(
-              onTap: _openAIChat,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.brightMarigold,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.auto_awesome,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-            ),
-          ],
-        ),
+      floatingActionButton: WorkoutActionButtons(
+        onStartWorkout: _startWorkout,
+        onOpenAIChat: _openAIChat,
       ),
     );
   }
@@ -272,337 +198,4 @@ class _WorkoutDetailViewState extends ConsumerState<WorkoutDetailView> {
   }
 }
 
-class WorkoutDetailCard extends StatefulWidget {
-  final WorkoutTask task;
-  final int index;
-  final bool isActive;
-
-  const WorkoutDetailCard({
-    super.key,
-    required this.task,
-    required this.index,
-    required this.isActive,
-  });
-
-  @override
-  State<WorkoutDetailCard> createState() => _WorkoutDetailCardState();
-}
-
-class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
-  VideoPlayerController? _videoController;
-  bool _isVideoInitialized = false;
-  bool _isExpanded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize video controller if URL is present
-    if (widget.task.exampleVideoUrl.isNotEmpty) {
-      _initializeVideo();
-    }
-  }
-
-  Future<void> _initializeVideo() async {
-    if (widget.task.exampleVideoUrl.isEmpty) return;
-
-    try {
-      _videoController = VideoPlayerController.networkUrl(
-        Uri.parse(widget.task.exampleVideoUrl),
-      );
-      await _videoController!.initialize();
-      _videoController!.setLooping(true);
-      _videoController!.setVolume(0); // Mute
-
-      if (widget.isActive) {
-        _videoController!.play();
-      }
-
-      if (mounted) {
-        setState(() => _isVideoInitialized = true);
-      }
-    } catch (e) {
-      debugPrint('Video init error: $e');
-      debugPrint('Media URL refresh skipped - immutable entity limitation');
-    }
-  }
-
-  @override
-  void dispose() {
-    _videoController?.dispose();
-    super.dispose();
-  }
-
-  void _toggleExpansion() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Determine if it's maintenance/stretch
-    final bool isMaintenance =
-        (widget.task.reps <= 1 && !widget.task.isCountable) ||
-        widget.task.category.toLowerCase() == 'stretch';
-
-    // Format Subtitle
-    String subtitleText;
-    final int validTime =
-        widget.task.durationSec ??
-        widget.task.timeoutSec; // Prefer duration, fallback to timeout
-    final int displayTime = validTime > 0
-        ? validTime
-        : 60; // Default to 60 if both 0
-
-    if (isMaintenance) {
-      subtitleText = 'Relax & Stretch';
-    } else if (widget.task.reps == 0) {
-      // Duration only task
-      subtitleText = '$displayTime Sec per set';
-    } else {
-      // Reps + Duration task
-      subtitleText =
-          '${widget.task.adjustedReps} Reps / $displayTime Sec per set';
-    }
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFB08CDD),
-            Color(0xFF9670BF),
-          ], // Soft Purple Gradient
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF9670BF).withOpacity(0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      // No fixed height, let it grow
-      child: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min, // Hug content
-            children: [
-              // 1. Main Content (Collapsed View)
-              SizedBox(
-                height: 180, // Keep collapsed height consistent for layout
-                child: Stack(
-                  children: [
-                    // Right-side Image (masked)
-                    Positioned(
-                      right: -20,
-                      bottom: 0,
-                      top: 20,
-                      width: 160,
-                      child: _buildSimpleVisualPreview(),
-                    ),
-                    // Content Overlay (Text)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Tag (Pill shape)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              isMaintenance
-                                  ? AppLocalizations.of(context)!.hold
-                                  : '${widget.task.adjustedSets} Sets',
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Title
-                          SizedBox(
-                            width: 180,
-                            child: Text(
-                              widget.task.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 28,
-                                fontWeight: FontWeight.w700,
-                                height: 1.1,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          // Subtext / Reps
-                          Text(
-                            subtitleText,
-                            style: GoogleFonts.outfit(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 15,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // 2. Expanded Content (Description & Advice)
-              if (_isExpanded)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    24,
-                    0,
-                    24,
-                    70,
-                  ), // Bottom padding for arrow safety
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Divider(color: Colors.white24),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Description',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.task.description,
-                        style: GoogleFonts.outfit(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 13,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Expert Advice',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.task.advice,
-                        style: GoogleFonts.outfit(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 13,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-
-          // 3. Circular Arrow Button (Toggle Trigger)
-          Positioned(
-            bottom: 24,
-            right: 24,
-            child: GestureDetector(
-              onTap: _toggleExpansion,
-              child: AnimatedRotation(
-                duration: const Duration(milliseconds: 300),
-                turns: _isExpanded ? 0.25 : 0.0, // Rotate 90 deg down
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 1,
-                    ),
-                    color: _isExpanded
-                        ? Colors.white.withOpacity(0.25)
-                        : Colors.white.withOpacity(0.1),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_forward_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Simplified visual for the card
-  Widget _buildSimpleVisualPreview() {
-    if (_isVideoInitialized && _videoController != null) {
-      return FittedBox(
-        fit: BoxFit.cover,
-        child: SizedBox(
-          width: _videoController!.value.size.width,
-          height: _videoController!.value.size.height,
-          child: VideoPlayer(_videoController!),
-        ),
-      );
-    } else if (widget.task.thumbnail.isNotEmpty) {
-      if (widget.task.thumbnail.startsWith('http')) {
-        return Image.network(
-          widget.task.thumbnail,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildPlaceholder(),
-        );
-      } else {
-        return Image.asset(
-          widget.task.thumbnail,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildPlaceholder(),
-        );
-      }
-    } else {
-      // Fallback: Try to use ID to find local asset
-      return Image.asset(
-        'assets/images/workouts/${widget.task.id}.png',
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildPlaceholder(),
-      );
-    }
-  }
-
-  Widget _buildPlaceholder() {
-    return Container(
-      color: Colors.white.withOpacity(0.1),
-      child: Center(
-        child: Icon(Icons.fitness_center, color: Colors.white.withOpacity(0.3)),
-      ),
-    );
-  }
-}
+// WorkoutDetailCard moved to lib/views/widgets/workout/workout_detail_card.dart

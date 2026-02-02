@@ -283,7 +283,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   _fallDetectionEnabled = val;
                 });
               },
-              activeColor: const Color(0xFF5E35B1),
+              activeThumbColor: const Color(0xFF5E35B1),
             ),
             child: _fallDetectionEnabled
                 ? Column(
@@ -298,7 +298,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                           )!.guardianPhone,
                           labelStyle: GoogleFonts.barlow(color: Colors.black54),
                           filled: true,
-                          fillColor: Colors.grey.withOpacity(0.05),
+                          fillColor: Colors.grey.withValues(alpha: 0.05),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
                             borderSide: BorderSide.none,
@@ -306,7 +306,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
                             borderSide: BorderSide(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
@@ -394,7 +394,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     hintText: AppLocalizations.of(context)!.enterApiKey,
                     hintStyle: GoogleFonts.barlow(color: Colors.black38),
                     filled: true,
-                    fillColor: Colors.grey.withOpacity(0.05),
+                    fillColor: Colors.grey.withValues(alpha: 0.05),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
@@ -402,7 +402,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -524,7 +524,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 5),
           ),
@@ -586,7 +586,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             decoration: BoxDecoration(
               color: const Color(0xFFFFF8E1), // Amber tint
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.amber.withOpacity(0.3)),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -683,6 +683,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
     // Profile will be updated by AIInterviewView through provider
     if (result == true && mounted) {
+      // Reload data to fetch any new curriculum
+      ref.read(homeViewModelProvider).loadData();
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.consultationUpdated),

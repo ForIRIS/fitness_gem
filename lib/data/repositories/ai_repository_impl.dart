@@ -508,11 +508,25 @@ Please start the interview in English.
     String jsonText,
     List<WorkoutTask> availableWorkouts,
   ) async {
-    final jsonData = json.decode(jsonText) as Map<String, dynamic>;
+    Map<String, dynamic> jsonData;
+    try {
+      jsonData = json.decode(jsonText) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('Error decoding curriculum JSON: $e');
+      // If decoding fails, try to extract JSON from markdown if present
+      final jsonMatch = RegExp(
+        r'```json\s*([\s\S]*?)\s*```',
+      ).firstMatch(jsonText);
+      if (jsonMatch != null) {
+        jsonData = json.decode(jsonMatch.group(1)!) as Map<String, dynamic>;
+      } else {
+        rethrow;
+      }
+    }
 
     final workoutIds =
         (jsonData['workoutTaskList'] as List<dynamic>?)
-            ?.map((e) => e['id'].toString())
+            ?.map((e) => (e is Map ? e['id'] : e).toString())
             .toList() ??
         (jsonData['workout_ids'] as List<dynamic>?)
             ?.map((e) => e.toString())
@@ -530,10 +544,19 @@ Please start the interview in English.
 
       if (adjustments.containsKey(id)) {
         final adj = adjustments[id] as Map<String, dynamic>;
-        task = task.withAdjustment(
-          reps: adj['reps'] as int?,
-          sets: adj['sets'] as int?,
-        );
+
+        // Robust int parsing for adjustments
+        int? reps;
+        int? sets;
+
+        if (adj['reps'] != null) {
+          reps = int.tryParse(adj['reps'].toString());
+        }
+        if (adj['sets'] != null) {
+          sets = int.tryParse(adj['sets'].toString());
+        }
+
+        task = task.withAdjustment(reps: reps, sets: sets);
       }
       selectedTasks.add(task);
     }

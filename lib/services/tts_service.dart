@@ -1,5 +1,6 @@
 import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 /// TTSService - TTS voice feedback service
 class TTSService {
@@ -18,7 +19,7 @@ class TTSService {
     await _flutterTts.setLanguage('en-US');
 
     // iOS audio category configuration (mix with other audio)
-    if (Platform.isIOS) {
+    if (!kIsWeb && Platform.isIOS) {
       await _flutterTts.setIosAudioCategory(
         IosTextToSpeechAudioCategory.playback,
         [

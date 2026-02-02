@@ -9,30 +9,25 @@ abstract class Failure {
 
 /// Failure when server/remote operation fails
 class ServerFailure extends Failure {
-  const ServerFailure([String message = 'Server error occurred'])
-    : super(message);
+  const ServerFailure([super.message = 'Server error occurred']);
 }
 
 /// Failure when cache/local operation fails
 class CacheFailure extends Failure {
-  const CacheFailure([String message = 'Cache error occurred'])
-    : super(message);
+  const CacheFailure([super.message = 'Cache error occurred']);
 }
 
 /// Failure when network is unavailable
 class NetworkFailure extends Failure {
-  const NetworkFailure([String message = 'No internet connection'])
-    : super(message);
+  const NetworkFailure([super.message = 'No internet connection']);
 }
 
 /// Failure when validation fails
 class ValidationFailure extends Failure {
-  const ValidationFailure([String message = 'Validation failed'])
-    : super(message);
+  const ValidationFailure([super.message = 'Validation failed']);
 }
 
 /// Failure when authentication fails
 class AuthFailure extends Failure {
-  const AuthFailure([String message = 'Authentication failed'])
-    : super(message);
+  const AuthFailure([super.message = 'Authentication failed']);
 }

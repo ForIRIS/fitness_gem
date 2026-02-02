@@ -5,6 +5,8 @@ import '../../core/di/injection.dart';
 import '../../domain/usecases/ai/start_interview_usecase.dart';
 import '../../domain/usecases/ai/send_interview_message_usecase.dart';
 import '../../domain/usecases/ai/generate_curriculum_from_interview_usecase.dart';
+import '../../domain/usecases/workout/save_curriculum.dart';
+// import '../../domain/entities/workout_curriculum.dart'; // Unused
 import '../services/tts_service.dart';
 import '../services/stt_service.dart';
 import '../services/firebase_service.dart';
@@ -242,28 +244,33 @@ class _AIInterviewViewState extends State<AIInterviewView>
         final curriculum = result.fold((failure) => null, (c) => c);
 
         if (curriculum != null) {
-          // Note: Curriculum saving not supported with immutable entities
-          // The curriculum would need to be passed back through navigation
-          // await WorkoutCurriculum.save(curriculum);
-
-          if (mounted) {
-            setState(() {
-              _messages.add(
-                _ChatMessage(
-                  text: 'Curriculum created: ${curriculum.title}',
-                  isUser: false,
-                ),
-              );
-              _isLoading = false;
-              _isInterviewComplete = true; // Use this to show "Start" button
-            });
+          // Save the curriculum using the use case
+          try {
+            final saveCurriculum = getIt<SaveCurriculumUseCase>();
+            await saveCurriculum.execute(curriculum);
 
             if (mounted) {
-              _ttsService.speak(
-                AppLocalizations.of(context)!.downloadComplete,
-              ); // Or generic success message if localization not ready
+              setState(() {
+                _messages.add(
+                  _ChatMessage(
+                    text: 'Curriculum created: ${curriculum.title}',
+                    isUser: false,
+                  ),
+                );
+                _isLoading = false;
+                _isInterviewComplete = true; // Use this to show "Start" button
+              });
+
+              if (mounted) {
+                _ttsService.speak(
+                  AppLocalizations.of(context)!.downloadComplete,
+                );
+              }
+              return;
             }
-            return;
+          } catch (e) {
+            debugPrint('Error saving curriculum: $e');
+            // Continue to show error or fallback
           }
         }
       } catch (e) {
@@ -353,7 +360,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
             child: Text(
               AppLocalizations.of(context)!.skip,
               style: GoogleFonts.barlow(
-                color: const Color(0xFF1A237E).withOpacity(0.7),
+                color: const Color(0xFF1A237E).withValues(alpha: 0.7),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -490,7 +497,9 @@ class _AIInterviewViewState extends State<AIInterviewView>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF5E35B1).withOpacity(0.3),
+                            color: const Color(
+                              0xFF5E35B1,
+                            ).withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -533,7 +542,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, -4),
                       ),
@@ -575,7 +584,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: _isListening
-                                ? Colors.red.withOpacity(0.1)
+                                ? Colors.red.withValues(alpha: 0.1)
                                 : Colors.transparent,
                             shape: BoxShape.circle,
                           ),
@@ -606,18 +615,20 @@ class _AIInterviewViewState extends State<AIInterviewView>
   }
 
   Future<void> _startListening() async {
+    final languageCode = Localizations.localeOf(context).languageCode;
     final available = await _sttService.initialize();
     if (available) {
+      if (!mounted) return;
       setState(() => _isListening = true);
       _sttService.startListening(
         onResult: (text) {
-          setState(() {
-            _messageController.text = text;
-          });
+          if (mounted) {
+            setState(() {
+              _messageController.text = text;
+            });
+          }
         },
-        languageCode: Localizations.localeOf(context).languageCode == 'ko'
-            ? 'ko-KR'
-            : 'en-US',
+        languageCode: languageCode == 'ko' ? 'ko-KR' : 'en-US',
       );
     }
   }
@@ -645,7 +656,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
               : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -727,7 +738,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -757,7 +768,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: const Color(0xFF5E35B1).withOpacity(opacity),
+            color: const Color(0xFF5E35B1).withValues(alpha: opacity),
             shape: BoxShape.circle,
           ),
         );

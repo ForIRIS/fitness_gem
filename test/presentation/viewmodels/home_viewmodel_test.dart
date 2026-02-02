@@ -11,7 +11,7 @@ import 'package:fitness_gem/domain/usecases/workout/save_curriculum.dart';
 import 'package:fitness_gem/domain/usecases/workout/get_daily_hot_categories.dart';
 import 'package:fitness_gem/domain/usecases/workout/get_featured_program.dart';
 import 'package:fitness_gem/domain/usecases/user/get_user_profile.dart';
-import 'package:fitness_gem/core/error/failures.dart';
+// import 'package:fitness_gem/core/error/failures.dart'; // Unused
 
 @GenerateMocks([
   GetTodayCurriculumUseCase,

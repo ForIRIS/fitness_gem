@@ -70,12 +70,12 @@ class _CoachingOverlayState extends State<CoachingOverlay>
           margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.8),
+            color: Colors.black.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.deepPurpleAccent, width: 2),
             boxShadow: [
               BoxShadow(
-                color: Colors.deepPurpleAccent.withOpacity(0.3),
+                color: Colors.deepPurpleAccent.withValues(alpha: 0.3),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),

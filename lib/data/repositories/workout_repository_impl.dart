@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/workout_curriculum.dart';
 import '../../domain/entities/featured_program.dart';
 import '../../domain/entities/workout_task.dart';
@@ -26,12 +27,16 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   @override
   Future<Either<Failure, WorkoutCurriculum?>> getTodayCurriculum() async {
     try {
+      debugPrint('WorkoutRepo: Getting today\'s curriculum...');
       final model = await localDataSource.getCurriculum();
       if (model != null) {
+        debugPrint('WorkoutRepo: Found cached curriculum: ${model.title}');
         return Right(model.toEntity());
       }
+      debugPrint('WorkoutRepo: No cached curriculum found');
       return const Right(null);
     } catch (e) {
+      debugPrint('WorkoutRepo: Failed to load curriculum: $e');
       return Left(CacheFailure('Failed to load curriculum: $e'));
     }
   }
@@ -41,10 +46,13 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
     WorkoutCurriculum curriculum,
   ) async {
     try {
+      debugPrint('WorkoutRepo: Saving curriculum: ${curriculum.title}');
       final model = WorkoutCurriculumModel.fromEntity(curriculum);
       await localDataSource.saveCurriculum(model);
+      debugPrint('WorkoutRepo: Curriculum saved successfully');
       return const Right(null);
     } catch (e) {
+      debugPrint('WorkoutRepo: Failed to save curriculum: $e');
       return Left(CacheFailure('Failed to save curriculum: $e'));
     }
   }

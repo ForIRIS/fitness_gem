@@ -40,12 +40,12 @@ class GlassDialog extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
-                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                color: Colors.black.withValues(alpha: 0.6),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -106,11 +106,13 @@ class GlassButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         decoration: BoxDecoration(
           color: isPrimary
-              ? Colors.red.withOpacity(0.8)
-              : Colors.white.withOpacity(0.1),
+              ? Colors.red.withValues(alpha: 0.8)
+              : Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isPrimary ? Colors.redAccent : Colors.white.withOpacity(0.2),
+            color: isPrimary
+                ? Colors.redAccent
+                : Colors.white.withValues(alpha: 0.2),
           ),
         ),
         child: Text(

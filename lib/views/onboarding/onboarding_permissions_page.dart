@@ -53,8 +53,8 @@ class _OnboardingPermissionsPageState extends State<OnboardingPermissionsPage> {
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
               color: isAllGranted
-                  ? Colors.green.withOpacity(0.1)
-                  : const Color(0xFF5E35B1).withOpacity(0.1),
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : const Color(0xFF5E35B1).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -116,60 +116,64 @@ class _OnboardingPermissionsPageState extends State<OnboardingPermissionsPage> {
 
                         if ((cameraPermanentlyDenied || micPermanentlyDenied) &&
                             mounted) {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              backgroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              title: Text(
-                                AppLocalizations.of(
-                                  context,
-                                )!.permissionRequired,
-                                style: GoogleFonts.barlow(
-                                  color: const Color(0xFF1A237E),
-                                  fontWeight: FontWeight.bold,
+                          if (context.mounted) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
                                 ),
-                              ),
-                              content: Text(
-                                AppLocalizations.of(
-                                  context,
-                                )!.permissionDeniedMessage,
-                                style: GoogleFonts.barlow(
-                                  color: Colors.black54,
+                                title: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.permissionRequired,
+                                  style: GoogleFonts.barlow(
+                                    color: const Color(0xFF1A237E),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text(
-                                    AppLocalizations.of(context)!.cancel,
-                                    style: GoogleFonts.barlow(
-                                      color: Colors.black54,
+                                content: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.permissionDeniedMessage,
+                                  style: GoogleFonts.barlow(
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text(
+                                      AppLocalizations.of(context)!.cancel,
+                                      style: GoogleFonts.barlow(
+                                        color: Colors.black54,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    openAppSettings();
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF5E35B1),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      openAppSettings();
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF5E35B1),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.openSettings,
+                                      style: GoogleFonts.barlow(),
                                     ),
                                   ),
-                                  child: Text(
-                                    AppLocalizations.of(context)!.openSettings,
-                                    style: GoogleFonts.barlow(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
+                                ],
+                              ),
+                            );
+                          }
                         }
                       }
                     },

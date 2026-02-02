@@ -39,7 +39,7 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.orange.withOpacity(0.15),
+                  color: Colors.orange.withValues(alpha: 0.15),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -72,7 +72,7 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -93,10 +93,10 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
               ),
               value: widget.fallDetectionEnabled,
               onChanged: widget.onFallDetectionChanged,
-              activeColor: const Color(0xFF5E35B1),
+              activeThumbColor: const Color(0xFF5E35B1),
               activeTrackColor: const Color(0xFFD1C4E9),
               inactiveThumbColor: Colors.grey,
-              inactiveTrackColor: Colors.grey.withOpacity(0.2),
+              inactiveTrackColor: Colors.grey.withValues(alpha: 0.2),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
                 vertical: 8,
@@ -153,9 +153,9 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
