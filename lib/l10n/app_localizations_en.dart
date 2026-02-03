@@ -35,7 +35,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get next => 'Next';
 
   @override
-  String get previous => 'Previous';
+  String get previous => 'Back';
 
   @override
   String get start => 'Start';
@@ -232,7 +232,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openSettings => 'Open Settings';
 
   @override
-  String get startWithAiConsultant => 'Talk with AI Consultant';
+  String get startWithAiConsultant => 'Start After AI Consultation';
 
   @override
   String get apiKeySaved => 'API Key saved.';
@@ -491,6 +491,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readyToWorkout => 'Ready to Workout';
+
+  @override
+  String get welcomeReady => 'You\'re All Set!';
 
   @override
   String get pickAProgram => 'Pick A Program';

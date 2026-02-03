@@ -149,7 +149,7 @@ abstract class AppLocalizations {
   /// No description provided for @previous.
   ///
   /// In en, this message translates to:
-  /// **'Previous'**
+  /// **'Back'**
   String get previous;
 
   /// No description provided for @start.
@@ -521,7 +521,7 @@ abstract class AppLocalizations {
   /// No description provided for @startWithAiConsultant.
   ///
   /// In en, this message translates to:
-  /// **'Talk with AI Consultant'**
+  /// **'Start After AI Consultation'**
   String get startWithAiConsultant;
 
   /// No description provided for @apiKeySaved.
@@ -997,6 +997,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ready to Workout'**
   String get readyToWorkout;
+
+  /// No description provided for @welcomeReady.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re All Set!'**
+  String get welcomeReady;
 
   /// No description provided for @pickAProgram.
   ///

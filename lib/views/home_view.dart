@@ -163,6 +163,17 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   isInProgress: viewModel.isInProgress,
                   onOpenAIChat: _openAIChat,
                   onOpenSettings: _openSettings,
+                  areNotificationsEnabled: viewModel.areNotificationsEnabled,
+                  hasUnreadNotifications: viewModel.hasUnreadNotifications,
+                  onNotificationTap: () {
+                    final vm = ref.read(homeViewModelProvider);
+                    vm.toggleNotifications();
+                    if (vm.areNotificationsEnabled) {
+                      vm.setUnreadCount(3);
+                    } else {
+                      vm.setUnreadCount(0);
+                    }
+                  },
                 ),
                 const SizedBox(height: 16),
                 DailyStatsCard(

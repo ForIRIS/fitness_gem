@@ -15,6 +15,8 @@ class UserProfile extends Equatable {
   final String goal;
   final String userTier; // 'free', 'basic', 'premium'
   final String? guardianPhone;
+  final String? guardianEmail; // Added for Push Notification
+  final String? emergencyMethod; // 'sms' or 'push'
   final bool fallDetectionEnabled;
   final String? interviewSummary;
   final Map<String, String>? extractedDetails;
@@ -35,6 +37,8 @@ class UserProfile extends Equatable {
     required this.goal,
     this.userTier = 'free',
     this.guardianPhone,
+    this.guardianEmail,
+    this.emergencyMethod,
     this.fallDetectionEnabled = false,
     this.interviewSummary,
     this.extractedDetails,
@@ -114,6 +118,8 @@ class UserProfile extends Equatable {
       'goal': goal,
       'userTier': userTier,
       'guardianPhone': guardianPhone,
+      'guardianEmail': guardianEmail,
+      'emergencyMethod': emergencyMethod,
       'fallDetectionEnabled': fallDetectionEnabled,
       'interviewSummary': interviewSummary,
       'extractedDetails': extractedDetails,
@@ -140,6 +146,8 @@ class UserProfile extends Equatable {
     String? goal,
     String? userTier,
     String? guardianPhone,
+    String? guardianEmail,
+    String? emergencyMethod,
     bool? fallDetectionEnabled,
     String? interviewSummary,
     Map<String, String>? extractedDetails,
@@ -160,6 +168,8 @@ class UserProfile extends Equatable {
       goal: goal ?? this.goal,
       userTier: userTier ?? this.userTier,
       guardianPhone: guardianPhone ?? this.guardianPhone,
+      guardianEmail: guardianEmail ?? this.guardianEmail,
+      emergencyMethod: emergencyMethod ?? this.emergencyMethod,
       fallDetectionEnabled: fallDetectionEnabled ?? this.fallDetectionEnabled,
       interviewSummary: interviewSummary ?? this.interviewSummary,
       extractedDetails: extractedDetails ?? this.extractedDetails,

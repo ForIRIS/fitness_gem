@@ -10,14 +10,22 @@ class HomeHeader extends StatelessWidget {
   final VoidCallback onOpenSettings;
   final bool isCompleted;
   final bool isInProgress;
+  final bool areNotificationsEnabled;
+  final bool hasUnreadNotifications;
+  final VoidCallback? onNotificationTap;
 
   const HomeHeader({
     super.key,
     required this.userProfile,
-    required this.onOpenAIChat,
+    required this.onOpenAIChat, // Keeping this if needed, but unused for notification now?
+    // Actually, let's deprecate/remove it from here if it's not used.
+    // But to minimize breakage, I'll keep it but NOT use it for notification.
     required this.onOpenSettings,
     this.isCompleted = false,
     this.isInProgress = false,
+    this.areNotificationsEnabled = false,
+    this.hasUnreadNotifications = false,
+    this.onNotificationTap,
   });
 
   @override
@@ -65,18 +73,38 @@ class HomeHeader extends StatelessWidget {
           Row(
             children: [
               GestureDetector(
-                onTap: onOpenAIChat,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.brightMarigold,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.notifications_off_outlined,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                onTap: onNotificationTap,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.brightMarigold,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        areNotificationsEnabled
+                            ? Icons.notifications_none
+                            : Icons.notifications_off_outlined,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    if (areNotificationsEnabled && hasUnreadNotifications)
+                      Positioned(
+                        top: 6,
+                        right: 8,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(width: 12),

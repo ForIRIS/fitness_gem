@@ -15,10 +15,14 @@ import '../domain/services/coaching_manager.dart';
 
 import '../presentation/controllers/workout_session_controller.dart';
 import '../presentation/states/workout_session_state.dart';
-import '../services/camera_manager.dart';
+import '../services/camera_manager.dart'; // Restored import
 
-import '../utils/pose_painter.dart';
-import '../widgets/coaching_overlay.dart';
+import '../utils/pose_painter.dart'; // Restored import
+import '../widgets/coaching_overlay.dart'; // Restored import
+
+import '../services/fall_detection_service.dart';
+import '../services/emergency_notification_service.dart';
+import '../views/widgets/fall_confirmation_dialog.dart';
 import '../widgets/glass_dialog.dart';
 
 class CameraView extends StatefulWidget {
@@ -35,6 +39,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   late final WorkoutSessionController _controller;
   late final CameraManager _cameraManager;
   final CoachingManager _coachingManager = getIt<CoachingManager>();
+  late final FallDetectionService _fallDetectionService; // Service Instance
   StreamSubscription? _poseSubscription;
 
   // Guide Video
@@ -54,6 +59,10 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
     // Listen to phase changes to control video player
     _controller.addListener(_onControllerChanged);
+
+    // Initialize Fall Detection Service
+    _fallDetectionService = FallDetectionService();
+    _fallDetectionService.onFallSuspected = _onFallSuspected;
 
     _initialize();
   }
@@ -75,6 +84,17 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     } else if (state.isWorking) {
       if (!_guideVideoController!.value.isPlaying) {
         _guideVideoController!.play();
+      }
+
+      // Start/Resume Fall Monitoring when working
+      if (widget.userProfile?.fallDetectionEnabled == true &&
+          !_fallDetectionService.isMonitoring) {
+        _fallDetectionService.startMonitoring();
+      }
+    } else {
+      // Stop monitoring in other phases (Rest, Ready, etc)
+      if (_fallDetectionService.isMonitoring) {
+        _fallDetectionService.stopMonitoring();
       }
     }
   }
@@ -99,7 +119,20 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     // 3. Start Pose Stream & Wire to Controller
     _poseSubscription = _cameraManager.poseStream.listen((poses) {
       if (poses.isNotEmpty) {
-        _controller.processPose(poses.first);
+        final pose = poses.first;
+        _controller.processPose(pose);
+
+        // Pass to Fall Detection Service (only if user has enabled it in settings)
+        // For now, always check, service handles 'isMonitoring' state
+        if (widget.userProfile?.fallDetectionEnabled == true) {
+          // We need screen height for drop ratio calculation
+          final screenHeight =
+              _cameraManager.controller?.value.previewSize?.height ?? 1000;
+          // We need current exercise name to exclude lying exercises
+          final exerciseName = _controller.state.currentTask?.title ?? '';
+
+          _fallDetectionService.processPose(pose, screenHeight, exerciseName);
+        }
       }
     });
 
@@ -147,6 +180,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     _poseSubscription?.cancel();
     _controller.removeListener(_onControllerChanged);
     _cameraManager.dispose();
+    _fallDetectionService.stopMonitoring(); // Stop monitoring
     _controller.dispose();
     _guideVideoController?.dispose();
     super.dispose();
@@ -160,6 +194,49 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       // Logic for resume if needed
     }
+  }
+
+  // --- Fall Detection Handling ---
+  void _onFallSuspected() {
+    debugPrint("Fall Suspected! Pausing workout...");
+    _controller.pause(); // Pause workout logic
+    _fallDetectionService
+        .stopMonitoring(); // Stop monitoring to prevent double triggers
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => FallConfirmationDialog(
+        onOk: () {
+          Navigator.pop(context); // Close dialog
+          _fallDetectionService.userResponded();
+          _fallDetectionService.startMonitoring(); // Resume monitoring
+          _controller.resume(); // Resume workout if desired
+        },
+        onTimeout: () {
+          Navigator.pop(context); // Close dialog
+          _triggerEmergencyProtocol();
+        },
+      ),
+    );
+  }
+
+  void _triggerEmergencyProtocol() {
+    debugPrint("Emergency Protocol Triggered!");
+
+    // Phase 3: Send Notification & Analyze with Gemini
+    if (widget.userProfile != null) {
+      EmergencyNotificationService().triggerEmergency(widget.userProfile!);
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Emergency System Activated! Contacting Guardian..."),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 5),
+      ),
+    );
+    // TODO: _fallDetectionService.analyzeWithGemini(...)
   }
 
   @override

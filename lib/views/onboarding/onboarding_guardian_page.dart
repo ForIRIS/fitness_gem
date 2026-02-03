@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fitness_gem/l10n/app_localizations.dart';
-import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:io';
+import 'guardian_strategy.dart';
 
 class OnboardingGuardianPage extends StatefulWidget {
   final bool fallDetectionEnabled;
@@ -24,6 +24,14 @@ class OnboardingGuardianPage extends StatefulWidget {
 }
 
 class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
+  late final GuardianStrategy _strategy;
+
+  @override
+  void initState() {
+    super.initState();
+    _strategy = GuardianStrategyFactory.getStrategy(Platform.isIOS);
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -39,17 +47,21 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.orange.withValues(alpha: 0.15),
+                  color: _strategy.getThemeColor().withValues(alpha: 0.15),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
               ],
             ),
-            child: const Icon(Icons.emergency, size: 64, color: Colors.orange),
+            child: Icon(
+              _strategy.getIcon(),
+              size: 64,
+              color: _strategy.getThemeColor(),
+            ),
           ),
           const SizedBox(height: 32),
           Text(
-            AppLocalizations.of(context)!.safetySettings,
+            _strategy.getTitle(context),
             textAlign: TextAlign.center,
             style: GoogleFonts.barlowCondensed(
               color: const Color(0xFF1A237E),
@@ -59,132 +71,20 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            AppLocalizations.of(context)!.safetyDescription,
+            _strategy.getDescription(context),
             textAlign: TextAlign.center,
             style: GoogleFonts.barlow(color: Colors.black54, fontSize: 16),
           ),
           const SizedBox(height: 48),
 
-          // Fall Detection Toggle
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: SwitchListTile(
-              title: Text(
-                AppLocalizations.of(context)!.enableFallDetection,
-                style: GoogleFonts.barlow(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-              subtitle: Text(
-                AppLocalizations.of(context)!.fallDetectionDescription,
-                style: GoogleFonts.barlow(color: Colors.black45, fontSize: 13),
-              ),
-              value: widget.fallDetectionEnabled,
-              onChanged: widget.onFallDetectionChanged,
-              activeThumbColor: const Color(0xFF5E35B1),
-              activeTrackColor: const Color(0xFFD1C4E9),
-              inactiveThumbColor: Colors.grey,
-              inactiveTrackColor: Colors.grey.withValues(alpha: 0.2),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 8,
-              ),
-            ),
+          // Strategy Content
+          _strategy.buildContent(
+            context,
+            fallDetectionEnabled: widget.fallDetectionEnabled,
+            onFallDetectionChanged: widget.onFallDetectionChanged,
+            guardianController: widget.guardianController,
+            onPhoneChanged: widget.onPhoneChanged,
           ),
-
-          const SizedBox(height: 24),
-
-          if (widget.fallDetectionEnabled) ...[
-            IntlPhoneField(
-              controller: widget.guardianController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.guardianPhone,
-                labelStyle: GoogleFonts.barlow(color: Colors.black45),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(
-                    color: Color(0xFF5E35B1),
-                    width: 1.5,
-                  ),
-                ),
-                counterStyle: GoogleFonts.barlow(color: Colors.black54),
-              ),
-              initialCountryCode:
-                  Localizations.localeOf(context).countryCode ?? 'KR',
-              style: GoogleFonts.barlow(
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
-              ),
-              dropdownTextStyle: GoogleFonts.barlow(color: Colors.black87),
-              dropdownIcon: const Icon(
-                Icons.arrow_drop_down,
-                color: Colors.black54,
-              ),
-              onChanged: (phone) {
-                widget.onPhoneChanged(phone.completeNumber);
-              },
-              onCountryChanged: (country) {
-                // Country changed
-              },
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.verified_user_outlined,
-                    color: Colors.green,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context)!.guardianStorageNotice,
-                      style: GoogleFonts.barlow(
-                        color: Colors.green[800],
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              AppLocalizations.of(context)!.guardianPhoneDescription,
-              style: GoogleFonts.barlow(color: Colors.black38, fontSize: 13),
-              textAlign: TextAlign.center,
-            ),
-          ],
         ],
       ),
     );

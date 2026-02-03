@@ -33,7 +33,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get next => '다음';
 
   @override
-  String get previous => '이전';
+  String get previous => '뒤로가기';
 
   @override
   String get start => '시작하기';
@@ -224,7 +224,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get openSettings => '설정 열기';
 
   @override
-  String get startWithAiConsultant => 'AI Consultant 대화 후 시작하기';
+  String get startWithAiConsultant => 'AI 컨설턴트와 상담 후 시작하기';
 
   @override
   String get apiKeySaved => 'API Key가 저장되었습니다.';
@@ -479,6 +479,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get readyToWorkout => '운동 준비 완료';
+
+  @override
+  String get welcomeReady => '준비가 되었습니다!';
 
   @override
   String get pickAProgram => '프로그램 선택';

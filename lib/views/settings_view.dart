@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,6 +12,12 @@ import '../../domain/usecases/ai/set_api_key_usecase.dart';
 import 'camera_view.dart';
 import 'ai_interview_view.dart';
 import 'settings/edit_profile_view.dart';
+import '../services/guardian_connection_service.dart';
+import 'widgets/guardian_request_dialog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'widgets/login_dialog.dart';
+import 'onboarding_view.dart'; // For navigation after delete
 
 /// SettingsView - Settings Screen
 class SettingsView extends ConsumerStatefulWidget {
@@ -23,10 +30,16 @@ class SettingsView extends ConsumerStatefulWidget {
 class _SettingsViewState extends ConsumerState<SettingsView> {
   final TextEditingController _apiKeyController = TextEditingController();
   final TextEditingController _guardianController = TextEditingController();
+  final TextEditingController _guardianEmailController =
+      TextEditingController();
   String? _completeGuardianPhone;
+  String _emergencyMethod = 'sms'; // Default to SMS for Android
   bool _showApiKey = false;
   bool _fallDetectionEnabled = false;
   bool _isInitialized = false;
+
+  final GuardianConnectionService _guardianService =
+      GuardianConnectionService();
 
   @override
   void initState() {
@@ -59,7 +72,10 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   void _initializeFromProfile(UserProfile profile) {
     if (!_isInitialized) {
       _guardianController.text = profile.guardianPhone ?? '';
+      _guardianEmailController.text = profile.guardianEmail ?? '';
       _fallDetectionEnabled = profile.fallDetectionEnabled;
+      _emergencyMethod =
+          profile.emergencyMethod ?? (Platform.isIOS ? 'push' : 'sms');
       _isInitialized = true;
     }
   }
@@ -93,16 +109,19 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     // Create updated profile using copyWith (immutable)
     final updatedProfile = profile.copyWith(
       fallDetectionEnabled: _fallDetectionEnabled,
-      guardianPhone: _fallDetectionEnabled ? _completeGuardianPhone : null,
+      guardianPhone: (_emergencyMethod == 'sms')
+          ? _completeGuardianPhone
+          : null,
+      guardianEmail: (_emergencyMethod == 'push')
+          ? _guardianEmailController.text.trim()
+          : null,
+      emergencyMethod: _emergencyMethod,
       updatedAt: DateTime.now(),
     );
 
     // Update ViewModel state
     ref.read(homeViewModelProvider).updateUserProfile(updatedProfile);
-
-    // Note: Profile persistence handled by ViewModel
-    // TODO: Implement persistence in ViewModel
-    debugPrint('Guardian phone updated: ${updatedProfile.guardianPhone}');
+    debugPrint('Guardian phone/email updated');
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -112,7 +131,109 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   }
 
   @override
+  void dispose() {
+    _apiKeyController.dispose();
+    _guardianController.dispose();
+    _guardianEmailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _showLoginDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (_) => const LoginDialog(),
+    );
+
+    if (result == true && mounted) {
+      setState(() {}); // Rebuild to show logged-in state
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Logged in successfully")));
+    }
+  }
+
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    if (mounted) {
+      setState(() {});
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Logged out")));
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.deleteAccount),
+        content: Text(AppLocalizations.of(context)!.deleteAccountConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(AppLocalizations.of(context)!.deleteAccount),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await FirebaseAuth.instance.currentUser?.delete();
+        if (mounted) {
+          // Navigate to Onboarding or restart app
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const OnboardingView()),
+            (route) => false,
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Failed to delete account: $e"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _showLoginRequiredDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.loginRequired),
+        content: Text(AppLocalizations.of(context)!.guardianLoginMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.close),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _showLoginDialog();
+            },
+            child: Text(AppLocalizations.of(context)!.signIn),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (Platform.isIOS && _emergencyMethod == 'sms') {
+      _emergencyMethod = 'push';
+    }
+
     final viewModel = ref.watch(homeViewModelProvider);
     final profile = viewModel.userProfile;
 
@@ -195,7 +316,6 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
                 // Show loader if actually loading
                 if (viewModel.isLoading || profile == null) {
-                  // If profile is null but isLoading is true, showing loader is correct
                   return const Center(child: CircularProgressIndicator());
                 }
 
@@ -232,9 +352,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   ),
                 );
                 if (result != null) {
-                  // Update ViewModel with edited profile
                   ref.read(homeViewModelProvider).updateUserProfile(result);
-                  debugPrint('Profile updated: ${result.nickname}');
                 }
               },
             ),
@@ -263,6 +381,87 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
           const SizedBox(height: 24),
 
+          // Incoming Guardian Requests (Priority Display)
+          StreamBuilder<QuerySnapshot>(
+            stream: _guardianService.listenToIncomingRequests(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return const SizedBox.shrink();
+              }
+
+              return Column(
+                children: snapshot.data!.docs.map((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final email = data['requester_email'] ?? 'Unknown';
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 24.0),
+                    child: _buildSection(
+                      title: "Incoming Request 🔔",
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.purple),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    email,
+                                    style: GoogleFonts.barlow(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Text(
+                                    "Wants you to be their Guardian",
+                                    style: GoogleFonts.barlow(
+                                      color: Colors.black54,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => GuardianRequestDialog(
+                                    requesterEmail: email,
+                                    onAccept: () async {
+                                      Navigator.pop(context); // Close dialog
+                                      await _guardianService.respondToRequest(
+                                        doc.id,
+                                        true,
+                                      );
+                                    },
+                                    onDecline: () async {
+                                      Navigator.pop(context);
+                                      await _guardianService.respondToRequest(
+                                        doc.id,
+                                        false,
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                              child: const Text("View"),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+
           // AI Consulting
           _buildSection(
             title: AppLocalizations.of(context)!.aiConsulting,
@@ -289,68 +488,125 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 ? Column(
                     children: [
                       const SizedBox(height: 12),
-                      IntlPhoneField(
-                        controller: _guardianController,
-                        dropdownIconPosition: IconPosition.trailing,
-                        decoration: InputDecoration(
-                          labelText: AppLocalizations.of(
-                            context,
-                          )!.guardianPhone,
-                          labelStyle: GoogleFonts.barlow(color: Colors.black54),
-                          filled: true,
-                          fillColor: Colors.grey.withValues(alpha: 0.05),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(
-                              color: Colors.black.withValues(alpha: 0.1),
+
+                      if (Platform.isAndroid) ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: RadioListTile<String>(
+                                title: Text(
+                                  "SMS",
+                                  style: GoogleFonts.barlow(fontSize: 14),
+                                ),
+                                value: 'sms',
+                                groupValue: _emergencyMethod,
+                                activeColor: const Color(0xFF5E35B1),
+                                contentPadding: EdgeInsets.zero,
+                                onChanged: (val) =>
+                                    setState(() => _emergencyMethod = val!),
+                              ),
                             ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF5E35B1),
+                            Expanded(
+                              child: RadioListTile<String>(
+                                title: Text(
+                                  "Push",
+                                  style: GoogleFonts.barlow(fontSize: 14),
+                                ),
+                                value: 'push',
+                                groupValue: _emergencyMethod,
+                                activeColor: const Color(0xFF5E35B1),
+                                contentPadding: EdgeInsets.zero,
+                                onChanged: (val) {
+                                  final user =
+                                      FirebaseAuth.instance.currentUser;
+                                  if (user == null || user.isAnonymous) {
+                                    _showLoginRequiredDialog();
+                                  } else {
+                                    setState(() => _emergencyMethod = val!);
+                                  }
+                                },
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                        initialCountryCode:
-                            Localizations.localeOf(context).countryCode ?? 'KR',
-                        style: GoogleFonts.barlow(color: Colors.black87),
-                        dropdownTextStyle: GoogleFonts.barlow(
-                          color: Colors.black87,
-                        ),
-                        dropdownIcon: const Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.black54,
-                        ),
-                        onChanged: (phone) {
-                          _completeGuardianPhone = phone.completeNumber;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => _saveGuardianPhone(profile),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1A237E),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                        const SizedBox(height: 12),
+                      ],
+
+                      if (_emergencyMethod == 'sms')
+                        Column(
+                          children: [
+                            IntlPhoneField(
+                              controller: _guardianController,
+                              dropdownIconPosition: IconPosition.trailing,
+                              decoration: InputDecoration(
+                                labelText: AppLocalizations.of(
+                                  context,
+                                )!.guardianPhone,
+                                labelStyle: GoogleFonts.barlow(
+                                  color: Colors.black54,
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey.withValues(alpha: 0.05),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                  borderSide: BorderSide(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF5E35B1),
+                                  ),
+                                ),
+                              ),
+                              initialCountryCode:
+                                  Localizations.localeOf(context).countryCode ??
+                                  'KR',
+                              style: GoogleFonts.barlow(color: Colors.black87),
+                              dropdownTextStyle: GoogleFonts.barlow(
+                                color: Colors.black87,
+                              ),
+                              dropdownIcon: const Icon(
+                                Icons.arrow_drop_down,
+                                color: Colors.black54,
+                              ),
+                              onChanged: (phone) {
+                                _completeGuardianPhone = phone.completeNumber;
+                              },
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: Text(
-                            AppLocalizations.of(context)!.save,
-                            style: GoogleFonts.barlow(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () => _saveGuardianPhone(profile),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1A237E),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                ),
+                                child: Text(
+                                  AppLocalizations.of(context)!.save,
+                                  style: GoogleFonts.barlow(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
+                          ],
+                        )
+                      else
+                        _buildGuardianConnectionUI(),
+
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -441,6 +697,85 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     ),
                   ),
                 ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Authentication (Account)
+          _buildSection(
+            title: "Account",
+            child: Column(
+              children: [
+                if (FirebaseAuth.instance.currentUser == null ||
+                    FirebaseAuth.instance.currentUser!.isAnonymous)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _showLoginDialog,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5E35B1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(
+                        AppLocalizations.of(context)!.signInSignUp,
+                        style: GoogleFonts.barlow(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: _signOut,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF5E35B1),
+                            side: const BorderSide(color: Color(0xFF5E35B1)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: Text(
+                            AppLocalizations.of(context)!.signOut,
+                            style: GoogleFonts.barlow(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: _deleteAccount,
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: Text(
+                            AppLocalizations.of(context)!.deleteAccount,
+                            style: GoogleFonts.barlow(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -681,9 +1016,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       ),
     );
 
-    // Profile will be updated by AIInterviewView through provider
     if (result == true && mounted) {
-      // Reload data to fetch any new curriculum
       ref.read(homeViewModelProvider).loadData();
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -701,22 +1034,22 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-            flex: 4,
+            flex: 2,
             child: Text(
               label,
-              style: GoogleFonts.barlow(color: Colors.black54, fontSize: 14),
+              style: GoogleFonts.barlow(color: Colors.black54, fontSize: 16),
             ),
           ),
           Expanded(
-            flex: 6,
+            flex: 3,
             child: Text(
               value,
-              textAlign: TextAlign.end,
               style: GoogleFonts.barlow(
                 color: Colors.black87,
                 fontWeight: FontWeight.w500,
-                fontSize: 14,
+                fontSize: 16,
               ),
+              textAlign: TextAlign.end,
             ),
           ),
         ],
@@ -724,10 +1057,178 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     );
   }
 
-  @override
-  void dispose() {
-    _apiKeyController.dispose();
-    _guardianController.dispose();
-    super.dispose();
+  Widget _buildGuardianConnectionUI() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _guardianService.listenToMyGuardianStatus(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) {
+          // No active connection -> Show Invite UI
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _guardianEmailController,
+                style: GoogleFonts.barlow(color: Colors.black87),
+                decoration: InputDecoration(
+                  labelText: "Guardian Email",
+                  hintText: "Enter guardian's email for request",
+                  labelStyle: GoogleFonts.barlow(color: Colors.black54),
+                  filled: true,
+                  fillColor: Colors.grey.withValues(alpha: 0.05),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide(
+                      color: Colors.black.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: const BorderSide(color: Color(0xFF5E35B1)),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.email_outlined,
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    if (_guardianEmailController.text.isEmpty) return;
+                    try {
+                      await _guardianService.sendGuardianRequest(
+                        _guardianEmailController.text.trim(),
+                      );
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Guardian Request Sent!"),
+                          ),
+                        );
+                        // Save profile with 'Push' method and new email locally too?
+                        // It's good practice to sync local profile state even if we rely on Firestore relation
+                        final viewModel = ref.read(homeViewModelProvider);
+                        if (viewModel.userProfile != null) {
+                          _saveGuardianPhone(viewModel.userProfile!);
+                        }
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Failed: $e"),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.send),
+                  label: Text(
+                    "Send Request",
+                    style: GoogleFonts.barlow(fontWeight: FontWeight.w600),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5E35B1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        // Has connection (Pending or Accepted)
+        final doc = docs.first;
+        final data = doc.data() as Map<String, dynamic>;
+        final status = data['status'];
+        final guardianEmail = data['guardian_email'];
+
+        final isAccepted = status == 'accepted';
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isAccepted
+                ? Colors.green.withValues(alpha: 0.1)
+                : Colors.orange.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isAccepted ? Colors.green : Colors.orange,
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    isAccepted ? Icons.check_circle : Icons.pending,
+                    color: isAccepted ? Colors.green : Colors.orange,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isAccepted ? "Connected" : "Pending Request",
+                          style: GoogleFonts.barlow(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          guardianEmail,
+                          style: GoogleFonts.barlow(
+                            color: Colors.black54,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () async {
+                    await _guardianService.revokeConnection(doc.id);
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: Text(isAccepted ? "Disconnect" : "Cancel Request"),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

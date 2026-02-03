@@ -82,6 +82,7 @@ dependencies:
   dartz: ^0.10.1           # Functional programming (Either)
   equatable: ^2.0.5        # Value equality
   flutter_riverpod: ^2.4.0 # State management
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

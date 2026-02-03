@@ -16,6 +16,8 @@ class UserProfileModel {
   final String goal;
   final String userTier;
   final String? guardianPhone;
+  final String? guardianEmail;
+  final String? emergencyMethod;
   final bool fallDetectionEnabled;
   final String? interviewSummary;
   final Map<String, String>? extractedDetails;
@@ -36,6 +38,8 @@ class UserProfileModel {
     required this.goal,
     this.userTier = 'free',
     this.guardianPhone,
+    this.guardianEmail,
+    this.emergencyMethod,
     this.fallDetectionEnabled = false,
     this.interviewSummary,
     this.extractedDetails,
@@ -59,6 +63,8 @@ class UserProfileModel {
       goal: goal,
       userTier: userTier,
       guardianPhone: guardianPhone,
+      guardianEmail: guardianEmail,
+      emergencyMethod: emergencyMethod,
       fallDetectionEnabled: fallDetectionEnabled,
       interviewSummary: interviewSummary,
       extractedDetails: extractedDetails,
@@ -83,6 +89,8 @@ class UserProfileModel {
       goal: entity.goal,
       userTier: entity.userTier,
       guardianPhone: entity.guardianPhone,
+      guardianEmail: entity.guardianEmail,
+      emergencyMethod: entity.emergencyMethod,
       fallDetectionEnabled: entity.fallDetectionEnabled,
       interviewSummary: entity.interviewSummary,
       extractedDetails: entity.extractedDetails,
@@ -107,6 +115,8 @@ class UserProfileModel {
       goal: map['goal'] ?? '',
       userTier: map['userTier'] ?? 'free',
       guardianPhone: map['guardianPhone'],
+      guardianEmail: map['guardianEmail'],
+      emergencyMethod: map['emergencyMethod'],
       fallDetectionEnabled: map['fallDetectionEnabled'] ?? false,
       interviewSummary: map['interviewSummary'],
       extractedDetails: map['extractedDetails'] != null
@@ -139,6 +149,8 @@ class UserProfileModel {
       'goal': goal,
       'userTier': userTier,
       'guardianPhone': guardianPhone,
+      'guardianEmail': guardianEmail,
+      'emergencyMethod': emergencyMethod,
       'fallDetectionEnabled': fallDetectionEnabled,
       'interviewSummary': interviewSummary,
       'extractedDetails': extractedDetails,

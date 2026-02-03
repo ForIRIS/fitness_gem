@@ -73,6 +73,15 @@ class HomeViewModel extends ChangeNotifier {
   String get selectedCategory => _selectedCategory;
   WorkoutCurriculum? get tomorrowCurriculum => _tomorrowCurriculum;
 
+  // Notification State
+  bool _areNotificationsEnabled =
+      false; // Default to off as per user description
+  int _unreadNotificationCount = 0;
+
+  bool get areNotificationsEnabled => _areNotificationsEnabled;
+  int get unreadNotificationCount => _unreadNotificationCount;
+  bool get hasUnreadNotifications => _unreadNotificationCount > 0;
+
   bool get isTodayCompleted => _todayCurriculum?.isCompleted ?? false;
 
   bool get isInProgress {
@@ -374,6 +383,21 @@ class HomeViewModel extends ChangeNotifier {
       createdAt: DateTime.now().add(const Duration(days: 1)),
       workoutTasks: [], // Empty for preview
     );
+    notifyListeners();
+  }
+
+  /// Toggle notification enabled state (Mock)
+  void toggleNotifications() {
+    _areNotificationsEnabled = !_areNotificationsEnabled;
+    // Reset unread count if disabled? Or keep it?
+    // Usually if you disable notifications, you might not see badges, but existing ones might stay or clear.
+    // Let's just toggle the setting for now.
+    notifyListeners();
+  }
+
+  /// Update unread notification count (Mock)
+  void setUnreadCount(int count) {
+    _unreadNotificationCount = count;
     notifyListeners();
   }
 }
