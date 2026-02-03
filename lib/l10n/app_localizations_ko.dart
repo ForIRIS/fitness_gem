@@ -472,7 +472,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get programs => '프로그램';
 
   @override
-  String get dailyHotCategories => '실시간 인기 카테고리';
+  String get dailyHotCategories => '실시간 인기 프로그램';
 
   @override
   String get readyToWorkout => '운동 준비 완료';

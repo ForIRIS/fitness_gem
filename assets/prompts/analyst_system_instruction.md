@@ -21,8 +21,15 @@ Analyze individual workout sets to detect form degradation, fatigue signs, and i
 
 **ANALYSIS PROTOCOL**:
 1.  **Safety First**: Check user's "injury_history" against current form. (e.g., if Knee injury exists, Valgus is a CRITICAL red flag).
-2.  **Performance Auditing**: Compare `actual` vs `target` metrics.
-3.  **Fatigue Analysis**: Analyze tempo degradation (slowing down) and stability score.
+2.  **Multimodal Synthesis**:
+    - **Source A (RGB Video)**: Observe facial effort (fatigue), grip strength, and environmental safety.
+    - **Source B (Skeleton Video)**: Analyze joint alignment, bilateral symmetry, and range of motion using the color-coded guide:
+        - **Red/Orange**: Right side limbs (Hot color = Right).
+        - **Blue/Cyan**: Left side limbs (Cold color = Left).
+        - **Yellow**: Torso, Shoulders, and Hips (Core alignment).
+        - **Green Points**: Joint centers (tracking stability).
+3.  **Performance Auditing**: Compare `actual` vs `target` metrics.
+4.  **Fatigue Analysis**: Analyze tempo degradation (slowing down) and stability score.
 
 **OUTPUT SCHEMA (Strict JSON)**:
 - **Language**: Text values MUST be in the `user_language` specified in Input.

@@ -43,6 +43,10 @@ class RepCounter {
   int _totalPhases = 0;
   final Set<String> _sidesCompletedInCycle = {};
 
+  // Duration Mode Tracking
+  double _cumulativeDuration = 0.0;
+  DateTime? _lastInferenceTime;
+
   // Evaluation & Performance Analysis
   final List<List<double>> _featureBuffer = [];
   final Map<String, List<double>> _movingAverageFeatures = {};
@@ -210,6 +214,11 @@ class RepCounter {
       _stateCounter = 0;
       _lastDetectedState = null;
     }
+
+    // Continuous Logic (Duration Mode)
+    if (config.countType == CountingMode.duration) {
+      _handleDurationCounting(detectedState, maxProb);
+    }
   }
 
   void _onStateChange(String newState) {
@@ -223,6 +232,9 @@ class RepCounter {
       case CountingMode.alternatingPerSide:
       case CountingMode.sequential:
         _handleSequentialTransition(newState);
+        break;
+      case CountingMode.duration:
+        // Duration handled continuously in _handleModelOutput
         break;
     }
   }
@@ -250,24 +262,25 @@ class RepCounter {
 
   /// Sequential, Side & Alternating Modes
   void _handleSequentialTransition(String newState) {
-    // Collect detected labels
+    // Collect detected labels in current sequence
     _detectedLabelsInRep.add(newState);
 
-    // Check for sequence completion (Restart)
-    // Convention: "1_Ready" or similar starts/resets the sequence
-    final isRestart = newState.startsWith('1');
+    // Check for sequence completion (Restart/Ready state)
+    // We count when returning to the starting position ('Ready' or '1_...')
+    final phase = ExercisePhase.fromLabel(newState);
+    final isRestart = newState.startsWith('1') || phase == ExercisePhase.ready;
 
     if (isRestart && _detectedLabelsInRep.length >= 2) {
-      // Check if rep should be counted
+      // Check if rep should be counted (all phases visited)
       if (_shouldCountSequentialRep()) {
         _processCompletion();
       } else if (_detectedLabelsInRep.any(
         (l) => ExercisePhase.fromLabel(l) == ExercisePhase.peak,
       )) {
-        // Validation Error: If a "Peak" label is skipped
-
+        // Validation Error: If a "Peak" label exists in config but was skipped
         _checkPeakSkip();
       }
+      // Start fresh for the next rep
       _detectedLabelsInRep.clear();
       _detectedLabelsInRep.add(newState);
     }
@@ -306,21 +319,52 @@ class RepCounter {
     // Lower threshold provided as we might skip some transition frames
     if (ratio < 0.5) return false;
 
-    // 2. Peak Check
+    // 2. Peak Check / Sequence Completeness Check
     final labels = List<String>.from(config.classLabels!['classes'] ?? []);
     final peakLabels = labels
         .where((l) => ExercisePhase.fromLabel(l) == ExercisePhase.peak)
         .toList();
-    for (final peak in peakLabels) {
-      // If we are in an alternating mode, we only care about the peak matching the declared side
-      // for the current sequence.
-      if (!_detectedLabelsInRep.contains(peak)) {
-        final mode = config.countType;
-        if (mode == CountingMode.alternatingFullCycle ||
-            mode == CountingMode.alternatingPerSide) {
-          continue;
+
+    final isSingleAction = config.countType == CountingMode.singleAction;
+
+    if (peakLabels.isEmpty && !isSingleAction) {
+      // Strict Sequence Check for Non-Peak Exercises:
+      // Ensure we visited all uniquely numbered phases defined in the config.
+      final numericPrefixesInConfig = labels
+          .map((l) => l.split('_').first)
+          .where((s) => int.tryParse(s) != null)
+          .toSet();
+
+      if (numericPrefixesInConfig.isNotEmpty) {
+        final detectedPrefixes = _detectedLabelsInRep
+            .map((l) => l.split('_').first)
+            .where((s) => int.tryParse(s) != null)
+            .toSet();
+
+        // If we missed any numeric phase that exists in the config, it's an incomplete rep
+        if (detectedPrefixes.length < numericPrefixesInConfig.length) {
+          return false;
         }
-        return false;
+      } else {
+        // Fallback for non-numeric labels: Ensure at least one non-ready/non-idle phase was hit
+        final hasMovement = _detectedLabelsInRep.any((l) {
+          final p = ExercisePhase.fromLabel(l);
+          return p == ExercisePhase.movement;
+        });
+        if (!hasMovement) return false;
+      }
+    } else {
+      // Peak Check: Ensure the peak state was hit during this sequence
+      for (final peak in peakLabels) {
+        // If we are in an alternating mode, we only care about the peak matching the declared side
+        if (!_detectedLabelsInRep.contains(peak)) {
+          final mode = config.countType;
+          if (mode == CountingMode.alternatingFullCycle ||
+              mode == CountingMode.alternatingPerSide) {
+            continue;
+          }
+          return false;
+        }
       }
     }
 
@@ -428,12 +472,53 @@ class RepCounter {
     _coachingManager.deliver("Please adjust your position or camera angle.");
   }
 
+  void _handleDurationCounting(String detectedState, double probability) {
+    final now = DateTime.now();
+    if (_lastInferenceTime == null) {
+      _lastInferenceTime = now;
+      return;
+    }
+
+    final dt = now.difference(_lastInferenceTime!).inMilliseconds / 1000.0;
+    _lastInferenceTime = now;
+
+    // 1. Validate Target Phase
+    // Using config.triggerPhase (e.g. "PEAK" or "3_Plank")
+    final trigger = config.triggerPhase;
+    if (trigger == null) return;
+
+    final isTargetPhase = detectedState.contains(trigger);
+
+    // 2. Validate Confidence
+    if (isTargetPhase && probability > _inferenceThreshold) {
+      _cumulativeDuration += dt;
+
+      // Increment rep for every 1.0 second accumulated
+      while (_cumulativeDuration >= 1.0) {
+        _incrementRep();
+        _cumulativeDuration -= 1.0;
+      }
+    }
+  }
+
   void _analyzePoseQuality(ExerciseModelOutput output, String state) {
     if (config.medianStats == null || config.classLabels == null) return;
-    final stats = config.medianStats![state];
-    if (stats == null) return; // No stats for this state
+    final statsData = config.medianStats![state];
+    if (statsData == null) return; // No stats for this state
 
-    final List<double> medians = List<double>.from(stats ?? []);
+    List<double> medians;
+    List<double>? stdDevs;
+
+    // Parse Stats (Map or List)
+    if (statsData is Map) {
+      medians = List<double>.from(statsData['features'] ?? []);
+      stdDevs = List<double>.from(statsData['stdDev'] ?? []);
+    } else if (statsData is List) {
+      medians = List<double>.from(statsData);
+    } else {
+      return;
+    }
+
     if (medians.isEmpty || medians.length != output.currentFeatures.length) {
       return;
     }
@@ -444,10 +529,31 @@ class RepCounter {
 
     final deviatingFeatures = <String>{};
     for (int i = 0; i < medians.length; i++) {
-      final diff = (output.currentFeatures[i] - medians[i]).abs();
-      // Heuristic threshold: if feature differs by > 0.2 (normalized approx)
-      // We might need per-feature thresholds, but 0.2 is a safe start
-      if (diff > 0.2) {
+      final currentVal = output.currentFeatures[i];
+      final medianVal = medians[i];
+      final diff = (currentVal - medianVal).abs();
+
+      bool isDeviating = false;
+
+      if (stdDevs != null && i < stdDevs.length) {
+        // Z-Score Analysis
+        final sigma = stdDevs[i];
+        if (sigma > 0.001) {
+          // Avoid division by zero
+          // Threshold: 2.0 Sigma (95% confidence interval deviation)
+          if (diff / sigma > 2.0) {
+            isDeviating = true;
+          }
+        } else {
+          // Fallback if zero variance (strict exact match expected?)
+          if (diff > 0.2) isDeviating = true;
+        }
+      } else {
+        // Legacy fixed threshold
+        if (diff > 0.2) isDeviating = true;
+      }
+
+      if (isDeviating) {
         deviatingFeatures.add(featureKeys[i]);
       }
     }

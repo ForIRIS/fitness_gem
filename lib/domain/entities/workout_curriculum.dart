@@ -29,12 +29,37 @@ class WorkoutCurriculum extends Equatable {
 
   /// Total estimated time in minutes
   int get estimatedMinutes {
-    int totalSets = 0;
-    for (final task in workoutTasks) {
-      totalSets += task.adjustedSets;
+    double totalSeconds = 0;
+
+    for (int i = 0; i < workoutTasks.length; i++) {
+      final task = workoutTasks[i];
+      double taskSeconds = 0;
+
+      if (task.isCountable) {
+        // Dynamic exercise: Estimate 4s per rep
+        // (eccentric + concentric + pause)
+        taskSeconds += task.adjustedReps * 4 * task.adjustedSets;
+      } else {
+        // Static exercise: Use duration
+        // If adjustedDurationSec is set, use it, otherwise use default durationSec or fallback to 30s
+        final duration = task.adjustedDurationSec ?? task.durationSec ?? 30;
+        taskSeconds += duration * task.adjustedSets;
+      }
+
+      // Add rest time between sets (Sets - 1 rests)
+      if (task.adjustedSets > 1) {
+        taskSeconds += (task.adjustedSets - 1) * task.timeoutSec;
+      }
+
+      totalSeconds += taskSeconds;
+
+      // Add transition time between tasks (e.g., 60 seconds)
+      if (i < workoutTasks.length - 1) {
+        totalSeconds += 60;
+      }
     }
-    // Approx 1 min per set + 30 sec rest
-    return (totalSets * 1.5).ceil();
+
+    return (totalSeconds / 60).ceil();
   }
 
   /// Summary text for display

@@ -3,7 +3,6 @@ import 'package:dartz/dartz.dart';
 import '../../entities/featured_program.dart';
 import '../../repositories/workout_repository.dart';
 import '../../../core/error/failures.dart';
-import '../../../core/usecases/usecase.dart';
 
 /// Use case to get featured program
 class GetFeaturedProgramUseCase {

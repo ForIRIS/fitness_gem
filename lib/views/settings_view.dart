@@ -700,16 +700,23 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: GoogleFonts.barlow(color: Colors.black54, fontSize: 14),
+          Expanded(
+            flex: 4,
+            child: Text(
+              label,
+              style: GoogleFonts.barlow(color: Colors.black54, fontSize: 14),
+            ),
           ),
-          Text(
-            value,
-            style: GoogleFonts.barlow(
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
+          Expanded(
+            flex: 6,
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: GoogleFonts.barlow(
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
             ),
           ),
         ],

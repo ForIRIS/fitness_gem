@@ -1,0 +1,24 @@
+{
+  "classes": [
+    "1_Ready",
+    "2_Right_Down",
+    "3_Right_Peak",
+    "4_Right_Up",
+    "5_Left_Down",
+    "6_Left_Peak",
+    "7_Left_Up"
+  ],
+  "num_classes": 7,
+  "input_shape": [
+    1,
+    30,
+    33,
+    3
+  ],
+  "input_name": "landmarks",
+  "feature_set": "strength_legs",
+  "countingMode": "ALTERNATING_FULL_CYCLE",
+  "triggerPhase": "READY",
+  "runtime": "onnxruntime-mobile",
+  "opset_version": 18
+}

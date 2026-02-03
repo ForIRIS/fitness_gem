@@ -27,6 +27,7 @@ class WorkoutTask extends Equatable {
   // Adjusted values (immutable - use copyWith to modify)
   final int adjustedReps;
   final int adjustedSets;
+  final int? adjustedDurationSec;
 
   const WorkoutTask({
     required this.id,
@@ -49,6 +50,7 @@ class WorkoutTask extends Equatable {
     this.onnxUrl = '',
     int? adjustedReps,
     int? adjustedSets,
+    this.adjustedDurationSec,
   }) : adjustedReps = adjustedReps ?? reps,
        adjustedSets = adjustedSets ?? sets;
 
@@ -90,9 +92,13 @@ class WorkoutTask extends Equatable {
         guideAudioUrl.isNotEmpty;
   }
 
-  /// Apply adjustment to reps/sets (returns new instance)
-  WorkoutTask withAdjustment({int? reps, int? sets}) {
-    return copyWith(adjustedReps: reps, adjustedSets: sets);
+  /// Apply adjustment to reps/sets/duration (returns new instance)
+  WorkoutTask withAdjustment({int? reps, int? sets, int? durationSec}) {
+    return copyWith(
+      adjustedReps: reps,
+      adjustedSets: sets,
+      adjustedDurationSec: durationSec,
+    );
   }
 
   /// Update media info (returns new instance)
@@ -138,6 +144,7 @@ class WorkoutTask extends Equatable {
     String? onnxUrl,
     int? adjustedReps,
     int? adjustedSets,
+    int? adjustedDurationSec,
   }) {
     return WorkoutTask(
       id: id ?? this.id,
@@ -160,6 +167,7 @@ class WorkoutTask extends Equatable {
       onnxUrl: onnxUrl ?? this.onnxUrl,
       adjustedReps: adjustedReps ?? this.adjustedReps,
       adjustedSets: adjustedSets ?? this.adjustedSets,
+      adjustedDurationSec: adjustedDurationSec ?? this.adjustedDurationSec,
     );
   }
 
@@ -185,5 +193,6 @@ class WorkoutTask extends Equatable {
     onnxUrl,
     adjustedReps,
     adjustedSets,
+    adjustedDurationSec,
   ];
 }

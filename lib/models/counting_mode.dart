@@ -9,7 +9,10 @@ enum CountingMode {
   alternatingFullCycle,
 
   /// Left = 1, Right = 1 (tracked separately)
-  alternatingPerSide;
+  alternatingPerSide,
+
+  /// Count time in target zone (1 rep = 1 second)
+  duration;
 
   /// Parse from string (case-insensitive)
   static CountingMode fromString(String? value) {
@@ -22,6 +25,9 @@ enum CountingMode {
         return CountingMode.alternatingFullCycle;
       case 'ALTERNATING_PER_SIDE':
         return CountingMode.alternatingPerSide;
+      case 'DURATION':
+      case 'STATIC':
+        return CountingMode.duration;
       case 'SEQUENTIAL':
       default:
         return CountingMode.sequential;

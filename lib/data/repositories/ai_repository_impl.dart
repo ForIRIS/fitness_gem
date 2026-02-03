@@ -281,7 +281,7 @@ Output JSON only.
       // Wait for processing
       await Future.delayed(const Duration(seconds: 3));
 
-      // 2. Analyst Step
+      // 2. Analyst Step (Direct Client Call - Fast & Efficient for Hackathon)
       final inputContext = {
         "query_type": "INTER_SET_ANALYSIS",
         "user_profile": profile.toJson(),
@@ -524,41 +524,49 @@ Please start the interview in English.
       }
     }
 
-    final workoutIds =
-        (jsonData['workoutTaskList'] as List<dynamic>?)
-            ?.map((e) => (e is Map ? e['id'] : e).toString())
-            .toList() ??
-        (jsonData['workout_ids'] as List<dynamic>?)
-            ?.map((e) => e.toString())
-            .toList() ??
-        [];
-
-    final adjustments = jsonData['adjustments'] as Map<String, dynamic>? ?? {};
-
+    final workoutList = jsonData['workoutTaskList'] as List<dynamic>? ?? [];
     final selectedTasks = <WorkoutTask>[];
-    for (final id in workoutIds) {
-      var task = availableWorkouts.firstWhere(
-        (t) => t.id == id,
-        orElse: () => availableWorkouts.first,
-      );
 
-      if (adjustments.containsKey(id)) {
-        final adj = adjustments[id] as Map<String, dynamic>;
+    for (final item in workoutList) {
+      if (item is Map<String, dynamic>) {
+        final id = item['id']?.toString() ?? '';
+        final task = availableWorkouts
+            .firstWhere(
+              (t) => t.id == id,
+              orElse: () => availableWorkouts.first,
+            )
+            .copyWith(); // Create copy to modify
 
-        // Robust int parsing for adjustments
+        // Extract adjustments from the item itself
         int? reps;
         int? sets;
+        int? durationSec;
 
-        if (adj['reps'] != null) {
-          reps = int.tryParse(adj['reps'].toString());
+        if (item['reps'] != null) {
+          reps = int.tryParse(item['reps'].toString());
         }
-        if (adj['sets'] != null) {
-          sets = int.tryParse(adj['sets'].toString());
+        if (item['sets'] != null) {
+          sets = int.tryParse(item['sets'].toString());
+        }
+        if (item['durationSec'] != null) {
+          durationSec = int.tryParse(item['durationSec'].toString());
         }
 
-        task = task.withAdjustment(reps: reps, sets: sets);
+        // Also check "adjustments" map for backward compatibility, though deprecated in prompt
+        // (Leaving it out for now to strictly follow new logic)
+
+        selectedTasks.add(
+          task.withAdjustment(reps: reps, sets: sets, durationSec: durationSec),
+        );
+      } else if (item is String) {
+        // Fallback for list of IDs
+        final id = item;
+        final task = availableWorkouts.firstWhere(
+          (t) => t.id == id,
+          orElse: () => availableWorkouts.first,
+        );
+        selectedTasks.add(task);
       }
-      selectedTasks.add(task);
     }
 
     // Enrich Media Info
@@ -582,10 +590,11 @@ Please start the interview in English.
     final missingInfoTaskIds = tasks
         .where((t) => !t.hasMediaInfo)
         .map((t) => t.id)
+        .toSet() // Use Set to avoid duplicates
         .toList();
 
     if (missingInfoTaskIds.isNotEmpty) {
-      final extraInfos = await functionsService.requestTaskInfo(
+      final extraInfos = await functionsService.getWorkoutAssets(
         missingInfoTaskIds,
       );
       for (var i = 0; i < tasks.length; i++) {
@@ -597,10 +606,10 @@ Please start the interview in English.
 
         if (info.isNotEmpty) {
           tasks[i] = task.withMediaInfo(
-            thumbnail: info['thumbnail'] as String?,
-            readyPoseImageUrl: info['readyPoseImageUrl'] as String?,
-            exampleVideoUrl: info['exampleVideoUrl'] as String?,
-            guideAudioUrl: info['guideAudioUrl'] as String?,
+            thumbnail: info['thumbnailUrl'] as String?,
+            readyPoseImageUrl: info['samplePoseUrl'] as String?,
+            exampleVideoUrl: info['videoUrl'] as String?,
+            // bundleUrl could also be stored if needed
           );
         }
       }

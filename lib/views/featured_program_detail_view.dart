@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/featured_program.dart';
 import '../../presentation/viewmodels/home_viewmodel.dart';
 import '../../theme/app_theme.dart';
-import 'package:fitness_gem/l10n/app_localizations.dart';
 
 class FeaturedProgramDetailView extends ConsumerWidget {
   final FeaturedProgram program;

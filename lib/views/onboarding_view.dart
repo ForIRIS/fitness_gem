@@ -488,7 +488,7 @@ class _OnboardingViewState extends State<OnboardingView> {
       weight: 70.0, // Default - not collected in onboarding
       fitnessLevel: _experienceLevel, // Maps to experienceLevel
       targetExercise: _exerciseController.text.isEmpty
-          ? 'Squat'
+          ? 'squat_01'
           : _exerciseController.text,
       healthConditions: _showCustomInjury
           ? _customInjuryController.text

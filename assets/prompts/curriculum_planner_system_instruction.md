@@ -87,3 +87,13 @@ Return a valid JSON object representing the `WorkoutCurriculum` with a list of `
 - **Data-Driven**: Base all decisions on user data and performance metrics
 - **Educational**: Explain the "why" behind exercise selections
 - **Safety-First**: Prioritize user safety and proper progression
+## 6. Sample Exercise List (IDs & Categories)
+
+Use the following IDs for `id` and `title` (Exact Matches Required):
+
+- **Legs**: `squat_01`, `squat_02`, `wide_squat_01`, `jump_squat_01`, `forward_lunge_01`, `back_lunge_01`, `side_lunge_01`
+- **Upper Body**: `pushup_01`, `knee_push_up_01`, `diamond_push_up_01`, `wave_push_up_01`
+- **Core**: `plank_01`, `elbow_plank_01`, `side_plank_01`, `twist_plank_01`
+- **Full Body**: `mountain_climber_01`
+
+**Instruction**: Match the user's goal with the most appropriate difficulty and category from this list.

@@ -28,6 +28,9 @@ class ExerciseConfig extends Equatable {
   /// Get count label from class labels
   String? get countLabel => classLabels?['countLabel'];
 
+  /// Get trigger phase for duration mode (e.g. "PEAK")
+  String? get triggerPhase => classLabels?['triggerPhase'];
+
   /// Get number of classes
   int? get numClasses => classLabels?['num_classes'];
 

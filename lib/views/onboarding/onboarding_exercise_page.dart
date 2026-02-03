@@ -63,22 +63,22 @@ class _OnboardingExercisePageState extends State<OnboardingExercisePage> {
                 [
                   {
                     'name': AppLocalizations.of(context)!.exerciseSquat,
-                    'value': 'Squat',
+                    'value': 'squat_01',
                     'icon': Icons.accessibility_new,
                   },
                   {
                     'name': AppLocalizations.of(context)!.exercisePushup,
-                    'value': 'Push-up',
+                    'value': 'pushup_01',
                     'icon': Icons.fitness_center,
                   },
                   {
                     'name': AppLocalizations.of(context)!.exerciseLunge,
-                    'value': 'Lunge',
+                    'value': 'lunge_01',
                     'icon': Icons.directions_run,
                   },
                   {
                     'name': AppLocalizations.of(context)!.exercisePlank,
-                    'value': 'Plank',
+                    'value': 'plank_01',
                     'icon': Icons.view_headline,
                   },
                 ].map((exercise) {

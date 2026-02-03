@@ -47,32 +47,65 @@ class FunctionsService {
     }
   }
 
-  /// 운동 정보 상세 요청 (썸네일, 비디오 등) - Batch 처리
-  Future<List<Map<String, dynamic>>> requestTaskInfo(
+  /// 운동 리소스 안전 요청 (Bundle Zip, Video 등)
+  Future<List<Map<String, dynamic>>> getWorkoutAssets(
     List<String> taskIds,
   ) async {
     if (taskIds.isEmpty) return [];
 
     try {
-      final HttpsCallable callable = _functions.httpsCallable(
-        'requestTaskInfo',
-      );
-      // "task_ids": [...]
-      final results = await callable.call({'task_ids': taskIds});
+      final results = await _functions.httpsCallable('getWorkoutAssets').call({
+        'task_ids': taskIds,
+      });
 
       final data = results.data as Map<dynamic, dynamic>;
-      final taskUrls = data['task_urls'] as List<dynamic>?;
+      final assets = data['assets'] as List<dynamic>?;
 
-      if (taskUrls == null) return [];
-
-      return taskUrls.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-    } on FirebaseFunctionsException catch (e) {
-      debugPrint('Cloud Function Error (requestTaskInfo): ${e.code}');
-      // 인증 실패 등의 에러 처리 가능
-      return [];
+      if (assets == null) return [];
+      return assets.map((e) => Map<String, dynamic>.from(e as Map)).toList();
     } catch (e) {
-      debugPrint('Error calling requestTaskInfo: $e');
+      debugPrint('Error calling getWorkoutAssets: $e');
       return [];
+    }
+  }
+
+  /// Gemini 운동 분석 요청 (Proxy)
+  Future<Map<String, dynamic>?> analyzeWorkoutInterSet({
+    required String rgbUri,
+    required String controlNetUri,
+    Map<String, dynamic>? context,
+    String? prompt,
+    String? systemInstruction,
+  }) async {
+    try {
+      final results = await _functions
+          .httpsCallable('analyzeWorkoutInterSet')
+          .call({
+            'rgb_uri': rgbUri,
+            'control_net_uri': controlNetUri,
+            'context': context,
+            'prompt': prompt,
+            'system_instruction': systemInstruction,
+          });
+
+      return results.data as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('Error calling analyzeWorkoutInterSet: $e');
+      return null;
+    }
+  }
+
+  /// 낙상 감지 AI 검증 요청
+  Future<Map<String, dynamic>?> verifyFallDetection(String videoUri) async {
+    try {
+      final results = await _functions
+          .httpsCallable('verifyFallDetection')
+          .call({'video_uri': videoUri});
+
+      return results.data as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('Error calling verifyFallDetection: $e');
+      return null;
     }
   }
 

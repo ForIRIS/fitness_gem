@@ -240,7 +240,6 @@ class _AIInterviewViewState extends State<AIInterviewView>
         );
 
         // Handling the result type Either<Failure, WorkoutCurriculum?>
-        // We need to extract the curriculum from the Right side
         final curriculum = result.fold((failure) => null, (c) => c);
 
         if (curriculum != null) {
@@ -253,7 +252,10 @@ class _AIInterviewViewState extends State<AIInterviewView>
               setState(() {
                 _messages.add(
                   _ChatMessage(
-                    text: 'Curriculum created: ${curriculum.title}',
+                    text:
+                        'Curriculum created: ${curriculum.title}\n'
+                        'Duration: ${curriculum.estimatedMinutes} min\n'
+                        '${curriculum.description}',
                     isUser: false,
                   ),
                 );
@@ -262,6 +264,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
               });
 
               if (mounted) {
+                _scrollToBottom();
                 _ttsService.speak(
                   AppLocalizations.of(context)!.downloadComplete,
                 );
@@ -272,9 +275,37 @@ class _AIInterviewViewState extends State<AIInterviewView>
             debugPrint('Error saving curriculum: $e');
             // Continue to show error or fallback
           }
+        } else {
+          // Handle generation failure (null curriculum from Right or Failure from Left)
+          if (mounted) {
+            setState(() {
+              _messages.add(
+                _ChatMessage(
+                  text: 'Failed to generate curriculum. Please try again.',
+                  isUser: false,
+                ),
+              );
+              _hasError = true;
+              _isLoading = false;
+            });
+          }
+          return;
         }
       } catch (e) {
         debugPrint('Error generating curriculum in view: $e');
+        if (mounted) {
+          setState(() {
+            _messages.add(
+              _ChatMessage(
+                text: 'An error occurred while creating your plan.',
+                isUser: false,
+              ),
+            );
+            _hasError = true;
+            _isLoading = false;
+          });
+        }
+        return;
       }
     }
 

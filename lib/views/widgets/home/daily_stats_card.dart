@@ -97,6 +97,14 @@ class DailyStatsCard extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                        Text(
+                          curriculum!.description,
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
