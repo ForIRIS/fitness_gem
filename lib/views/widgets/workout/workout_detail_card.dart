@@ -38,9 +38,15 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
     if (widget.task.exampleVideoUrl.isEmpty) return;
 
     try {
-      _videoController = VideoPlayerController.networkUrl(
-        Uri.parse(widget.task.exampleVideoUrl),
-      );
+      if (widget.task.exampleVideoUrl.startsWith('assets/')) {
+        _videoController = VideoPlayerController.asset(
+          widget.task.exampleVideoUrl,
+        );
+      } else {
+        _videoController = VideoPlayerController.networkUrl(
+          Uri.parse(widget.task.exampleVideoUrl),
+        );
+      }
       await _videoController!.initialize();
       _videoController!.setLooping(true);
       _videoController!.setVolume(0); // Mute

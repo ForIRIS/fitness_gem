@@ -98,20 +98,27 @@ class _SessionFeedbackViewState extends State<SessionFeedbackView> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  task.thumbnail.isNotEmpty
-                      ? task.thumbnail
-                      : 'https://via.placeholder.com/50', // Fallback
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: 50,
-                    height: 50,
-                    color: Colors.grey,
-                    child: const Icon(Icons.fitness_center),
-                  ),
-                ),
+                child: task.thumbnail.startsWith('http')
+                    ? Image.network(
+                        task.thumbnail.isNotEmpty
+                            ? task.thumbnail
+                            : 'https://via.placeholder.com/50',
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _placeholderIcon(),
+                      )
+                    : Image.asset(
+                        task.thumbnail.isNotEmpty
+                            ? task.thumbnail
+                            : 'assets/images/placeholder.png', // Assuming this exists or fallback
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _placeholderIcon(),
+                      ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -152,6 +159,15 @@ class _SessionFeedbackViewState extends State<SessionFeedbackView> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _placeholderIcon() {
+    return Container(
+      width: 50,
+      height: 50,
+      color: Colors.grey,
+      child: const Icon(Icons.fitness_center),
     );
   }
 }

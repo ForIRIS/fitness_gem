@@ -26,6 +26,7 @@ class RepCounter {
   String? _currentState;
   ExercisePhase? _currentPhase;
   double _currentStability = 1.0;
+  double _lastMaxProb = 0.0; // Expose probability
 
   bool _isProcessing = false;
 
@@ -173,6 +174,8 @@ class RepCounter {
         maxIdx = i;
       }
     }
+
+    _lastMaxProb = maxProb; // Store for external access
 
     final detectedState = labels[maxIdx];
 
@@ -619,5 +622,29 @@ class RepCounter {
       }
     });
     return PoseNormalization.normalizeByTorso(landmarks);
+  }
+
+  /// Check if the specific class is detected with high confidence
+  bool isClassDetected(String className, {double threshold = 0.8}) {
+    if (config.classLabels == null) return false;
+    final labels = List<String>.from(config.classLabels!['classes'] ?? []);
+
+    // Find index of label containing className
+    // E.g. "0_Ready", "Ready"
+    int index = -1;
+    for (int i = 0; i < labels.length; i++) {
+      if (labels[i].toLowerCase().contains(className.toLowerCase())) {
+        index = i;
+        break;
+      }
+    }
+
+    if (index == -1 || currentState == null) return false;
+
+    if (currentState!.toLowerCase().contains(className.toLowerCase())) {
+      return _lastMaxProb >= threshold;
+    }
+
+    return false;
   }
 }

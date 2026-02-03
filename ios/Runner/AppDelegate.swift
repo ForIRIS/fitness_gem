@@ -10,9 +10,9 @@ import CoreML
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
+    let registrar = self.registrar(forPlugin: "ModelRunner")!
     let modelChannel = FlutterMethodChannel(name: "com.antigravity.fitness_gem/model_runner",
-                                              binaryMessenger: controller.binaryMessenger)
+                                              binaryMessenger: registrar.messenger())
     
     modelChannel.setMethodCallHandler({
       [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in

@@ -162,7 +162,13 @@ class DailyStatsCard extends StatelessWidget {
                                     ),
                                     image: task.thumbnail.isNotEmpty
                                         ? DecorationImage(
-                                            image: NetworkImage(task.thumbnail),
+                                            image:
+                                                task.thumbnail.startsWith(
+                                                  'http',
+                                                )
+                                                ? NetworkImage(task.thumbnail)
+                                                : AssetImage(task.thumbnail)
+                                                      as ImageProvider,
                                             fit: BoxFit.cover,
                                           )
                                         : null,

@@ -29,6 +29,7 @@ class CacheService {
 
   /// Extract filename from URL
   String _getFileName(String url) {
+    if (url.startsWith('assets/')) return url.split('/').last;
     final uri = Uri.parse(url);
     final pathSegments = uri.pathSegments;
     if (pathSegments.isNotEmpty) {
@@ -39,7 +40,8 @@ class CacheService {
 
   /// Check if file exists in cache
   Future<bool> isCached(String url) async {
-    if (url.isEmpty) return true; // No caching needed for empty URLs
+    if (url.isEmpty || url.startsWith('assets/'))
+      return true; // No caching needed for empty or assets
     final file = await _getCacheFile(url);
     return file.existsSync();
   }
@@ -66,7 +68,7 @@ class CacheService {
     String url, {
     void Function(double progress)? onProgress,
   }) async {
-    if (url.isEmpty) return null;
+    if (url.isEmpty || url.startsWith('assets/')) return null;
 
     // Return immediately if already cached
     final existingPath = await getCachedPath(url);
@@ -144,28 +146,34 @@ class CacheService {
     void Function(int completed, int total, String currentItem)? onProgress,
   }) async {
     // 1. If URLs are empty, fetch them via Cloud Functions
+    List<WorkoutTask> currentTasks = tasks;
     final tasksToFetch = tasks.where((t) => t.exampleVideoUrl.isEmpty).toList();
     if (tasksToFetch.isNotEmpty) {
       onProgress?.call(0, 1, 'Fetching URLs...');
-      await FirebaseService().requestTaskUrls(tasksToFetch);
+      currentTasks = await FirebaseService().requestTaskUrls(tasks);
     }
 
     final allUrls = <String>[];
 
-    for (final task in tasks) {
-      if (task.exampleVideoUrl.isNotEmpty) {
+    for (final task in currentTasks) {
+      // Skip assets as they are handled by the app directly (e.g., VideoPlayer.asset)
+      if (task.exampleVideoUrl.isNotEmpty &&
+          !task.exampleVideoUrl.startsWith('assets/')) {
         allUrls.add(task.exampleVideoUrl);
       }
-      if (task.readyPoseImageUrl.isNotEmpty) {
+      if (task.readyPoseImageUrl.isNotEmpty &&
+          !task.readyPoseImageUrl.startsWith('assets/')) {
         allUrls.add(task.readyPoseImageUrl);
       }
-      if (task.guideAudioUrl.isNotEmpty) {
+      if (task.guideAudioUrl.isNotEmpty &&
+          !task.guideAudioUrl.startsWith('assets/')) {
         allUrls.add(task.guideAudioUrl);
       }
-      if (task.configureUrl.isNotEmpty) {
+      if (task.configureUrl.isNotEmpty &&
+          !task.configureUrl.startsWith('assets/')) {
         allUrls.add(task.configureUrl);
       }
-      if (task.coremlUrl.isNotEmpty) {
+      if (task.coremlUrl.isNotEmpty && !task.coremlUrl.startsWith('assets/')) {
         allUrls.add(task.coremlUrl);
       }
       if (task.onnxUrl.isNotEmpty) {

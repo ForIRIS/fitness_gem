@@ -25,8 +25,8 @@ class AdaptiveOneEuroFilter {
       'd_cutoff': 1.0,
     },
     OneEuroProfile.controlled: {
-      'min_cutoff': 1.0,
-      'beta': 0.5,
+      'min_cutoff': 0.5, // Increased smoothing for UI jitter reduction
+      'beta': 0.1,
       'd_cutoff': 1.0,
     },
     OneEuroProfile.rhythmic: {'min_cutoff': 1.5, 'beta': 1.5, 'd_cutoff': 1.0},
