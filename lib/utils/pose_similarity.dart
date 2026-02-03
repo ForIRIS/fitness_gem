@@ -1,33 +1,33 @@
 import 'dart:math';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
-/// PoseSimilarity - Ready Pose 유사도 비교
+/// PoseSimilarity - Compare pose similarity for Ready Pose
 class PoseSimilarity {
-  /// 두 포즈의 유사도 계산 (0.0 ~ 1.0)
-  /// trainerPose: 정석 자세 (미리 캡처된 좌표)
-  /// userPose: 사용자의 현재 포즈
+  /// Calculate similarity between two poses (0.0 ~ 1.0)
+  /// trainerPose: Standard pose (pre-captured coordinates)
+  /// userPose: User's current pose
   static double compare(List<Point3D> trainerPose, Pose userPose) {
     if (trainerPose.isEmpty) return 0.0;
 
-    // 사용자 포즈에서 벡터 추출 및 정규화
+    // Extract and normalize vector from user pose
     final userVector = _extractAndNormalize(userPose);
     if (userVector.isEmpty) return 0.0;
 
-    // 코사인 유사도 계산
+    // Calculate cosine similarity
     return _cosineSimilarity(trainerPose, userVector);
   }
 
-  /// ML Kit Pose에서 포즈 벡터 추출
+  /// Extract pose vector from ML Kit Pose
   static List<Point3D> extractPoseVector(Pose pose) {
     return _extractAndNormalize(pose);
   }
 
-  /// 정규화: Hip을 원점으로, 크기를 1.0으로 맞춤
+  /// Normalization: Set Hip as origin and scale to 1.0
   static List<Point3D> _extractAndNormalize(Pose pose) {
     final landmarks = pose.landmarks;
     if (landmarks.isEmpty) return [];
 
-    // 주요 랜드마크만 추출
+    // Extract only key landmarks
     final keyTypes = [
       PoseLandmarkType.leftShoulder,
       PoseLandmarkType.rightShoulder,
@@ -43,7 +43,7 @@ class PoseSimilarity {
       PoseLandmarkType.rightAnkle,
     ];
 
-    // 중심점 계산 (Hip 중간점)
+    // Calculate center point (Hip midpoint)
     final leftHip = landmarks[PoseLandmarkType.leftHip];
     final rightHip = landmarks[PoseLandmarkType.rightHip];
 
@@ -52,7 +52,7 @@ class PoseSimilarity {
     final centerX = (leftHip.x + rightHip.x) / 2;
     final centerY = (leftHip.y + rightHip.y) / 2;
 
-    // 스케일 계산 (어깨-힙 거리 기준)
+    // Calculate scale (based on Shoulder-Hip distance)
     final leftShoulder = landmarks[PoseLandmarkType.leftShoulder];
     final rightShoulder = landmarks[PoseLandmarkType.rightShoulder];
 
@@ -61,15 +61,15 @@ class PoseSimilarity {
     final shoulderCenterY = (leftShoulder.y + rightShoulder.y) / 2;
     final torsoLength = (centerY - shoulderCenterY).abs();
 
-    if (torsoLength < 1) return []; // 너무 작으면 무시
+    if (torsoLength < 1) return []; // Ignore if too small
 
-    // 정규화된 벡터 생성
+    // Create normalized vector
     final normalizedPoints = <Point3D>[];
 
     for (final type in keyTypes) {
       final landmark = landmarks[type];
       if (landmark == null) {
-        // 누락된 랜드마크는 0으로
+        // Missing landmarks are set to 0
         normalizedPoints.add(Point3D(0, 0, 0));
       } else {
         normalizedPoints.add(
@@ -85,7 +85,7 @@ class PoseSimilarity {
     return normalizedPoints;
   }
 
-  /// 코사인 유사도 계산
+  /// Calculate cosine similarity
   static double _cosineSimilarity(List<Point3D> a, List<Point3D> b) {
     if (a.length != b.length || a.isEmpty) return 0.0;
 
@@ -103,11 +103,11 @@ class PoseSimilarity {
 
     final similarity = dotProduct / (sqrt(normA) * sqrt(normB));
 
-    // -1 ~ 1 범위를 0 ~ 1로 변환
+    // Convert -1 ~ 1 range to 0 ~ 1
     return (similarity + 1) / 2;
   }
 
-  /// 이미지에서 포즈 추출하여 저장할 수 있는 형태로 변환
+  /// Convert extracted pose from image to storable format
   static Map<String, dynamic> poseToJson(Pose pose) {
     final vector = _extractAndNormalize(pose);
     return {
@@ -115,7 +115,7 @@ class PoseSimilarity {
     };
   }
 
-  /// JSON에서 포즈 벡터 복원
+  /// Restore pose vector from JSON
   static List<Point3D> poseFromJson(Map<String, dynamic> json) {
     final points = json['points'] as List<dynamic>? ?? [];
     return points.map((p) {
@@ -129,7 +129,7 @@ class PoseSimilarity {
   }
 }
 
-/// 3D 포인트 클래스
+/// 3D Point Class
 class Point3D {
   final double x;
   final double y;

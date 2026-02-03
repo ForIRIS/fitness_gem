@@ -54,6 +54,7 @@ class HomeViewModel extends ChangeNotifier {
   bool _isHotCategoriesLoading = false;
   bool _isFeaturedLoading = false;
   String? _errorMessage;
+  WorkoutCurriculum? _tomorrowCurriculum;
 
   // Initialize with a default category if needed, or null
   // Based on user request, 'Build Strength' seems to be the default A case
@@ -70,6 +71,16 @@ class HomeViewModel extends ChangeNotifier {
   bool get isFeaturedLoading => _isFeaturedLoading;
   String? get errorMessage => _errorMessage;
   String get selectedCategory => _selectedCategory;
+  WorkoutCurriculum? get tomorrowCurriculum => _tomorrowCurriculum;
+
+  bool get isTodayCompleted => _todayCurriculum?.isCompleted ?? false;
+
+  bool get isInProgress {
+    if (_todayCurriculum == null) return false;
+    if (isTodayCompleted) return false;
+    return _todayCurriculum!.currentTaskIndex > 0 ||
+        _todayCurriculum!.currentSetIndex > 0;
+  }
 
   /// Select a category and update featured program
   Future<void> selectCategory(String category) async {
@@ -143,6 +154,9 @@ class HomeViewModel extends ChangeNotifier {
         debugPrint('HomeViewModel: Generating new curriculum...');
         await generateNewCurriculum();
       }
+
+      // Load tomorrow's curriculum (mock for now or based on some schedule)
+      await _loadTomorrowCurriculum();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -338,6 +352,28 @@ class HomeViewModel extends ChangeNotifier {
   /// Clear error message
   void clearError() {
     _errorMessage = null;
+    notifyListeners();
+  }
+
+  /// Reset progress of today's curriculum
+  Future<void> resetWorkoutProgress() async {
+    if (_todayCurriculum == null) return;
+
+    final resetCurriculum = _todayCurriculum!.resetProgress();
+    await updateTodayCurriculum(resetCurriculum);
+  }
+
+  /// Load tomorrow's curriculum (Mock implementation)
+  Future<void> _loadTomorrowCurriculum() async {
+    // In a real app, this might fetch from a pre-planned schedule
+    // or generate a preview. For now, we'll provide a mock tomorrow curriculum.
+    _tomorrowCurriculum = WorkoutCurriculum(
+      id: 'tomorrow_1',
+      title: 'Active Recovery',
+      description: 'Light stretching and mobility to recover from today.',
+      createdAt: DateTime.now().add(const Duration(days: 1)),
+      workoutTasks: [], // Empty for preview
+    );
     notifyListeners();
   }
 }

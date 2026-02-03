@@ -8,16 +8,16 @@ import '../domain/entities/workout_task.dart';
 import '../domain/entities/workout_curriculum.dart';
 import '../data/models/workout_task_model.dart';
 
-/// FirebaseService - Firebase 초기화 및 운동 라이브러리 관리
+/// FirebaseService - Manage Firebase initialization and workout library
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();
   factory FirebaseService() => _instance;
   FirebaseService._internal();
 
   bool _initialized = false;
-  bool _isOffline = false; // Auth 실패 시 오프라인 모드로 동작
+  bool _isOffline = false; // Operates in offline mode if Auth fails
 
-  /// Firebase 초기화
+  /// Firebase initialization
   Future<void> initialize() async {
     if (_initialized) return;
 
@@ -25,13 +25,13 @@ class FirebaseService {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // 익명 로그인
+    // Anonymous Sign-in
     await _signInAnonymously();
 
     _initialized = true;
   }
 
-  /// 익명 로그인
+  /// Anonymous Sign-in
   Future<void> _signInAnonymously() async {
     try {
       final auth = FirebaseAuth.instance;
@@ -41,16 +41,16 @@ class FirebaseService {
       }
     } catch (e) {
       debugPrint('Anonymous sign in failed: $e (Falling back to offline mode)');
-      _isOffline = true; // 실패 시 오프라인 모드 활성화
+      _isOffline = true; // Enable offline mode on failure
     }
   }
 
-  /// 현재 사용자 ID
+  /// Current User ID
   String? get currentUserId => FirebaseAuth.instance.currentUser?.uid;
 
-  // ============ 운동 라이브러리 (더미 데이터) ============
+  // ============ Workout Library (Dummy Data) ============
 
-  /// 모든 운동 목록 조회
+  /// Fetch all workout list
   Future<List<WorkoutTask>> fetchWorkoutAllList() async {
     if (_isOffline) return _dummyWorkoutTasks;
 
@@ -60,7 +60,7 @@ class FirebaseService {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        // 데이터가 없으면 더미 데이터 업로드 (개발 편의성)
+        // Upload dummy data if no data exists (development convenience)
         await uploadDummyData();
         return _dummyWorkoutTasks;
       }
@@ -70,12 +70,12 @@ class FirebaseService {
           .toList();
     } catch (e) {
       debugPrint('Error fetching workouts: $e');
-      // 에러 발생 시 더미 데이터 반환 (오프라인 등)
+      // Return dummy data on error (offline, etc.)
       return _dummyWorkoutTasks;
     }
   }
 
-  /// 카테고리별 운동 검색
+  /// Search workouts by category
   Future<List<WorkoutTask>> searchWorkoutParts(String category) async {
     if (_isOffline) {
       return _dummyWorkoutTasks
@@ -92,7 +92,7 @@ class FirebaseService {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        // Firestore에 없으면 더미에서 검색
+        // Search in dummy if not in Firestore
         return _dummyWorkoutTasks
             .where(
               (task) => task.category.toLowerCase() == category.toLowerCase(),
@@ -113,7 +113,7 @@ class FirebaseService {
     }
   }
 
-  /// 특정 운동 조회
+  /// Fetch specific workouts
   Future<List<WorkoutTask>> fetchWorkoutTask(
     List<String> workoutTaskIds,
   ) async {
@@ -125,10 +125,10 @@ class FirebaseService {
     }
 
     try {
-      // whereIn은 최대 10개까지만 가능하므로 10개씩 끊어서 요청 (여기서는 간단히 처리)
+      // whereIn is limited to 10 items, so handle in chunks (simplified here)
       if (workoutTaskIds.length > 10) {
-        // 단순화를 위해 10개 이상은 개별 쿼리 병렬 처리 or 그냥 fetchAll 후 필터링
-        // MVP: Fetch All and Filter (데이터가 적으므로)
+        // For simplicity, individual query parallel processing or just fetchAll and filter
+        // MVP: Fetch All and Filter (as data is small)
         final all = await fetchWorkoutAllList();
         return all.where((t) => workoutTaskIds.contains(t.id)).toList();
       }
@@ -142,7 +142,7 @@ class FirebaseService {
           .map((doc) => WorkoutTaskModel.fromMap(doc.data()).toEntity())
           .toList();
 
-      // 만약 Firestore에서 못 찾은 게 있으면 더미에서 찾기 (Mixed scenarios)
+      // If some items not found in Firestore, search in dummy (Mixed scenarios)
       if (fetched.length < workoutTaskIds.length) {
         final foundIds = fetched.map((e) => e.id).toSet();
         final missingIds = workoutTaskIds.where((id) => !foundIds.contains(id));
@@ -163,7 +163,7 @@ class FirebaseService {
     }
   }
 
-  /// Cloud Function을 통해 운동 미디어 URL(Signed URL) 요청
+  /// Request workout media URLs (Signed URLs) via Cloud Function
   /// Returns updated tasks with URLs populated
   Future<List<WorkoutTask>> requestTaskUrls(List<WorkoutTask> tasks) async {
     if (tasks.isEmpty) return tasks;
@@ -222,7 +222,7 @@ class FirebaseService {
     }
   }
 
-  /// 더미 데이터 업로드 (개발용)
+  /// Upload dummy data (for development)
   Future<void> uploadDummyData() async {
     try {
       final batch = FirebaseFirestore.instance.batch();
@@ -239,7 +239,7 @@ class FirebaseService {
     }
   }
 
-  /// Gemini에 전달할 운동 목록 텍스트
+  /// Workout list text to provide to Gemini
   Future<String> getWorkoutListForGemini(String category) async {
     final tasks = await searchWorkoutParts(category);
     final buffer = StringBuffer();
@@ -255,10 +255,10 @@ class FirebaseService {
     return buffer.toString();
   }
 
-  /// 일일 인기 카테고리 조회
+  /// Fetch daily hot categories
   Future<List<String>> fetchDailyHotCategories() async {
     if (_isOffline) {
-      // 오프라인 모드일 경우 목업 데이터 반환
+      // Return mockup data in offline mode
       return mockDailyHotCategories;
     }
 
@@ -271,12 +271,12 @@ class FirebaseService {
       return categories.map((e) => e.toString()).toList();
     } catch (e) {
       debugPrint('Error fetching daily hot categories: $e');
-      // 에러 발생 시 목업 데이터 반환
+      // Return mockup data on error
       return mockDailyHotCategories;
     }
   }
 
-  /// 추천 프로그램 조회
+  /// Fetch featured program
   Future<WorkoutCurriculum?> fetchFeaturedProgram() async {
     try {
       Map<String, dynamic> data;
@@ -321,7 +321,7 @@ class FirebaseService {
     }
   }
 
-  // ============ 더미 데이터 (16종 운동) ============
+  // ============ Dummy Data (16 Exercise Types) ============
 
   static const Map<String, dynamic> mockFeaturedProgram = {
     'id': 'summer_shred_mock',
@@ -357,7 +357,7 @@ class FirebaseService {
   ];
 
   static final List<WorkoutTask> _dummyWorkoutTasks = [
-    // === 하체 (Squat) ===
+    // === Lower Body (Squat) ===
     WorkoutTask(
       id: 'squat_01',
       title: 'Box Squat',
@@ -431,7 +431,7 @@ class FirebaseService {
       difficulty: 4,
     ),
 
-    // === 상체 (Push) ===
+    // === Upper Body (Push) ===
     WorkoutTask(
       id: 'push_01',
       title: 'Wall Push-up',
@@ -505,7 +505,7 @@ class FirebaseService {
       difficulty: 4,
     ),
 
-    // === 코어 (Core) ===
+    // === Core ===
     WorkoutTask(
       id: 'core_01',
       title: 'Elbow Plank',
@@ -583,7 +583,7 @@ class FirebaseService {
       difficulty: 4,
     ),
 
-    // === 런지 (Lunge) ===
+    // === Lunge ===
     WorkoutTask(
       id: 'lunge_01',
       title: 'Static Lunge',

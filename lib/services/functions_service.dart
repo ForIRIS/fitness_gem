@@ -1,7 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 
-/// FunctionsService - Firebase Cloud Functions 호출 관리
+/// FunctionsService - Manage Firebase Cloud Functions calls
 class FunctionsService {
   static final FunctionsService _instance = FunctionsService._internal();
   factory FunctionsService() => _instance;
@@ -9,7 +9,7 @@ class FunctionsService {
 
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
-  /// 서버 상태 확인 (테스트용)
+  /// Check server status (for testing)
   Future<Map<String, dynamic>?> checkServerStatus() async {
     try {
       final HttpsCallable callable = _functions.httpsCallable(
@@ -30,7 +30,7 @@ class FunctionsService {
     }
   }
 
-  /// Hello World 호출 (테스트용)
+  /// Hello World call (for testing)
   Future<Map<String, dynamic>?> callHelloWorld({String? name}) async {
     try {
       final HttpsCallable callable = _functions.httpsCallable('helloWorld');
@@ -47,7 +47,7 @@ class FunctionsService {
     }
   }
 
-  /// 운동 리소스 안전 요청 (Bundle Zip, Video 등)
+  /// Request workout assets safely (Bundle Zip, Video, etc.)
   Future<List<Map<String, dynamic>>> getWorkoutAssets(
     List<String> taskIds,
   ) async {
@@ -69,7 +69,7 @@ class FunctionsService {
     }
   }
 
-  /// Gemini 운동 분석 요청 (Proxy)
+  /// Gemini workout analysis request (Proxy)
   Future<Map<String, dynamic>?> analyzeWorkoutInterSet({
     required String rgbUri,
     required String controlNetUri,
@@ -95,7 +95,7 @@ class FunctionsService {
     }
   }
 
-  /// 낙상 감지 AI 검증 요청
+  /// Fall detection AI verification request
   Future<Map<String, dynamic>?> verifyFallDetection(String videoUri) async {
     try {
       final results = await _functions
@@ -109,7 +109,7 @@ class FunctionsService {
     }
   }
 
-  /// 에뮬레이터 설정 (개발용)
+  /// Emulator settings (for development)
   void useEmulator(String host, int port) {
     try {
       _functions.useFunctionsEmulator(host, port);

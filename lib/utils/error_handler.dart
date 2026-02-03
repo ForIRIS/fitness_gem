@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
-/// ErrorHandler - 공통 에러 핸들링 유틸리티
+/// ErrorHandler - Common error handling utility
 class ErrorHandler {
-  /// 재시도 로직 래퍼
-  /// [action]: 실행할 비동기 함수
-  /// [maxRetries]: 최대 재시도 횟수
-  /// [delay]: 재시도 간격 (ms)
+  /// Retry logic wrapper
+  /// [action]: Async function to execute
+  /// [maxRetries]: Maximum number of retries
+  /// [delayMs]: Delay between retries (ms)
   static Future<T?> withRetry<T>({
     required Future<T> Function() action,
     int maxRetries = 3,
@@ -32,7 +33,7 @@ class ErrorHandler {
     return null;
   }
 
-  /// 에러 스낵바 표시
+  /// Show error snackbar
   static void showErrorSnackBar(
     BuildContext context,
     String message, {
@@ -64,7 +65,7 @@ class ErrorHandler {
     );
   }
 
-  /// 성공 스낵바 표시
+  /// Show success snackbar
   static void showSuccessSnackBar(
     BuildContext context,
     String message, {
@@ -87,45 +88,50 @@ class ErrorHandler {
     );
   }
 
-  /// 사용자 친화적 에러 메시지 변환
-  static String getUserFriendlyMessage(Object error) {
+  /// Convert to user-friendly error message
+  static String getUserFriendlyMessage(Object error, [BuildContext? context]) {
     final errorString = error.toString().toLowerCase();
+
+    final l10n = context != null ? AppLocalizations.of(context) : null;
 
     if (errorString.contains('socket') ||
         errorString.contains('network') ||
         errorString.contains('connection')) {
-      return '네트워크 연결을 확인해주세요.';
+      return l10n?.errNetwork ?? 'Please check your network connection.';
     }
 
     if (errorString.contains('timeout')) {
-      return '서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.';
+      return l10n?.errTimeout ??
+          'Server response is delayed. Please try again later.';
     }
 
     if (errorString.contains('permission')) {
-      return '필요한 권한을 허용해주세요.';
+      return l10n?.errPermission ?? 'Please grant the required permissions.';
     }
 
     if (errorString.contains('camera')) {
-      return '카메라 접근에 문제가 발생했습니다.';
+      return l10n?.errCamera ??
+          'A problem occurred while accessing the camera.';
     }
 
     if (errorString.contains('api') || errorString.contains('gemini')) {
-      return 'AI 서비스에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      return l10n?.errAiService ??
+          'A problem occurred with the AI service. Please try again later.';
     }
 
     if (errorString.contains('storage') || errorString.contains('disk')) {
-      return '저장 공간이 부족합니다.';
+      return l10n?.errStorage ?? 'Insufficient storage space.';
     }
 
-    return '문제가 발생했습니다. 다시 시도해주세요.';
+    return l10n?.errUnknown ?? 'A problem occurred. Please try again.';
   }
 
-  /// 에러 다이얼로그 표시
+  /// Show error dialog
   static Future<bool> showErrorDialog(
     BuildContext context, {
     required String title,
     required String message,
-    String confirmText = '확인',
+    String confirmText = 'OK',
     String? cancelText,
     VoidCallback? onConfirm,
   }) async {
@@ -162,7 +168,7 @@ class ErrorHandler {
     return result ?? false;
   }
 
-  /// 로딩 오버레이 표시
+  /// Show loading overlay
   static OverlayEntry? _loadingOverlay;
 
   static void showLoading(BuildContext context, {String? message}) {

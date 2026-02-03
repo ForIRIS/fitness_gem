@@ -261,7 +261,7 @@ class FormRuleChecker {
   }
 }
 
-/// 폼 위반 정보
+/// Form violation info
 class FormViolation {
   final String ruleId;
   final String shortMessage;

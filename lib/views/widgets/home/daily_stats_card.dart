@@ -7,11 +7,13 @@ import '../../../domain/entities/workout_curriculum.dart';
 class DailyStatsCard extends StatelessWidget {
   final WorkoutCurriculum? curriculum;
   final VoidCallback onViewDetail;
+  final bool isCompleted;
 
   const DailyStatsCard({
     super.key,
     required this.curriculum,
     required this.onViewDetail,
+    this.isCompleted = false,
   });
 
   @override
@@ -22,10 +24,12 @@ class DailyStatsCard extends StatelessWidget {
         height: 220, // Adjusted height for background image
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(32),
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppTheme.capri, AppTheme.kiwiColada],
+            colors: isCompleted
+                ? [const Color(0xFF667eea), const Color(0xFF764ba2)]
+                : [AppTheme.capri, AppTheme.kiwiColada],
           ),
           boxShadow: [
             BoxShadow(
@@ -46,13 +50,38 @@ class DailyStatsCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        AppLocalizations.of(context)!.todayWorkout,
-                        style: GoogleFonts.outfit(
-                          fontSize: 22,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.todayWorkout,
+                            style: GoogleFonts.outfit(
+                              fontSize: 22,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (isCompleted) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                AppLocalizations.of(context)!.completed,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       if (curriculum != null)
                         ElevatedButton(

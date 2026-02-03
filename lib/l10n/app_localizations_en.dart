@@ -301,7 +301,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todayWorkout => 'Today\'s Workout';
 
   @override
-  String estimatedTime(Object minutes) {
+  String get todayProgramDescFallback =>
+      'Follow your customized AI coaching plan.';
+
+  @override
+  String estimatedTime(String minutes) {
     return '~$minutes min';
   }
 
@@ -354,7 +358,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sorry, failed to generate curriculum. Please try again.';
 
   @override
-  String errorOccurred(Object error) {
+  String errorOccurred(String error) {
     return 'An error occurred: $error';
   }
 
@@ -419,7 +423,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadComplete => 'Complete!';
 
   @override
-  String downloadFailed(Object error) {
+  String downloadFailed(String error) {
     return 'Download failed: $error';
   }
 
@@ -503,4 +507,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hold => 'HOLD';
+
+  @override
+  String get errNetwork => 'Please check your network connection.';
+
+  @override
+  String get errTimeout =>
+      'Server response is delayed. Please try again later.';
+
+  @override
+  String get errPermission => 'Please grant the required permissions.';
+
+  @override
+  String get errCamera => 'A problem occurred while accessing the camera.';
+
+  @override
+  String get errAiService =>
+      'A problem occurred with the AI service. Please try again later.';
+
+  @override
+  String get errStorage => 'Insufficient storage space.';
+
+  @override
+  String get errUnknown => 'A problem occurred. Please try again.';
+
+  @override
+  String get workoutWellDone => 'Well done today!';
+
+  @override
+  String get continueTomorrow => 'Let\'s keep it up tomorrow.';
+
+  @override
+  String get resumeWorkout => 'Resume Workout';
+
+  @override
+  String get resumeTitle => 'Resume Workout?';
+
+  @override
+  String get resumeDesc =>
+      'Would you like to resume where you left off or start from the beginning?';
+
+  @override
+  String get resumeFromLast => 'Resume from last';
+
+  @override
+  String get startBeginning => 'Start from beginning';
+
+  @override
+  String get tomorrowWorkout => 'Tomorrow\'s Workout';
+
+  @override
+  String get completed => 'Completed';
 }

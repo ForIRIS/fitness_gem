@@ -133,11 +133,12 @@
   "startWorkout": "운동 시작",
   "aiChat": "상담",
   "todayWorkout": "오늘의 운동",
+  "todayProgramDescFallback": "AI 맞춤 코칭 계획에 따라 운동을 진행하세요.",
   "estimatedTime": "약 {minutes}분",
   "@estimatedTime": {
     "placeholders": {
       "minutes": {
-        "type": "Object"
+        "type": "String"
       }
     }
   },
@@ -166,7 +167,7 @@
   "@errorOccurred": {
     "placeholders": {
       "error": {
-        "type": "Object"
+        "type": "String"
       }
     }
   },
@@ -194,7 +195,7 @@
   "@downloadFailed": {
     "placeholders": {
       "error": {
-        "type": "Object"
+        "type": "String"
       }
     }
   },
@@ -215,5 +216,21 @@
   "geminiApiKeyTitle": "Gemini API Key",
   "hackathonEdition": "해커톤 에디션",
   "downloadAndStart": "다운로드 후 시작",
-  "createWorkout": "운동 생성하기"
+  "createWorkout": "운동 생성하기",
+  "errNetwork": "네트워크 연결을 확인해주세요.",
+  "errTimeout": "서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.",
+  "errPermission": "필요한 권한을 허용해주세요.",
+  "errCamera": "카메라 접근에 문제가 발생했습니다.",
+  "errAiService": "AI 서비스에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
+  "errStorage": "저장 공간이 부족합니다.",
+  "errUnknown": "문제가 발생했습니다. 다시 시도해주세요.",
+  "workoutWellDone": "오늘도 수고하셨어요!",
+  "continueTomorrow": "내일도 함께 운동해요.",
+  "resumeWorkout": "운동 이어하기",
+  "resumeTitle": "이전 운동을 이어하시겠습니까?",
+  "resumeDesc": "중단했던 부분부터 시작할까요, 아니면 처음부터 다시 시작할까요?",
+  "resumeFromLast": "마지막부터 이어하기",
+  "startBeginning": "처음부터 시작하기",
+  "tomorrowWorkout": "내일의 운동",
+  "completed": "완료됨"
 }

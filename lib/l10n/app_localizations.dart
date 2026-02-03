@@ -644,11 +644,17 @@ abstract class AppLocalizations {
   /// **'Today\'s Workout'**
   String get todayWorkout;
 
+  /// No description provided for @todayProgramDescFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow your customized AI coaching plan.'**
+  String get todayProgramDescFallback;
+
   /// No description provided for @estimatedTime.
   ///
   /// In en, this message translates to:
   /// **'~{minutes} min'**
-  String estimatedTime(Object minutes);
+  String estimatedTime(String minutes);
 
   /// No description provided for @generatingWorkout.
   ///
@@ -738,7 +744,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'An error occurred: {error}'**
-  String errorOccurred(Object error);
+  String errorOccurred(String error);
 
   /// No description provided for @viewDetail.
   ///
@@ -864,7 +870,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Download failed: {error}'**
-  String downloadFailed(Object error);
+  String downloadFailed(String error);
 
   /// No description provided for @ready.
   ///
@@ -1021,6 +1027,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'HOLD'**
   String get hold;
+
+  /// No description provided for @errNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check your network connection.'**
+  String get errNetwork;
+
+  /// No description provided for @errTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Server response is delayed. Please try again later.'**
+  String get errTimeout;
+
+  /// No description provided for @errPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Please grant the required permissions.'**
+  String get errPermission;
+
+  /// No description provided for @errCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'A problem occurred while accessing the camera.'**
+  String get errCamera;
+
+  /// No description provided for @errAiService.
+  ///
+  /// In en, this message translates to:
+  /// **'A problem occurred with the AI service. Please try again later.'**
+  String get errAiService;
+
+  /// No description provided for @errStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Insufficient storage space.'**
+  String get errStorage;
+
+  /// No description provided for @errUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'A problem occurred. Please try again.'**
+  String get errUnknown;
+
+  /// No description provided for @workoutWellDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Well done today!'**
+  String get workoutWellDone;
+
+  /// No description provided for @continueTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s keep it up tomorrow.'**
+  String get continueTomorrow;
+
+  /// No description provided for @resumeWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume Workout'**
+  String get resumeWorkout;
+
+  /// No description provided for @resumeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume Workout?'**
+  String get resumeTitle;
+
+  /// No description provided for @resumeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Would you like to resume where you left off or start from the beginning?'**
+  String get resumeDesc;
+
+  /// No description provided for @resumeFromLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume from last'**
+  String get resumeFromLast;
+
+  /// No description provided for @startBeginning.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from beginning'**
+  String get startBeginning;
+
+  /// No description provided for @tomorrowWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow\'s Workout'**
+  String get tomorrowWorkout;
+
+  /// No description provided for @completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completed;
 }
 
 class _AppLocalizationsDelegate

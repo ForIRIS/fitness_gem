@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../services/cache_service.dart';
 import '../presentation/viewmodels/home_viewmodel.dart';
 import 'camera_view.dart';
 import 'settings_view.dart';
 import 'ai_chat_view.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'workout_detail_view.dart';
+import 'featured_program_detail_view.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
 import '../domain/entities/workout_curriculum.dart';
+import '../widgets/glass_dialog.dart';
 import 'widgets/home/home_header.dart';
 import 'widgets/home/daily_stats_card.dart';
 import 'widgets/home/category_chips.dart';
 import 'widgets/home/featured_program_card.dart';
 import 'widgets/home/home_shimmer_widgets.dart';
-import 'featured_program_detail_view.dart';
+import 'widgets/home/tomorrow_workout_card.dart';
 
 /// HomeView - Dashboard Screen (Refactored with Riverpod)
 class HomeView extends ConsumerStatefulWidget {
@@ -87,7 +89,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
     }
   }
 
-  void _startWorkout() {
+  void _startWorkout() async {
     final viewModel = ref.read(homeViewModelProvider);
     if (viewModel.todayCurriculum == null) {
       ScaffoldMessenger.of(
@@ -96,6 +98,41 @@ class _HomeViewState extends ConsumerState<HomeView> {
       return;
     }
 
+    if (viewModel.isInProgress) {
+      // Show Resume Dialog
+      showDialog(
+        context: context,
+        builder: (context) => GlassDialog(
+          title: AppLocalizations.of(context)!.resumeTitle,
+          content: AppLocalizations.of(context)!.resumeDesc,
+          icon: const Icon(Icons.history, color: Colors.white, size: 48),
+          actions: [
+            GlassButton(
+              text: AppLocalizations.of(context)!.startBeginning,
+              onPressed: () async {
+                Navigator.pop(context);
+                await viewModel.resetWorkoutProgress();
+                _navigateToCamera();
+              },
+            ),
+            GlassButton(
+              text: AppLocalizations.of(context)!.resumeFromLast,
+              isPrimary: true,
+              onPressed: () {
+                Navigator.pop(context);
+                _navigateToCamera();
+              },
+            ),
+          ],
+        ),
+      );
+    } else {
+      _navigateToCamera();
+    }
+  }
+
+  void _navigateToCamera() {
+    final viewModel = ref.read(homeViewModelProvider);
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CameraView(
@@ -111,47 +148,53 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final viewModel = ref.watch(homeViewModelProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F4F7), // Cloud Dancer approx
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: () => ref.read(homeViewModelProvider).loadData(),
+          onRefresh: () => viewModel.loadData(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 HomeHeader(
                   userProfile: viewModel.userProfile,
+                  isCompleted: viewModel.isTodayCompleted,
+                  isInProgress: viewModel.isInProgress,
                   onOpenAIChat: _openAIChat,
                   onOpenSettings: _openSettings,
                 ),
+                const SizedBox(height: 16),
+                DailyStatsCard(
+                  curriculum: viewModel.todayCurriculum,
+                  isCompleted: viewModel.isTodayCompleted,
+                  onViewDetail: () {
+                    if (viewModel.todayCurriculum != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => WorkoutDetailView(
+                            curriculum: viewModel.todayCurriculum!,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                if (viewModel.isTodayCompleted) ...[
+                  const SizedBox(height: 24),
+                  TomorrowWorkoutCard(curriculum: viewModel.tomorrowCurriculum),
+                ],
                 const SizedBox(height: 24),
-                viewModel.isLoading
-                    ? const ShimmerDailyStats()
-                    : DailyStatsCard(
-                        curriculum: viewModel.todayCurriculum,
-                        onViewDetail: () {
-                          if (viewModel.todayCurriculum != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => WorkoutDetailView(
-                                  curriculum: viewModel.todayCurriculum!,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                const SizedBox(height: 24),
+                // Featured Programs and Categories in a white card container
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Container(
                     padding: EdgeInsets
                         .zero, //const EdgeInsets.symmetric(vertical: 20),
                     decoration: BoxDecoration(
                       color: AppTheme.surface,
                       borderRadius: BorderRadius.circular(32),
-                      // Optional: Add a subtle shadow if it helps separation, or keep flat
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.05),
@@ -217,10 +260,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 
-  // Shimmer Widgets
-
   Widget _buildRecentActivity() {
-    // Placeholder - can be expanded later with actual history data
     return const SizedBox.shrink();
   }
 
@@ -300,10 +340,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: AppTheme.brightMarigold,
-          shape: BoxShape.circle,
+          color: isActive
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(30),
         ),
         child: Icon(icon, color: Colors.white, size: 24),
       ),

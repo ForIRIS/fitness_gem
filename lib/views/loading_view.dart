@@ -111,7 +111,9 @@ class _LoadingViewState extends State<LoadingView> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = AppLocalizations.of(context)!.downloadFailed(e);
+          _statusMessage = AppLocalizations.of(
+            context,
+          )!.downloadFailed(e.toString());
           _hasError = true;
         });
       }

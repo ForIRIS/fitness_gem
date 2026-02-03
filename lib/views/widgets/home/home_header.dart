@@ -8,12 +8,16 @@ class HomeHeader extends StatelessWidget {
   final UserProfile? userProfile;
   final VoidCallback onOpenAIChat;
   final VoidCallback onOpenSettings;
+  final bool isCompleted;
+  final bool isInProgress;
 
   const HomeHeader({
     super.key,
     required this.userProfile,
     required this.onOpenAIChat,
     required this.onOpenSettings,
+    this.isCompleted = false,
+    this.isInProgress = false,
   });
 
   @override
@@ -33,19 +37,25 @@ class HomeHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppLocalizations.of(context)!.welcomeUser(displayName),
+                  isCompleted
+                      ? AppLocalizations.of(context)!.workoutWellDone
+                      : AppLocalizations.of(context)!.welcomeUser(displayName),
                   style: GoogleFonts.outfit(
                     fontSize: 16,
-                    color: AppTheme.textSecondary, // Slate 500
+                    color: AppTheme.textSecondary,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  AppLocalizations.of(context)!.readyToWorkout,
+                  isCompleted
+                      ? AppLocalizations.of(context)!.continueTomorrow
+                      : (isInProgress
+                            ? AppLocalizations.of(context)!.resumeWorkout
+                            : AppLocalizations.of(context)!.readyToWorkout),
                   style: GoogleFonts.outfit(
                     fontSize: 24,
-                    color: AppTheme.textPrimary, // Slate 900
+                    color: AppTheme.textPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

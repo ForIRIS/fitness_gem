@@ -21,16 +21,16 @@ void main() async {
   // Load .env
   await dotenv.load(fileName: ".env");
 
-  // Firebase 초기화
+  // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Firebase 서비스 초기화 (익명 로그인 등)
+  // Initialize Firebase service (Anonymous login, etc.)
   await FirebaseService().initialize();
 
   // Initialize dependency injection
   await setupDependencyInjection();
 
-  // 프로필 존재 여부 확인
+  // Check if profile exists
   final profileResult = await getIt<GetUserProfileUseCase>().execute();
   bool showOnboarding = true;
   profileResult.fold(

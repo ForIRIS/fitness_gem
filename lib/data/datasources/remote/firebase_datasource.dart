@@ -120,15 +120,18 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
       'slogan': 'Get Set, Stay Ignite.',
       'description':
           'High-intensity routine to burn calories and build muscle.',
-      'imageUrl': 'assets/images/workouts/squat_01.png', // 스쿼트하는 남성 이미지
+      'imageUrl': 'assets/images/workouts/squat_04.png', // Jump sqaut image
       'membersCount': '5.8k+',
       'rating': 5.0,
       'difficulty': '3', // String type consistency
-      'duration': '9 Min',
+      'duration': '18 Min',
       'task_ids': [
-        'squat_01',
-        'push_01',
-        'core_01',
+        'squat_04',
+        'push_03',
+        'lunge_03',
+        'core_03',
+        'squat_03',
+        'push_02',
       ], // Added task_ids to prevent crash
       'userAvatars': [
         'https://i.pravatar.cc/150?img=11',

@@ -89,7 +89,6 @@
   "enterPhone": "Enter phone number",
   "enterApiKey": "Enter API Key",
   "saveApiKey": "Save API Key",
-  "saveApiKey": "Save API Key",
   "welcomeMessage": "Hello, {age}-year-old {level} member!",
   "welcomeTrainee": "Hello Trainee",
   "welcomeUser": "Hi {name}",
@@ -126,11 +125,12 @@
   "startWorkout": "Start Workout",
   "aiChat": "Chat",
   "todayWorkout": "Today's Workout",
+  "todayProgramDescFallback": "Follow your customized AI coaching plan.",
   "estimatedTime": "~{minutes} min",
   "@estimatedTime": {
     "placeholders": {
       "minutes": {
-        "type": "Object"
+        "type": "String"
       }
     }
   },
@@ -159,7 +159,7 @@
   "@errorOccurred": {
     "placeholders": {
       "error": {
-        "type": "Object"
+        "type": "String"
       }
     }
   },
@@ -187,7 +187,7 @@
   "@downloadFailed": {
     "placeholders": {
       "error": {
-        "type": "Object"
+        "type": "String"
       }
     }
   },
@@ -216,5 +216,21 @@
   "fullyCustomizableProgram": "Fully Customizable Program",
   "joinTheFlow": "Get Set, Stay\nIgnite, Finish Proud.\nJoin The Flow.",
   "members": "Members",
-  "hold": "HOLD"
+  "hold": "HOLD",
+  "errNetwork": "Please check your network connection.",
+  "errTimeout": "Server response is delayed. Please try again later.",
+  "errPermission": "Please grant the required permissions.",
+  "errCamera": "A problem occurred while accessing the camera.",
+  "errAiService": "A problem occurred with the AI service. Please try again later.",
+  "errStorage": "Insufficient storage space.",
+  "errUnknown": "A problem occurred. Please try again.",
+  "workoutWellDone": "Well done today!",
+  "continueTomorrow": "Let's keep it up tomorrow.",
+  "resumeWorkout": "Resume Workout",
+  "resumeTitle": "Resume Workout?",
+  "resumeDesc": "Would you like to resume where you left off or start from the beginning?",
+  "resumeFromLast": "Resume from last",
+  "startBeginning": "Start from beginning",
+  "tomorrowWorkout": "Tomorrow's Workout",
+  "completed": "Completed"
 }

@@ -347,7 +347,7 @@ Please provide the Next Step advice in the User Language.
               analystJson['safety_status']?['primary_risk_area'] ?? 'None',
           'tts_message':
               adviceJson['tts_message'] ??
-              (language == 'English' ? "Great job!" : "수고하셨습니다."),
+              (language == 'English' ? "Great job!" : "Well done."),
           'detailed_analysis': analystJson,
           'next_step_adjustments': adviceJson['next_set_adjustments'],
         },

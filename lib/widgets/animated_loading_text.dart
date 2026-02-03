@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-/// AnimatedLoadingText - 점이 애니메이션되는 로딩 텍스트
-/// 예: "로딩 중." → "로딩 중.." → "로딩 중..." → "로딩 중."
+/// AnimatedLoadingText - Loading text with animated dots
+/// Ex: "Loading." → "Loading.." → "Loading..." → "Loading."
 class AnimatedLoadingText extends StatefulWidget {
   final String baseText;
   final TextStyle? style;
@@ -50,7 +50,7 @@ class _AnimatedLoadingTextState extends State<AnimatedLoadingText> {
   @override
   Widget build(BuildContext context) {
     final dots = '.' * _dotCount;
-    final padding = ' ' * (widget.maxDots - _dotCount); // 너비 유지
+    final padding = ' ' * (widget.maxDots - _dotCount); // Maintain width
 
     return Text('${widget.baseText}$dots$padding', style: widget.style);
   }

@@ -10,6 +10,8 @@ class AppTheme {
   static const Color brightMarigold = Color(0xFFFFA800); // 15-1164 TCX (Approx)
   static const Color paradisePink = Color(0xFFE63E62); // 17-1755 TCX
   static const Color blazingYellow = Color(0xFFFEE715); // 12-0643 TCX (Approx)
+  static const Color skyBlue = Color(0xFF87CEEB);
+  static const Color indigoInk = Color(0xFF1E2F97);
 
   // Semantic Aliases
   static const Color primary = irisOrchid;

@@ -293,7 +293,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get todayWorkout => '오늘의 운동';
 
   @override
-  String estimatedTime(Object minutes) {
+  String get todayProgramDescFallback => 'AI 맞춤 코칭 계획에 따라 운동을 진행하세요.';
+
+  @override
+  String estimatedTime(String minutes) {
     return '약 $minutes분';
   }
 
@@ -344,7 +347,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get curriculumGenerationError => '죄송합니다, 커리큘럼을 생성하지 못했습니다. 다시 시도해주세요.';
 
   @override
-  String errorOccurred(Object error) {
+  String errorOccurred(String error) {
     return '오류가 발생했습니다: $error';
   }
 
@@ -409,7 +412,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadComplete => '완료되었습니다!';
 
   @override
-  String downloadFailed(Object error) {
+  String downloadFailed(String error) {
     return '다운로드 실패: $error';
   }
 
@@ -491,4 +494,52 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get hold => '유지';
+
+  @override
+  String get errNetwork => '네트워크 연결을 확인해주세요.';
+
+  @override
+  String get errTimeout => '서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.';
+
+  @override
+  String get errPermission => '필요한 권한을 허용해주세요.';
+
+  @override
+  String get errCamera => '카메라 접근에 문제가 발생했습니다.';
+
+  @override
+  String get errAiService => 'AI 서비스에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+
+  @override
+  String get errStorage => '저장 공간이 부족합니다.';
+
+  @override
+  String get errUnknown => '문제가 발생했습니다. 다시 시도해주세요.';
+
+  @override
+  String get workoutWellDone => '오늘도 수고하셨어요!';
+
+  @override
+  String get continueTomorrow => '내일도 함께 운동해요.';
+
+  @override
+  String get resumeWorkout => '운동 이어하기';
+
+  @override
+  String get resumeTitle => '이전 운동을 이어하시겠습니까?';
+
+  @override
+  String get resumeDesc => '중단했던 부분부터 시작할까요, 아니면 처음부터 다시 시작할까요?';
+
+  @override
+  String get resumeFromLast => '마지막부터 이어하기';
+
+  @override
+  String get startBeginning => '처음부터 시작하기';
+
+  @override
+  String get tomorrowWorkout => '내일의 운동';
+
+  @override
+  String get completed => '완료됨';
 }

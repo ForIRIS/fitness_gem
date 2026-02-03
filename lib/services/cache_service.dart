@@ -143,7 +143,7 @@ class CacheService {
     List<WorkoutTask> tasks, {
     void Function(int completed, int total, String currentItem)? onProgress,
   }) async {
-    // 1. URL이 비어 있는 경우 Cloud Functions를 통해 URL 획득
+    // 1. If URLs are empty, fetch them via Cloud Functions
     final tasksToFetch = tasks.where((t) => t.exampleVideoUrl.isEmpty).toList();
     if (tasksToFetch.isNotEmpty) {
       onProgress?.call(0, 1, 'Fetching URLs...');
@@ -180,7 +180,7 @@ class CacheService {
 
       final cachedPath = await downloadAndCache(url);
 
-      // Zip 파일인 경우 압축 해제
+      // If Zip file, unzip it
       if (cachedPath != null && url.toLowerCase().contains('.zip')) {
         onProgress?.call(completed, allUrls.length, 'Unzipping $fileName...');
         await _unzipFile(File(cachedPath));
