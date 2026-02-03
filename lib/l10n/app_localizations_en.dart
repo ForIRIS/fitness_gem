@@ -561,4 +561,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get completed => 'Completed';
+
+  @override
+  String get signInSignUp => 'Sign Up / Log In';
+
+  @override
+  String get signOut => 'Sign Out';
+
+  @override
+  String get deleteAccount => 'Delete Account';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Are you sure you want to delete your account? This action cannot be undone.';
+
+  @override
+  String get loginRequired => 'Login Required';
+
+  @override
+  String get guardianLoginMessage => 'Please sign in to use Guardian features.';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get signIn => 'Sign In';
+
+  @override
+  String get signUp => 'Sign Up';
+
+  @override
+  String get passwordMismatch => 'Passwords do not match';
+
+  @override
+  String get fieldRequired => 'This field is required';
+
+  @override
+  String get authError => 'Authentication Error';
+
+  @override
+  String get invalidEmail => 'Invalid email address format.';
+
+  @override
+  String get userDisabled => 'This user has been disabled.';
+
+  @override
+  String get userNotFound => 'No user found with this email.';
+
+  @override
+  String get wrongPassword => 'Incorrect password.';
+
+  @override
+  String get emailAlreadyInUse => 'This email is already registered.';
+
+  @override
+  String get weakPassword => 'The password is too weak.';
+
+  @override
+  String get unknownError => 'An unknown error occurred.';
 }

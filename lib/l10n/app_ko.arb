@@ -247,5 +247,12 @@
   "signUp": "회원가입",
   "passwordMismatch": "비밀번호가 일치하지 않습니다",
   "fieldRequired": "필수 항목입니다",
-  "authError": "인증 오류"
+  "authError": "인증 오류",
+  "invalidEmail": "이메일 형식이 올바르지 않습니다.",
+  "userDisabled": "사용이 중지된 계정입니다.",
+  "userNotFound": "해당 이메일로 가입된 사용자가 없습니다.",
+  "wrongPassword": "비밀번호가 틀렸습니다.",
+  "emailAlreadyInUse": "이미 사용 중인 이메일입니다.",
+  "weakPassword": "비밀번호가 너무 취약합니다.",
+  "unknownError": "알 수 없는 오류가 발생했습니다."
 }

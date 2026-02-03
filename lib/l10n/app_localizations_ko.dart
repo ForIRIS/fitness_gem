@@ -545,4 +545,67 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get completed => '완료됨';
+
+  @override
+  String get signInSignUp => '회원가입 / 로그인';
+
+  @override
+  String get signOut => '로그아웃';
+
+  @override
+  String get deleteAccount => '회원 탈퇴';
+
+  @override
+  String get deleteAccountConfirm => '정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.';
+
+  @override
+  String get loginRequired => '로그인 필요';
+
+  @override
+  String get guardianLoginMessage => '보호자 기능을 사용하려면 로그인이 필요합니다.';
+
+  @override
+  String get email => '이메일';
+
+  @override
+  String get password => '비밀번호';
+
+  @override
+  String get confirmPassword => '비밀번호 확인';
+
+  @override
+  String get signIn => '로그인';
+
+  @override
+  String get signUp => '회원가입';
+
+  @override
+  String get passwordMismatch => '비밀번호가 일치하지 않습니다';
+
+  @override
+  String get fieldRequired => '필수 항목입니다';
+
+  @override
+  String get authError => '인증 오류';
+
+  @override
+  String get invalidEmail => '이메일 형식이 올바르지 않습니다.';
+
+  @override
+  String get userDisabled => '사용이 중지된 계정입니다.';
+
+  @override
+  String get userNotFound => '해당 이메일로 가입된 사용자가 없습니다.';
+
+  @override
+  String get wrongPassword => '비밀번호가 틀렸습니다.';
+
+  @override
+  String get emailAlreadyInUse => '이미 사용 중인 이메일입니다.';
+
+  @override
+  String get weakPassword => '비밀번호가 너무 취약합니다.';
+
+  @override
+  String get unknownError => '알 수 없는 오류가 발생했습니다.';
 }

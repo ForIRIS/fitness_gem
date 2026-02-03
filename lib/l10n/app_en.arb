@@ -247,5 +247,12 @@
   "signUp": "Sign Up",
   "passwordMismatch": "Passwords do not match",
   "fieldRequired": "This field is required",
-  "authError": "Authentication Error"
+  "authError": "Authentication Error",
+  "invalidEmail": "Invalid email address format.",
+  "userDisabled": "This user has been disabled.",
+  "userNotFound": "No user found with this email.",
+  "wrongPassword": "Incorrect password.",
+  "emailAlreadyInUse": "This email is already registered.",
+  "weakPassword": "The password is too weak.",
+  "unknownError": "An unknown error occurred."
 }
