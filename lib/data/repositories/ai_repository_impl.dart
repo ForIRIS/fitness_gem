@@ -317,13 +317,24 @@ User Language: $language
 Please provide the Next Step advice in the User Language.
 ''';
 
-      final advice = await remoteDataSource.generateContent(
+      final consultantResponse = await remoteDataSource.generateContent(
         apiKey: _apiKey,
         systemInstruction: _consultantSystemInstruction,
         prompt: consultantPrompt,
+        responseMimeType: 'application/json',
       );
 
-      // 4. Map to UI format
+      // 4. Parse Consultant Response
+      Map<String, dynamic> adviceJson = {};
+      if (consultantResponse != null) {
+        try {
+          adviceJson = json.decode(consultantResponse);
+        } catch (e) {
+          debugPrint('Error parsing consultant response: $e');
+        }
+      }
+
+      // 5. Map to UI format
       final result = {
         'session_summary': {
           'exercise_name': exerciseName,
@@ -335,8 +346,10 @@ Please provide the Next Step advice in the User Language.
           'main_issue':
               analystJson['safety_status']?['primary_risk_area'] ?? 'None',
           'tts_message':
-              advice ?? (language == 'English' ? "Great job!" : "수고하셨습니다."),
+              adviceJson['tts_message'] ??
+              (language == 'English' ? "Great job!" : "수고하셨습니다."),
           'detailed_analysis': analystJson,
+          'next_step_adjustments': adviceJson['next_set_adjustments'],
         },
       };
 

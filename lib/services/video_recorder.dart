@@ -6,8 +6,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter/return_code.dart';
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/return_code.dart';
+
+/// Frame Data with Stability Score
+class FrameData {
+  final String path;
+  final double stability;
+  final int index;
+
+  FrameData({required this.path, required this.stability, required this.index});
+}
 
 /// VideoRecorder - Dual-stream Video Recording Service
 /// Records RGB video and ControlNet (Skeleton) video simultaneously
@@ -15,7 +24,9 @@ class VideoRecorder {
   // Configuration
   static const int targetFps = 15;
   static const int targetWidth = 640;
-  static const int targetHeight = 480;
+  static const int targetHeight = 360;
+  static const int highlightSeconds = 10;
+  static const int maxHighlightFrames = targetFps * highlightSeconds;
 
   // State
   bool _isRecording = false;
@@ -28,10 +39,11 @@ class VideoRecorder {
   String? _rgbVideoPath;
 
   // ControlNet Frame Capture
-  final List<String> _controlNetFramePaths = [];
+  final List<FrameData> _frameDataBuffer = [];
   int _frameCount = 0;
   Timer? _frameTimer;
   Pose? _currentPose;
+  double _lastStability = 1.0;
 
   // Callbacks
   void Function(Pose?)? onPoseUpdate;
@@ -60,7 +72,7 @@ class VideoRecorder {
 
       // Start ControlNet Frame Capture Timer
       _frameCount = 0;
-      _controlNetFramePaths.clear();
+      _frameDataBuffer.clear();
       _startControlNetCapture();
 
       _isRecording = true;
@@ -92,7 +104,13 @@ class VideoRecorder {
       final imageBytes = await _generateSkeletonImage(_currentPose!);
       if (imageBytes != null) {
         await File(framePath).writeAsBytes(imageBytes);
-        _controlNetFramePaths.add(framePath);
+        _frameDataBuffer.add(
+          FrameData(
+            path: framePath,
+            stability: _lastStability,
+            index: _frameCount,
+          ),
+        );
         _frameCount++;
       }
     } catch (e) {
@@ -244,8 +262,9 @@ class VideoRecorder {
   }
 
   /// Update Current Pose (Called every frame from CameraView)
-  void updatePose(Pose? pose) {
+  void updatePose(Pose? pose, {double stability = 1.0}) {
     _currentPose = pose;
+    _lastStability = stability;
     if (onPoseUpdate != null) onPoseUpdate!(pose);
   }
 
@@ -261,27 +280,43 @@ class VideoRecorder {
       final rgbXFile = await _cameraController!.stopVideoRecording();
 
       // Move RGB file to session directory
-      final rgbDestPath = '${_tempDir!.path}/rgb_video.mp4';
-      await File(rgbXFile.path).copy(rgbDestPath);
+      final rawRgbPath = '${_tempDir!.path}/raw_rgb.mp4';
+      await File(rgbXFile.path).copy(rawRgbPath);
       await File(rgbXFile.path).delete();
 
-      // 2. Convert ControlNet frames to video
+      // 2. Determine Best Highlight Window (Lowest Stability)
+      final window = _findWorstStabilityWindow();
+      final double startTimeSec = window.startIndex / targetFps;
+      final double durationSec = window.length / targetFps;
+
+      // 3. Trim RGB to Highlight Window
+      final rgbDestPath = '${_tempDir!.path}/rgb_video.mp4';
+      final trimSuccess = await _trimVideo(
+        rawRgbPath,
+        rgbDestPath,
+        startTime: startTimeSec,
+        duration: durationSec,
+      );
+      final finalRgbPath = trimSuccess ? rgbDestPath : rawRgbPath;
+
+      // 4. Convert SELECTED Skeleton frames to video
       String? controlNetPath;
-      if (_controlNetFramePaths.isNotEmpty) {
-        controlNetPath = await _convertFramesToVideo();
+      if (window.frames.isNotEmpty) {
+        controlNetPath = await _convertFramesToVideo(window.frames);
       }
 
-      // 3. Clean up temporary frame PNGs
-      for (final path in _controlNetFramePaths) {
+      // 5. Clean up ALL temporary frame PNGs
+      for (final frame in _frameDataBuffer) {
         try {
-          await File(path).delete();
+          final f = File(frame.path);
+          if (await f.exists()) await f.delete();
         } catch (_) {}
       }
-      _controlNetFramePaths.clear();
+      _frameDataBuffer.clear();
 
       return RecordingResult(
         sessionId: _sessionId!,
-        rgbVideoPath: rgbDestPath,
+        rgbVideoPath: finalRgbPath,
         controlNetVideoPath: controlNetPath,
       );
     } catch (e) {
@@ -290,25 +325,111 @@ class VideoRecorder {
     }
   }
 
+  /// Find 10-second window with lowest average stability
+  _WindowResult _findWorstStabilityWindow() {
+    if (_frameDataBuffer.isEmpty) {
+      return _WindowResult(startIndex: 0, length: 0, frames: []);
+    }
+
+    final int n = _frameDataBuffer.length;
+    final int winSize = maxHighlightFrames;
+
+    // If session is shorter than 10s, return all
+    if (n <= winSize) {
+      return _WindowResult(
+        startIndex: 0,
+        length: n,
+        frames: List.from(_frameDataBuffer),
+      );
+    }
+
+    int bestStart = n - winSize; // Default to last 10s if no clear "winner"
+    double minStabilitySum = double.infinity;
+
+    // Sliding window for min stability
+    double currentSum = 0.0;
+    for (int i = 0; i < winSize; i++) {
+      currentSum += _frameDataBuffer[i].stability;
+    }
+
+    minStabilitySum = currentSum;
+    bestStart = 0;
+
+    for (int i = 1; i <= n - winSize; i++) {
+      currentSum =
+          currentSum -
+          _frameDataBuffer[i - 1].stability +
+          _frameDataBuffer[i + winSize - 1].stability;
+      if (currentSum < minStabilitySum) {
+        minStabilitySum = currentSum;
+        bestStart = i;
+      }
+    }
+
+    final selectedFrames = _frameDataBuffer.sublist(
+      bestStart,
+      bestStart + winSize,
+    );
+    return _WindowResult(
+      startIndex: bestStart,
+      length: winSize,
+      frames: selectedFrames,
+    );
+  }
+
+  /// Trim Video to Highlight Window
+  Future<bool> _trimVideo(
+    String inputPath,
+    String outputPath, {
+    required double startTime,
+    required double duration,
+  }) async {
+    try {
+      // Use re-encoding for precise cuts if needed, or copy for speed
+      // -ss before -i is faster. -t is duration.
+      final command =
+          '-ss ${startTime.toStringAsFixed(2)} -i $inputPath -t ${duration.toStringAsFixed(2)} -c copy -y $outputPath';
+      final session = await FFmpegKit.execute(command);
+      final returnCode = await session.getReturnCode();
+      return ReturnCode.isSuccess(returnCode);
+    } catch (e) {
+      debugPrint('Error trimming video: $e');
+      return false;
+    }
+  }
+
   /// Convert PNG Frames to Mp4 Video using FFmpeg
-  Future<String?> _convertFramesToVideo() async {
-    if (_controlNetFramePaths.isEmpty || _tempDir == null) return null;
+  Future<String?> _convertFramesToVideo(List<FrameData> frames) async {
+    if (frames.isEmpty || _tempDir == null) return null;
 
     try {
       final outputPath = '${_tempDir!.path}/controlnet_video.mp4';
 
-      // FFmpeg Command for High Compatibility
+      // We need to re-index frames to %05d for FFmpeg to read them sequentially
+      // Copy selected frames to a temporary "stitch" folder
+      final stitchDir = Directory('${_tempDir!.path}/stitch');
+      if (await stitchDir.exists()) await stitchDir.delete(recursive: true);
+      await stitchDir.create();
+
+      for (int i = 0; i < frames.length; i++) {
+        final destPath =
+            '${stitchDir.path}/frame_${i.toString().padLeft(5, '0')}.png';
+        await File(frames[i].path).copy(destPath);
+      }
+
+      // FFmpeg Command
       final command =
-          '-framerate $targetFps -i ${_tempDir!.path}/frame_%05d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p -y $outputPath';
+          '-framerate $targetFps -i ${stitchDir.path}/frame_%05d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p -y $outputPath';
 
       final session = await FFmpegKit.execute(command);
       final returnCode = await session.getReturnCode();
 
+      // Clean up stitch dir
+      await stitchDir.delete(recursive: true);
+
       if (ReturnCode.isSuccess(returnCode)) {
-        debugPrint('ControlNet video generated: $outputPath');
         return outputPath;
       } else {
-        debugPrint('FFmpeg execution failed: ${await session.getOutput()}');
         return null;
       }
     } catch (e) {
@@ -332,14 +453,26 @@ class VideoRecorder {
       await _tempDir!.delete(recursive: true);
     }
 
-    _controlNetFramePaths.clear();
+    _frameDataBuffer.clear();
   }
 
   /// Dispose Timer
   void dispose() {
     _frameTimer?.cancel();
-    _controlNetFramePaths.clear();
+    _frameDataBuffer.clear();
   }
+}
+
+/// Internal helper for window result
+class _WindowResult {
+  final int startIndex;
+  final int length;
+  final List<FrameData> frames;
+  _WindowResult({
+    required this.startIndex,
+    required this.length,
+    required this.frames,
+  });
 }
 
 /// Recording Result Data Class

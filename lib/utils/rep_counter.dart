@@ -25,6 +25,7 @@ class RepCounter {
   int _repCount = 0;
   String? _currentState;
   ExercisePhase? _currentPhase;
+  double _currentStability = 1.0;
 
   bool _isProcessing = false;
 
@@ -92,6 +93,9 @@ class RepCounter {
   /// Current state
 
   String? get currentState => _currentState;
+
+  /// Current form stability (1.0 = perfect, 0.0 = total deviation)
+  double get currentStability => _currentStability;
 
   /// Reset counter
   void reset() {
@@ -504,7 +508,10 @@ class RepCounter {
   void _analyzePoseQuality(ExerciseModelOutput output, String state) {
     if (config.medianStats == null || config.classLabels == null) return;
     final statsData = config.medianStats![state];
-    if (statsData == null) return; // No stats for this state
+    if (statsData == null) {
+      _currentStability = 1.0;
+      return;
+    }
 
     List<double> medians;
     List<double>? stdDevs;
@@ -516,10 +523,12 @@ class RepCounter {
     } else if (statsData is List) {
       medians = List<double>.from(statsData);
     } else {
+      _currentStability = 1.0;
       return;
     }
 
     if (medians.isEmpty || medians.length != output.currentFeatures.length) {
+      _currentStability = 1.0;
       return;
     }
 
@@ -528,35 +537,36 @@ class RepCounter {
     if (featureKeys.length != medians.length) return;
 
     final deviatingFeatures = <String>{};
+    double totalDeviation = 0.0;
+
     for (int i = 0; i < medians.length; i++) {
       final currentVal = output.currentFeatures[i];
       final medianVal = medians[i];
       final diff = (currentVal - medianVal).abs();
 
-      bool isDeviating = false;
-
-      if (stdDevs != null && i < stdDevs.length) {
-        // Z-Score Analysis
-        final sigma = stdDevs[i];
-        if (sigma > 0.001) {
-          // Avoid division by zero
-          // Threshold: 2.0 Sigma (95% confidence interval deviation)
-          if (diff / sigma > 2.0) {
-            isDeviating = true;
-          }
-        } else {
-          // Fallback if zero variance (strict exact match expected?)
-          if (diff > 0.2) isDeviating = true;
-        }
+      // Normalize deviation by sigma if available
+      double deviation;
+      if (stdDevs != null && i < stdDevs.length && stdDevs[i] > 0.001) {
+        deviation =
+            (diff / stdDevs[i]).clamp(0.0, 5.0) /
+            5.0; // Max 5 sigma = 100% deviation
       } else {
-        // Legacy fixed threshold
-        if (diff > 0.2) isDeviating = true;
+        deviation = diff.clamp(0.0, 0.5) / 0.5; // Fixed 0.5 threshold
       }
 
-      if (isDeviating) {
+      totalDeviation += deviation;
+
+      if (deviation > 0.4) {
+        // Equivalent to ~2.0 sigma
         deviatingFeatures.add(featureKeys[i]);
       }
     }
+
+    // Update real-time stability score
+    _currentStability = (1.0 - (totalDeviation / medians.length)).clamp(
+      0.0,
+      1.0,
+    );
 
     if (deviatingFeatures.isNotEmpty) {
       _triggerSpecificCoaching(state, deviatingFeatures);

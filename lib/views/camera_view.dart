@@ -382,10 +382,44 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
             if (feedbackText != null) {
               _ttsService.speak(feedbackText);
             }
+
+            // Apply Adjustments (Adaptive Curriculum)
+            final adjustments =
+                analysisResult['feedback']?['next_step_adjustments'];
+            if (adjustments != null) {
+              _applyAiAdjustments(adjustments);
+            }
           }
         },
       );
     }
+  }
+
+  void _applyAiAdjustments(Map<String, dynamic> adjustments) {
+    if (_curriculum == null || _currentTask == null) return;
+
+    final reps = adjustments['reps'] as int?;
+    final restSec = adjustments['rest_sec'] as int?;
+
+    // Create updated task
+    final updatedTask = _currentTask!.withAdjustment(
+      reps: reps ?? _currentTask!.adjustedReps,
+      timeoutSec: restSec ?? _currentTask!.timeoutSec,
+    );
+
+    // Update curriculum tasks
+    final updatedTasks = List<WorkoutTask>.from(_curriculum!.workoutTasks);
+    final taskIndex = _curriculum!.currentTaskIndex;
+    updatedTasks[taskIndex] = updatedTask;
+
+    setState(() {
+      _curriculum = _curriculum!.copyWith(workoutTasks: updatedTasks);
+      _currentTask = updatedTask;
+    });
+
+    debugPrint(
+      'AI Adjustments Applied: Reps=${updatedTask.adjustedReps}, Rest=${updatedTask.timeoutSec}',
+    );
   }
 
   void _startWorkoutTimer() {
@@ -463,7 +497,10 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           _speakBodyNotVisibleThrottled();
         }
 
-        _videoRecorder.updatePose(pose); // For ControlNet Frame
+        _videoRecorder.updatePose(
+          pose,
+          stability: _repCounter?.currentStability ?? 1.0,
+        ); // For ControlNet Frame
 
         // Rep Counting
         if (_repCounter != null && !_isResting) {
@@ -637,7 +674,8 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     await _stopRecordingAndAnalyze();
 
     // Rest Guide
-    await _ttsService.speakRestStart(10);
+    final restTime = _currentTask?.timeoutSec ?? 10;
+    await _ttsService.speakRestStart(restTime);
 
     // Prepare Next Set/Example
     _curriculum = _curriculum?.moveToNextSet();
@@ -671,8 +709,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     _timeoutSeconds = _currentTask?.timeoutSec ?? 60;
     _repCounter?.reset();
 
-    // Rest Time (Guide Pose Prep after 10s)
-    await Future.delayed(const Duration(seconds: 10));
+    // Rest Time (Guide Pose Prep)
+    final nextRestTime = _currentTask?.timeoutSec ?? 10;
+    await Future.delayed(Duration(seconds: nextRestTime));
 
     if (mounted) {
       await _ttsService.speakReadyPose();

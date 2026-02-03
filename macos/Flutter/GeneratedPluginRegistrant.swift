@@ -7,7 +7,7 @@ import Foundation
 
 import cloud_firestore
 import cloud_functions
-import ffmpeg_kit_flutter
+import ffmpeg_kit_flutter_new
 import file_selector_macos
 import firebase_auth
 import firebase_core

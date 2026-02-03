@@ -92,12 +92,18 @@ class WorkoutTask extends Equatable {
         guideAudioUrl.isNotEmpty;
   }
 
-  /// Apply adjustment to reps/sets/duration (returns new instance)
-  WorkoutTask withAdjustment({int? reps, int? sets, int? durationSec}) {
+  /// Apply adjustment to reps/sets/duration/rest (returns new instance)
+  WorkoutTask withAdjustment({
+    int? reps,
+    int? sets,
+    int? durationSec,
+    int? timeoutSec,
+  }) {
     return copyWith(
       adjustedReps: reps,
       adjustedSets: sets,
       adjustedDurationSec: durationSec,
+      timeoutSec: timeoutSec,
     );
   }
 
