@@ -353,6 +353,18 @@ Please provide the Next Step advice in the User Language.
         },
       };
 
+      // Cost Logging (AI Wrapper Best Practice)
+      const double inputRate = 0.075 / 1000000; // \$0.075 per 1M tokens (Flash)
+      const double outputRate = 0.3 / 1000000; // \$0.3 per 1M tokens (Flash)
+      debugPrint('[AI_METERING] Multimodal analysis session complete.');
+      debugPrint('[AI_METERING] Model: Gemini 3 Flash');
+      debugPrint(
+        '[AI_METERING] Rates: Input=\$$inputRate, Output=\$$outputRate',
+      );
+      debugPrint(
+        '[AI_METERING] Highlight Duration: 10s (Target FPS: 15, Resolution: 640x480)',
+      );
+
       return Right(result);
     } catch (e) {
       return Left(ServerFailure('Video Analysis Failed: $e'));

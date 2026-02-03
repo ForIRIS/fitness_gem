@@ -398,16 +398,25 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   void _applyAiAdjustments(Map<String, dynamic> adjustments) {
     if (_curriculum == null || _currentTask == null) return;
 
-    final reps = adjustments['reps'] as int?;
-    final restSec = adjustments['rest_sec'] as int?;
+    // 1. Extract and Validate Reps (Limit between 5 and 30 for safety)
+    int? reps = adjustments['reps'] as int?;
+    if (reps != null) {
+      reps = reps.clamp(5, 30);
+    }
 
-    // Create updated task
+    // 2. Extract and Validate Rest (Limit between 5s and 120s)
+    int? restSec = adjustments['rest_sec'] as int?;
+    if (restSec != null) {
+      restSec = restSec.clamp(5, 120);
+    }
+
+    // 3. Create updated task
     final updatedTask = _currentTask!.withAdjustment(
       reps: reps ?? _currentTask!.adjustedReps,
       timeoutSec: restSec ?? _currentTask!.timeoutSec,
     );
 
-    // Update curriculum tasks
+    // 4. Update curriculum tasks
     final updatedTasks = List<WorkoutTask>.from(_curriculum!.workoutTasks);
     final taskIndex = _curriculum!.currentTaskIndex;
     updatedTasks[taskIndex] = updatedTask;
@@ -418,7 +427,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     });
 
     debugPrint(
-      'AI Adjustments Applied: Reps=${updatedTask.adjustedReps}, Rest=${updatedTask.timeoutSec}',
+      'AI Adjustments Applied (Safe): Reps=${updatedTask.adjustedReps}, Rest=${updatedTask.timeoutSec}',
     );
   }
 

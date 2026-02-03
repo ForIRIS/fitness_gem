@@ -122,12 +122,14 @@ class GeminiRemoteDataSourceImpl implements GeminiRemoteDataSource {
               {'text': json.encode(inputContext)},
               {
                 'file_data': {'mime_type': 'video/mp4', 'file_uri': rgbUri},
+                'media_resolution': {'level': 'MEDIA_RESOLUTION_MEDIUM'},
               },
               {
                 'file_data': {
                   'mime_type': 'video/mp4',
                   'file_uri': controlNetUri,
                 },
+                'media_resolution': {'level': 'MEDIA_RESOLUTION_MEDIUM'},
               },
             ],
           },

@@ -24,7 +24,7 @@ class VideoRecorder {
   // Configuration
   static const int targetFps = 15;
   static const int targetWidth = 640;
-  static const int targetHeight = 360;
+  static const int targetHeight = 480;
   static const int highlightSeconds = 10;
   static const int maxHighlightFrames = targetFps * highlightSeconds;
 
@@ -276,53 +276,69 @@ class VideoRecorder {
     _frameTimer?.cancel();
 
     try {
-      // 1. Stop RGB Recording
-      final rgbXFile = await _cameraController!.stopVideoRecording();
+      // 1. Process RGB Video
+      final rawRgbPath = await _processRawRgbVideo();
 
-      // Move RGB file to session directory
-      final rawRgbPath = '${_tempDir!.path}/raw_rgb.mp4';
-      await File(rgbXFile.path).copy(rawRgbPath);
-      await File(rgbXFile.path).delete();
-
-      // 2. Determine Best Highlight Window (Lowest Stability)
+      // 2. Determine and Trim Highlight Window
       final window = _findWorstStabilityWindow();
-      final double startTimeSec = window.startIndex / targetFps;
-      final double durationSec = window.length / targetFps;
+      final finalRgbPath = await _trimToHighlightWindow(rawRgbPath, window);
 
-      // 3. Trim RGB to Highlight Window
-      final rgbDestPath = '${_tempDir!.path}/rgb_video.mp4';
-      final trimSuccess = await _trimVideo(
-        rawRgbPath,
-        rgbDestPath,
-        startTime: startTimeSec,
-        duration: durationSec,
-      );
-      final finalRgbPath = trimSuccess ? rgbDestPath : rawRgbPath;
+      // 3. Process Skeleton Video
+      final controlNetPath = await _processSkeletonVideo(window);
 
-      // 4. Convert SELECTED Skeleton frames to video
-      String? controlNetPath;
-      if (window.frames.isNotEmpty) {
-        controlNetPath = await _convertFramesToVideo(window.frames);
-      }
-
-      // 5. Clean up ALL temporary frame PNGs
-      for (final frame in _frameDataBuffer) {
-        try {
-          final f = File(frame.path);
-          if (await f.exists()) await f.delete();
-        } catch (_) {}
-      }
-      _frameDataBuffer.clear();
+      // 4. Cleanup
+      await _cleanupTemporaryFrames();
 
       return RecordingResult(
         sessionId: _sessionId!,
         rgbVideoPath: finalRgbPath,
         controlNetVideoPath: controlNetPath,
+        highlightStartTime: window.startIndex / targetFps,
       );
     } catch (e) {
       debugPrint('Error stopping recording: $e');
       return null;
     }
+  }
+
+  Future<String> _processRawRgbVideo() async {
+    final rgbXFile = await _cameraController!.stopVideoRecording();
+    final rawRgbPath = '${_tempDir!.path}/raw_rgb.mp4';
+    await File(rgbXFile.path).copy(rawRgbPath);
+    await File(rgbXFile.path).delete();
+    return rawRgbPath;
+  }
+
+  Future<String> _trimToHighlightWindow(
+    String rawRgbPath,
+    _WindowResult window,
+  ) async {
+    final double startTimeSec = window.startIndex / targetFps;
+    final double durationSec = window.length / targetFps;
+
+    final rgbDestPath = '${_tempDir!.path}/rgb_video.mp4';
+    final trimSuccess = await _trimVideo(
+      rawRgbPath,
+      rgbDestPath,
+      startTime: startTimeSec,
+      duration: durationSec,
+    );
+    return trimSuccess ? rgbDestPath : rawRgbPath;
+  }
+
+  Future<String?> _processSkeletonVideo(_WindowResult window) async {
+    if (window.frames.isEmpty) return null;
+    return await _convertFramesToVideo(window.frames);
+  }
+
+  Future<void> _cleanupTemporaryFrames() async {
+    for (final frame in _frameDataBuffer) {
+      try {
+        final f = File(frame.path);
+        if (await f.exists()) await f.delete();
+      } catch (_) {}
+    }
+    _frameDataBuffer.clear();
   }
 
   /// Find 10-second window with lowest average stability
@@ -480,11 +496,13 @@ class RecordingResult {
   final String sessionId;
   final String rgbVideoPath;
   final String? controlNetVideoPath;
+  final double highlightStartTime;
 
   RecordingResult({
     required this.sessionId,
     required this.rgbVideoPath,
     this.controlNetVideoPath,
+    this.highlightStartTime = 0.0,
   });
 
   File get rgbFile => File(rgbVideoPath);
