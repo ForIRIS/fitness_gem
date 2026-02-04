@@ -625,4 +625,125 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unknownError => 'An unknown error occurred.';
+
+  @override
+  String get baselineTitle => 'PHYSICAL BASELINE';
+
+  @override
+  String get baselineMovementBenchmark => 'Movement Benchmark';
+
+  @override
+  String get baselineInstructions =>
+      'To personalize your experience, please perform 3 moderate air squats. \n\nEnsure your head and feet are visible in the frame.';
+
+  @override
+  String get baselineImReady => 'I\'M READY';
+
+  @override
+  String get baselineFullBodyNotVisible => 'Full Body Not Visible';
+
+  @override
+  String get baselineMoveBack =>
+      'Please move back until your feet are visible.';
+
+  @override
+  String get baselineHoldingPosition => 'Holding Position...';
+
+  @override
+  String get baselineRecording => 'RECORDING...';
+
+  @override
+  String get baselinePerformSquats => 'Perform 3 moderate air squats now';
+
+  @override
+  String get baselineAnalyzing => 'GEMINI ANALYZING...';
+
+  @override
+  String get baselineExtractingMarkers =>
+      'Extracting mobility and stability markers';
+
+  @override
+  String get baselineSuccess => 'Assessment Success';
+
+  @override
+  String get baselineStability => 'STABILITY';
+
+  @override
+  String get baselineMobility => 'MOBILITY';
+
+  @override
+  String get baselineContinue => 'CONTINUE TO WORKOUT';
+
+  @override
+  String get baselineErrorTitle => 'Something went wrong';
+
+  @override
+  String get baselineTryAgainLater => 'TRY AGAIN LATER';
+
+  @override
+  String ttsWorkoutStart(String exerciseName) {
+    return 'Starting $exerciseName workout. Please take your position.';
+  }
+
+  @override
+  String ttsSetStart(int setNumber) {
+    return 'Starting set $setNumber.';
+  }
+
+  @override
+  String ttsRestStart(int seconds) {
+    return 'Rest for $seconds seconds.';
+  }
+
+  @override
+  String get ttsReadyPose => 'Please take the ready pose.';
+
+  @override
+  String get ttsWorkoutComplete => 'Workout complete. Great job!';
+
+  @override
+  String get ttsFallDetection =>
+      'Are you okay? If there is no problem, please touch the screen.';
+
+  @override
+  String get ttsAnalyzing => 'Analyzing. Please wait a moment.';
+
+  @override
+  String get ttsBodyNotVisible =>
+      'Please adjust the camera so your whole body is visible.';
+
+  @override
+  String ttsCountdown(int seconds) {
+    return '$seconds';
+  }
+
+  @override
+  String get ttsStart => 'Start!';
+
+  @override
+  String get ttsReady => 'Ready! Starting soon.';
+
+  @override
+  String get baselineTtsStart =>
+      'We will now perform a quick physical assessment. Please stand back so your full body is visible.';
+
+  @override
+  String get baselineTtsPerformSquats =>
+      'Please perform 3 moderate air squats.';
+
+  @override
+  String get baselineTtsComplete =>
+      'Assessment complete. I have updated your physical profile.';
+
+  @override
+  String get baselineTtsError =>
+      'An error occurred during assessment. Please try again.';
+
+  @override
+  String get errorCaptureFailed => 'Failed to capture assessment video';
+
+  @override
+  String errorAnalysisFailed(String message) {
+    return 'Analysis failed: $message';
+  }
 }

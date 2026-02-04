@@ -37,8 +37,9 @@ class AIPoseCameraPreview extends StatelessWidget {
         StreamBuilder<List<Pose>>(
           stream: cameraManager.poseStream,
           builder: (context, snapshot) {
-            if (!snapshot.hasData || snapshot.data!.isEmpty)
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const SizedBox();
+            }
             return Transform.scale(
               scaleX: -1,
               alignment: Alignment.center,

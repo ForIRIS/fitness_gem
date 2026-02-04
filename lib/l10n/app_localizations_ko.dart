@@ -608,4 +608,117 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get unknownError => '알 수 없는 오류가 발생했습니다.';
+
+  @override
+  String get baselineTitle => '신체 능력 측정';
+
+  @override
+  String get baselineMovementBenchmark => '동작 벤치마크';
+
+  @override
+  String get baselineInstructions =>
+      '개인 맞춤형 경험을 위해 적당한 속도로 스쿼트 3회를 수행해주세요.\n\n머리부터 발끝까지 화면에 보이도록 해주세요.';
+
+  @override
+  String get baselineImReady => '준비 완료';
+
+  @override
+  String get baselineFullBodyNotVisible => '전신이 보이지 않습니다';
+
+  @override
+  String get baselineMoveBack => '발이 보일 때까지 뒤로 물러나주세요.';
+
+  @override
+  String get baselineHoldingPosition => '자세 유지 중...';
+
+  @override
+  String get baselineRecording => '녹화 중...';
+
+  @override
+  String get baselinePerformSquats => '지금 스쿼트 3회를 수행하세요';
+
+  @override
+  String get baselineAnalyzing => 'GEMINI 분석 중...';
+
+  @override
+  String get baselineExtractingMarkers => '유연성 및 안정성 지표 추출 중';
+
+  @override
+  String get baselineSuccess => '측정 성공';
+
+  @override
+  String get baselineStability => '안정성';
+
+  @override
+  String get baselineMobility => '유연성';
+
+  @override
+  String get baselineContinue => '운동 하러 가기';
+
+  @override
+  String get baselineErrorTitle => '문제가 발생했습니다';
+
+  @override
+  String get baselineTryAgainLater => '나중에 다시 시도';
+
+  @override
+  String ttsWorkoutStart(String exerciseName) {
+    return '$exerciseName 운동을 시작합니다. 준비 자세를 취해주세요.';
+  }
+
+  @override
+  String ttsSetStart(int setNumber) {
+    return '$setNumber세트를 시작합니다.';
+  }
+
+  @override
+  String ttsRestStart(int seconds) {
+    return '$seconds초간 휴식하세요.';
+  }
+
+  @override
+  String get ttsReadyPose => '준비 자세를 취해주세요.';
+
+  @override
+  String get ttsWorkoutComplete => '운동이 완료되었습니다. 수고하셨습니다!';
+
+  @override
+  String get ttsFallDetection => '괜찮으신가요? 문제가 없다면 화면을 터치해주세요.';
+
+  @override
+  String get ttsAnalyzing => '분석 중입니다. 잠시만 기다려주세요.';
+
+  @override
+  String get ttsBodyNotVisible => '전신이 보이도록 카메라를 조절해주세요.';
+
+  @override
+  String ttsCountdown(int seconds) {
+    return '$seconds';
+  }
+
+  @override
+  String get ttsStart => '시작!';
+
+  @override
+  String get ttsReady => '준비! 곧 시작합니다.';
+
+  @override
+  String get baselineTtsStart => '지금부터 신체 능력 측정을 시작합니다. 전신이 보이도록 뒤로 물러나주세요.';
+
+  @override
+  String get baselineTtsPerformSquats => '적당한 속도로 스쿼트 3회를 수행해주세요.';
+
+  @override
+  String get baselineTtsComplete => '측정이 완료되었습니다. 사용자의 신체 프로필을 업데이트했습니다.';
+
+  @override
+  String get baselineTtsError => '측정 중 오류가 발생했습니다. 다시 시도해주세요.';
+
+  @override
+  String get errorCaptureFailed => '측정 영상 캡처에 실패했습니다.';
+
+  @override
+  String errorAnalysisFailed(String message) {
+    return '분석 실패: $message';
+  }
 }

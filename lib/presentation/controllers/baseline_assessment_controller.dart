@@ -11,6 +11,7 @@ import '../../services/video_recorder.dart';
 import '../../services/ready_pose_detector.dart';
 import '../../services/tts_service.dart';
 import '../../services/workout_timer_service.dart';
+import '../../l10n/app_localizations.dart';
 
 enum AssessmentPhase {
   instructions,
@@ -59,6 +60,7 @@ class BaselineAssessmentController extends ChangeNotifier {
       getIt<UpdateUserProfileUseCase>();
 
   UserProfile? _userProfile;
+  AppLocalizations? _l10n;
 
   BaselineAssessmentController() {
     _timerService.onCountdownTick = (remaining) {
@@ -75,8 +77,11 @@ class BaselineAssessmentController extends ChangeNotifier {
     _timerService.onWorkoutTimeout = _stopRecording;
   }
 
-  Future<void> initialize(UserProfile profile) async {
+  Future<void> initialize(UserProfile profile, AppLocalizations l10n) async {
     _userProfile = profile;
+    _l10n = l10n;
+    _ttsService.updateLocalizations(l10n);
+
     await _ttsService.initialize();
     await _cameraManager.initialize();
     _cameraManager.startPoseDetection();
@@ -85,7 +90,8 @@ class BaselineAssessmentController extends ChangeNotifier {
 
     _updatePhase(AssessmentPhase.instructions);
     _ttsService.speak(
-      'We will now perform a quick physical assessment. Please stand back so your full body is visible.',
+      _l10n?.baselineTtsStart ??
+          'We will now perform a quick physical assessment. Please stand back so your full body is visible.',
     );
   }
 
@@ -138,7 +144,10 @@ class BaselineAssessmentController extends ChangeNotifier {
     }
 
     _timerService.startWorkoutTimer(timeoutSeconds: 10);
-    _ttsService.speak('Please perform 3 moderate air squats.');
+    _ttsService.speak(
+      _l10n?.baselineTtsPerformSquats ??
+          'Please perform 3 moderate air squats.',
+    );
   }
 
   Future<void> _stopRecording() async {
@@ -149,7 +158,9 @@ class BaselineAssessmentController extends ChangeNotifier {
     if (result != null) {
       await _runAnalysis(result.rgbVideoPath);
     } else {
-      _handleError('Failed to capture assessment video');
+      _handleError(
+        _l10n?.errorCaptureFailed ?? 'Failed to capture assessment video',
+      );
     }
   }
 
@@ -158,14 +169,18 @@ class BaselineAssessmentController extends ChangeNotifier {
 
     await result.fold(
       (failure) async {
-        _handleError('Analysis failed: ${failure.message}');
+        _handleError(
+          _l10n?.errorAnalysisFailed(failure.message) ??
+              'Analysis failed: ${failure.message}',
+        );
       },
       (data) async {
         _analysisResult = data;
         await _saveResultsToProfile(data);
         _updatePhase(AssessmentPhase.completed);
         _ttsService.speak(
-          'Assessment complete. I have updated your physical profile.',
+          _l10n?.baselineTtsComplete ??
+              'Assessment complete. I have updated your physical profile.',
         );
       },
     );
@@ -190,7 +205,27 @@ class BaselineAssessmentController extends ChangeNotifier {
   void _handleError(String message) {
     _errorMessage = message;
     _updatePhase(AssessmentPhase.error);
-    _ttsService.speak('An error occurred during assessment. Please try again.');
+    _ttsService.speak(
+      _l10n?.baselineTtsError ??
+          'An error occurred during assessment. Please try again.',
+    );
+  }
+
+  void retry() {
+    _timerService.stopWorkoutTimer();
+    _isFullBodyVisible = false;
+    _holdSeconds = 0;
+    _countdownSeconds = 5;
+    _recordingSeconds = 0;
+    _errorMessage = null;
+    _analysisResult = null;
+    _readyPoseDetector.reset();
+
+    _updatePhase(AssessmentPhase.instructions);
+    _ttsService.speak(
+      _l10n?.baselineTtsStart ??
+          'We will now perform a quick physical assessment. Please stand back so your full body is visible.',
+    );
   }
 
   void _updatePhase(AssessmentPhase newPhase) {

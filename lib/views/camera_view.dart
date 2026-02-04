@@ -66,8 +66,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   void _onControllerChanged() {
     final state = _controller.state;
     if (_guideVideoController == null ||
-        !_guideVideoController!.value.isInitialized)
+        !_guideVideoController!.value.isInitialized) {
       return;
+    }
 
     if (state.isPaused ||
         state.isResting ||

@@ -254,5 +254,74 @@
   "wrongPassword": "Incorrect password.",
   "emailAlreadyInUse": "This email is already registered.",
   "weakPassword": "The password is too weak.",
-  "unknownError": "An unknown error occurred."
+  "unknownError": "An unknown error occurred.",
+  "baselineTitle": "PHYSICAL BASELINE",
+  "baselineMovementBenchmark": "Movement Benchmark",
+  "baselineInstructions": "To personalize your experience, please perform 3 moderate air squats. \n\nEnsure your head and feet are visible in the frame.",
+  "baselineImReady": "I'M READY",
+  "baselineFullBodyNotVisible": "Full Body Not Visible",
+  "baselineMoveBack": "Please move back until your feet are visible.",
+  "baselineHoldingPosition": "Holding Position...",
+  "baselineRecording": "RECORDING...",
+  "baselinePerformSquats": "Perform 3 moderate air squats now",
+  "baselineAnalyzing": "GEMINI ANALYZING...",
+  "baselineExtractingMarkers": "Extracting mobility and stability markers",
+  "baselineSuccess": "Assessment Success",
+  "baselineStability": "STABILITY",
+  "baselineMobility": "MOBILITY",
+  "baselineContinue": "CONTINUE TO WORKOUT",
+  "baselineErrorTitle": "Something went wrong",
+  "baselineTryAgainLater": "TRY AGAIN LATER",
+  "ttsWorkoutStart": "Starting {exerciseName} workout. Please take your position.",
+  "@ttsWorkoutStart": {
+    "placeholders": {
+      "exerciseName": {
+        "type": "String"
+      }
+    }
+  },
+  "ttsSetStart": "Starting set {setNumber}.",
+  "@ttsSetStart": {
+    "placeholders": {
+      "setNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "ttsRestStart": "Rest for {seconds} seconds.",
+  "@ttsRestStart": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "ttsReadyPose": "Please take the ready pose.",
+  "ttsWorkoutComplete": "Workout complete. Great job!",
+  "ttsFallDetection": "Are you okay? If there is no problem, please touch the screen.",
+  "ttsAnalyzing": "Analyzing. Please wait a moment.",
+  "ttsBodyNotVisible": "Please adjust the camera so your whole body is visible.",
+  "ttsCountdown": "{seconds}",
+  "@ttsCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "ttsStart": "Start!",
+  "ttsReady": "Ready! Starting soon.",
+  "baselineTtsStart": "We will now perform a quick physical assessment. Please stand back so your full body is visible.",
+  "baselineTtsPerformSquats": "Please perform 3 moderate air squats.",
+  "baselineTtsComplete": "Assessment complete. I have updated your physical profile.",
+  "baselineTtsError": "An error occurred during assessment. Please try again.",
+  "errorCaptureFailed": "Failed to capture assessment video",
+  "errorAnalysisFailed": "Analysis failed: {message}",
+  "@errorAnalysisFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  }
 }

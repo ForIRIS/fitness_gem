@@ -14,6 +14,7 @@ import 'views/external_dashboard_view.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/di/injection.dart'; // Import DI setup
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'services/tts_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,11 +76,28 @@ class MainApp extends StatelessWidget {
 
       theme: AppTheme.lightTheme,
       initialRoute: '/',
+      builder: (context, child) {
+        return LocalizationsSync(child: child!);
+      },
       routes: {
         '/': (context) =>
             showOnboarding ? const OnboardingView() : const home.HomeView(),
         'external_dashboard': (context) => const ExternalDashboardView(),
       },
     );
+  }
+}
+
+class LocalizationsSync extends StatelessWidget {
+  final Widget child;
+  const LocalizationsSync({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n != null) {
+      TTSService().updateLocalizations(l10n);
+    }
+    return child;
   }
 }

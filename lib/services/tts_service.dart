@@ -1,6 +1,7 @@
 import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import '../l10n/app_localizations.dart';
 
 /// TTSService - TTS voice feedback service
 class TTSService {
@@ -10,6 +11,12 @@ class TTSService {
 
   final FlutterTts _flutterTts = FlutterTts();
   bool _initialized = false;
+  AppLocalizations? _l10n;
+
+  /// Update localizations for TTS
+  void updateLocalizations(AppLocalizations l10n) {
+    _l10n = l10n;
+  }
 
   /// Initialize TTS
   Future<void> initialize() async {
@@ -108,39 +115,43 @@ class TTSService {
 
   /// Announcement for starting workout
   Future<void> speakWorkoutStart(String exerciseName) async {
-    await speak('Starting $exerciseName workout. Please take your position.');
+    await speak(
+      _l10n?.ttsWorkoutStart(exerciseName) ??
+          'Starting $exerciseName workout. Please take your position.',
+    );
   }
 
   /// Announcement for starting a set
   Future<void> speakSetStart(int setNumber, int totalSets) async {
-    await speak('Starting set $setNumber.');
+    await speak(_l10n?.ttsSetStart(setNumber) ?? 'Starting set $setNumber.');
   }
 
   /// Announcement for rest period
   Future<void> speakRestStart(int seconds) async {
-    await speak('Rest for $seconds seconds.');
+    await speak(_l10n?.ttsRestStart(seconds) ?? 'Rest for $seconds seconds.');
   }
 
   /// Requesting ready pose
   Future<void> speakReadyPose() async {
-    await speak('Please take the ready pose.');
+    await speak(_l10n?.ttsReadyPose ?? 'Please take the ready pose.');
   }
 
   /// Announcement for workout completion
   Future<void> speakWorkoutComplete() async {
-    await speak('Workout complete. Great job!');
+    await speak(_l10n?.ttsWorkoutComplete ?? 'Workout complete. Great job!');
   }
 
   /// Announcement for fall detection
   Future<void> speakFallDetection() async {
     await speak(
-      'Are you okay? If there is no problem, please touch the screen.',
+      _l10n?.ttsFallDetection ??
+          'Are you okay? If there is no problem, please touch the screen.',
     );
   }
 
   /// Announcement for analysis in progress
   Future<void> speakAnalyzing() async {
-    await speak('Analyzing. Please wait a moment.');
+    await speak(_l10n?.ttsAnalyzing ?? 'Analyzing. Please wait a moment.');
   }
 
   /// Real-time form correction feedback (short phrases)
@@ -167,20 +178,23 @@ class TTSService {
 
   /// Announcement when body is not fully visible to the camera
   Future<void> speakBodyNotVisible() async {
-    await speak('Please adjust the camera so your whole body is visible.');
+    await speak(
+      _l10n?.ttsBodyNotVisible ??
+          'Please adjust the camera so your whole body is visible.',
+    );
   }
 
   /// Countdown announcement
   Future<void> speakCountdown(int seconds) async {
     if (seconds > 0) {
-      await speak('$seconds');
+      await speak(_l10n?.ttsCountdown(seconds) ?? '$seconds');
     } else {
-      await speak('Start!');
+      await speak(_l10n?.ttsStart ?? 'Start!');
     }
   }
 
   /// Announcement when ready
   Future<void> speakReady() async {
-    await speak('Ready! Starting soon.');
+    await speak(_l10n?.ttsReady ?? 'Ready! Starting soon.');
   }
 }

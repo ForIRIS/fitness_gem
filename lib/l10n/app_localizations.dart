@@ -1255,6 +1255,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An unknown error occurred.'**
   String get unknownError;
+
+  /// No description provided for @baselineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PHYSICAL BASELINE'**
+  String get baselineTitle;
+
+  /// No description provided for @baselineMovementBenchmark.
+  ///
+  /// In en, this message translates to:
+  /// **'Movement Benchmark'**
+  String get baselineMovementBenchmark;
+
+  /// No description provided for @baselineInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'To personalize your experience, please perform 3 moderate air squats. \n\nEnsure your head and feet are visible in the frame.'**
+  String get baselineInstructions;
+
+  /// No description provided for @baselineImReady.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'M READY'**
+  String get baselineImReady;
+
+  /// No description provided for @baselineFullBodyNotVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Body Not Visible'**
+  String get baselineFullBodyNotVisible;
+
+  /// No description provided for @baselineMoveBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Please move back until your feet are visible.'**
+  String get baselineMoveBack;
+
+  /// No description provided for @baselineHoldingPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Holding Position...'**
+  String get baselineHoldingPosition;
+
+  /// No description provided for @baselineRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'RECORDING...'**
+  String get baselineRecording;
+
+  /// No description provided for @baselinePerformSquats.
+  ///
+  /// In en, this message translates to:
+  /// **'Perform 3 moderate air squats now'**
+  String get baselinePerformSquats;
+
+  /// No description provided for @baselineAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'GEMINI ANALYZING...'**
+  String get baselineAnalyzing;
+
+  /// No description provided for @baselineExtractingMarkers.
+  ///
+  /// In en, this message translates to:
+  /// **'Extracting mobility and stability markers'**
+  String get baselineExtractingMarkers;
+
+  /// No description provided for @baselineSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Assessment Success'**
+  String get baselineSuccess;
+
+  /// No description provided for @baselineStability.
+  ///
+  /// In en, this message translates to:
+  /// **'STABILITY'**
+  String get baselineStability;
+
+  /// No description provided for @baselineMobility.
+  ///
+  /// In en, this message translates to:
+  /// **'MOBILITY'**
+  String get baselineMobility;
+
+  /// No description provided for @baselineContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'CONTINUE TO WORKOUT'**
+  String get baselineContinue;
+
+  /// No description provided for @baselineErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get baselineErrorTitle;
+
+  /// No description provided for @baselineTryAgainLater.
+  ///
+  /// In en, this message translates to:
+  /// **'TRY AGAIN LATER'**
+  String get baselineTryAgainLater;
+
+  /// No description provided for @ttsWorkoutStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting {exerciseName} workout. Please take your position.'**
+  String ttsWorkoutStart(String exerciseName);
+
+  /// No description provided for @ttsSetStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting set {setNumber}.'**
+  String ttsSetStart(int setNumber);
+
+  /// No description provided for @ttsRestStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest for {seconds} seconds.'**
+  String ttsRestStart(int seconds);
+
+  /// No description provided for @ttsReadyPose.
+  ///
+  /// In en, this message translates to:
+  /// **'Please take the ready pose.'**
+  String get ttsReadyPose;
+
+  /// No description provided for @ttsWorkoutComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout complete. Great job!'**
+  String get ttsWorkoutComplete;
+
+  /// No description provided for @ttsFallDetection.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you okay? If there is no problem, please touch the screen.'**
+  String get ttsFallDetection;
+
+  /// No description provided for @ttsAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing. Please wait a moment.'**
+  String get ttsAnalyzing;
+
+  /// No description provided for @ttsBodyNotVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Please adjust the camera so your whole body is visible.'**
+  String get ttsBodyNotVisible;
+
+  /// No description provided for @ttsCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}'**
+  String ttsCountdown(int seconds);
+
+  /// No description provided for @ttsStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start!'**
+  String get ttsStart;
+
+  /// No description provided for @ttsReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready! Starting soon.'**
+  String get ttsReady;
+
+  /// No description provided for @baselineTtsStart.
+  ///
+  /// In en, this message translates to:
+  /// **'We will now perform a quick physical assessment. Please stand back so your full body is visible.'**
+  String get baselineTtsStart;
+
+  /// No description provided for @baselineTtsPerformSquats.
+  ///
+  /// In en, this message translates to:
+  /// **'Please perform 3 moderate air squats.'**
+  String get baselineTtsPerformSquats;
+
+  /// No description provided for @baselineTtsComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Assessment complete. I have updated your physical profile.'**
+  String get baselineTtsComplete;
+
+  /// No description provided for @baselineTtsError.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred during assessment. Please try again.'**
+  String get baselineTtsError;
+
+  /// No description provided for @errorCaptureFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to capture assessment video'**
+  String get errorCaptureFailed;
+
+  /// No description provided for @errorAnalysisFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis failed: {message}'**
+  String errorAnalysisFailed(String message);
 }
 
 class _AppLocalizationsDelegate

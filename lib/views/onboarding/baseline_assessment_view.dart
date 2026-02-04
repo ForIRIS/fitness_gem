@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 import '../../domain/entities/user_profile.dart';
 import '../../presentation/controllers/baseline_assessment_controller.dart';
+import '../../l10n/app_localizations.dart';
 import '../home_view.dart';
 import '../widgets/ai_pose_camera_preview.dart';
 
@@ -18,11 +19,23 @@ class BaselineAssessmentView extends StatefulWidget {
 class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
   late final BaselineAssessmentController _controller;
 
+  // Constants
+  static const int _kRecordingDuration = 10;
+  static const double _kMetricValueFontSize = 48.0;
+  static const double _kMetricLabelFontSize = 12.0;
+
   @override
   void initState() {
     super.initState();
     _controller = BaselineAssessmentController();
-    _controller.initialize(widget.userProfile);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _controller.initialize(
+          widget.userProfile,
+          AppLocalizations.of(context)!,
+        );
+      }
+    });
   }
 
   @override
@@ -46,20 +59,20 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
               _buildCameraFeed(controller),
 
               // 2. Glass Overlay for Instructions / Feedback
-              _buildOverlay(controller),
+              _buildOverlay(context, controller),
 
               // 3. Header
               _buildHeader(context),
 
               // 4. Phase-Specific Overlays
               if (controller.phase == AssessmentPhase.analyzing)
-                _buildAnalyzingOverlay(),
+                _buildAnalyzingOverlay(context),
 
               if (controller.phase == AssessmentPhase.completed)
-                _buildCompletedOverlay(controller),
+                _buildCompletedOverlay(context, controller),
 
               if (controller.phase == AssessmentPhase.error)
-                _buildErrorOverlay(controller),
+                _buildErrorOverlay(context, controller),
             ],
           );
         },
@@ -72,6 +85,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Positioned(
       top: 0,
       left: 0,
@@ -87,7 +101,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
               ),
               const SizedBox(width: 8),
               Text(
-                'PHYSICAL BASELINE',
+                l10n.baselineTitle,
                 style: GoogleFonts.barlowCondensed(
                   color: Colors.white,
                   fontSize: 24,
@@ -102,13 +116,16 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
     );
   }
 
-  Widget _buildOverlay(BaselineAssessmentController controller) {
+  Widget _buildOverlay(
+    BuildContext context,
+    BaselineAssessmentController controller,
+  ) {
     if (controller.phase == AssessmentPhase.instructions) {
-      return _buildInstructionSlide(controller);
+      return _buildInstructionSlide(context, controller);
     }
 
     if (controller.phase == AssessmentPhase.ready) {
-      return _buildReadyPoseGuidance(controller);
+      return _buildReadyPoseGuidance(context, controller);
     }
 
     if (controller.phase == AssessmentPhase.countdown) {
@@ -116,13 +133,17 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
     }
 
     if (controller.phase == AssessmentPhase.recording) {
-      return _buildRecordingUI(controller);
+      return _buildRecordingUI(context, controller);
     }
 
     return const SizedBox.shrink();
   }
 
-  Widget _buildInstructionSlide(BaselineAssessmentController controller) {
+  Widget _buildInstructionSlide(
+    BuildContext context,
+    BaselineAssessmentController controller,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -150,7 +171,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        "Movement Benchmark",
+                        l10n.baselineMovementBenchmark,
                         style: GoogleFonts.barlow(
                           color: Colors.white,
                           fontSize: 24,
@@ -158,10 +179,13 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        "To personalize your experience, please perform 3 air squats. \n\nEnsure your head and feet are visible in the frame.",
+                      Text(
+                        l10n.baselineInstructions,
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70, fontSize: 16),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                        ),
                       ),
                       const SizedBox(height: 32),
                       ElevatedButton(
@@ -177,7 +201,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
                             borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        child: const Text("I'M READY"),
+                        child: Text(l10n.baselineImReady),
                       ),
                     ],
                   ),
@@ -190,7 +214,11 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
     );
   }
 
-  Widget _buildReadyPoseGuidance(BaselineAssessmentController controller) {
+  Widget _buildReadyPoseGuidance(
+    BuildContext context,
+    BaselineAssessmentController controller,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -202,17 +230,17 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
               size: 64,
             ),
             const SizedBox(height: 16),
-            const Text(
-              "Full Body Not Visible",
-              style: TextStyle(
+            Text(
+              l10n.baselineFullBodyNotVisible,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const Text(
-              "Please move back until your feet are visible.",
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+            Text(
+              l10n.baselineMoveBack,
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
           ] else ...[
             CircularProgressIndicator(
@@ -221,9 +249,9 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
               strokeWidth: 8,
             ),
             const SizedBox(height: 24),
-            const Text(
-              "Holding Position...",
-              style: TextStyle(
+            Text(
+              l10n.baselineHoldingPosition,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -248,7 +276,13 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
     );
   }
 
-  Widget _buildRecordingUI(BaselineAssessmentController controller) {
+  Widget _buildRecordingUI(
+    BuildContext context,
+    BaselineAssessmentController controller,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final remainingSeconds = _kRecordingDuration - controller.recordingSeconds;
+
     return Positioned(
       bottom: 64,
       left: 0,
@@ -267,7 +301,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
                 const Icon(Icons.circle, color: Colors.white, size: 12),
                 const SizedBox(width: 8),
                 Text(
-                  "RECORDING... ${10 - controller.recordingSeconds}s",
+                  "${l10n.baselineRecording} ${remainingSeconds}s",
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -277,9 +311,9 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            "Perform 3 Air Squats now",
-            style: TextStyle(
+          Text(
+            l10n.baselinePerformSquats,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
               fontWeight: FontWeight.w500,
@@ -290,7 +324,8 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
     );
   }
 
-  Widget _buildAnalyzingOverlay() {
+  Widget _buildAnalyzingOverlay(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       color: Colors.black87,
       child: Center(
@@ -300,7 +335,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
             const CircularProgressIndicator(color: Colors.deepPurpleAccent),
             const SizedBox(height: 24),
             Text(
-              "GEMINI ANALYZING...",
+              l10n.baselineAnalyzing,
               style: GoogleFonts.barlowCondensed(
                 color: Colors.white,
                 fontSize: 24,
@@ -308,9 +343,9 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              "Extracting mobility and stability markers",
-              style: TextStyle(color: Colors.white54),
+            Text(
+              l10n.baselineExtractingMarkers,
+              style: const TextStyle(color: Colors.white54),
             ),
           ],
         ),
@@ -318,11 +353,15 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
     );
   }
 
-  Widget _buildCompletedOverlay(BaselineAssessmentController controller) {
+  Widget _buildCompletedOverlay(
+    BuildContext context,
+    BaselineAssessmentController controller,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
     final result = controller.analysisResult;
     final stability = (result?['stability_score'] as num?)?.toDouble() ?? 0.0;
     final mobility = (result?['mobility_score'] as num?)?.toDouble() ?? 0.0;
-    final summary = result?['summary'] as String? ?? 'Assessment complete.';
+    final summary = result?['summary'] as String? ?? '';
 
     return Container(
       color: Colors.black,
@@ -339,7 +378,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
               ),
               const SizedBox(height: 24),
               Text(
-                "Assessment Success",
+                l10n.baselineSuccess,
                 style: GoogleFonts.barlow(
                   color: Colors.white,
                   fontSize: 28,
@@ -350,23 +389,24 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildMetric("STABILITY", stability),
-                  _buildMetric("MOBILITY", mobility),
+                  _buildMetric(l10n.baselineStability, stability),
+                  _buildMetric(l10n.baselineMobility, mobility),
                 ],
               ),
               const SizedBox(height: 32),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(20),
+              if (summary.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    summary,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70, height: 1.5),
+                  ),
                 ),
-                child: Text(
-                  summary,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, height: 1.5),
-                ),
-              ),
               const SizedBox(height: 48),
               SizedBox(
                 width: double.infinity,
@@ -386,7 +426,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: const Text("CONTINUE TO WORKOUT"),
+                  child: Text(l10n.baselineContinue),
                 ),
               ),
             ],
@@ -403,19 +443,26 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
           "${(value * 100).toInt()}",
           style: GoogleFonts.barlowCondensed(
             color: Colors.cyanAccent,
-            fontSize: 48,
+            fontSize: _kMetricValueFontSize,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
           label,
-          style: const TextStyle(color: Colors.white54, fontSize: 12),
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: _kMetricLabelFontSize,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildErrorOverlay(BaselineAssessmentController controller) {
+  Widget _buildErrorOverlay(
+    BuildContext context,
+    BaselineAssessmentController controller,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       color: Colors.black87,
       child: Center(
@@ -424,9 +471,9 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
           children: [
             const Icon(Icons.error_outline, color: Colors.redAccent, size: 80),
             const SizedBox(height: 24),
-            const Text(
-              "Something went wrong",
-              style: TextStyle(
+            Text(
+              l10n.baselineErrorTitle,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -434,13 +481,13 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
             ),
             const SizedBox(height: 16),
             Text(
-              controller.errorMessage ?? "An unknown error occurred",
+              controller.errorMessage ?? l10n.unknownError,
               style: const TextStyle(color: Colors.white54),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("TRY AGAIN LATER"),
+              onPressed: controller.retry,
+              child: Text(l10n.baselineTryAgainLater),
             ),
           ],
         ),
