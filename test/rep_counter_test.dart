@@ -23,6 +23,9 @@ class ManualMockWorkoutModelService implements WorkoutModelService {
 
   @override
   Future<bool> loadSampleModel() async => true;
+
+  @override
+  Future<bool> loadBaselineModel() async => true;
 }
 
 class MockFeedbackOutput implements FeedbackOutput {

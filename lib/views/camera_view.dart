@@ -1,13 +1,10 @@
-import 'dart:ui';
-import 'dart:io';
 import 'dart:async';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:ui';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import '../core/di/injection.dart';
 import '../domain/entities/workout_curriculum.dart';
 import '../domain/entities/user_profile.dart';
@@ -16,8 +13,7 @@ import '../domain/services/coaching_manager.dart';
 import '../presentation/controllers/workout_session_controller.dart';
 import '../presentation/states/workout_session_state.dart';
 import '../services/camera_manager.dart'; // Restored import
-
-import '../utils/pose_painter.dart'; // Restored import
+import 'widgets/ai_pose_camera_preview.dart';
 import '../widgets/coaching_overlay.dart'; // Restored import
 
 import '../services/fall_detection_service.dart';
@@ -331,7 +327,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         color: Colors.black54,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
+            color: Colors.black.withOpacity(0.5),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -368,54 +364,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   }
 
   Widget _buildCameraWithSkeleton({bool isPIP = false}) {
-    if (!_cameraManager.isInitialized || _cameraManager.controller == null) {
-      return const Center(
-        child: Text(
-          "Camera unavailable",
-          style: TextStyle(color: Colors.white, fontSize: 10),
-        ),
-      );
-    }
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        FittedBox(
-          fit: BoxFit.cover,
-          child: SizedBox(
-            width: _cameraManager.controller!.value.previewSize!.height,
-            height: _cameraManager.controller!.value.previewSize!.width,
-            child: CameraPreview(_cameraManager.controller!),
-          ),
-        ),
-        // Skeleton logic could be moved to a StreamBuilder listening to poseStream directly if we want smoother UI update separate from State
-        // For now, simple camera preview.
-        // Note: Drawing skeleton usually requires access to the poses.
-        // We can pass poses via state or stream.
-        // Let's assume we want Clean Code -> keep it simple, maybe skip skeleton on main view if not critical, or listen to stream.
-        StreamBuilder(
-          stream: _cameraManager.poseStream,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData || snapshot.data!.isEmpty)
-              return const SizedBox();
-            return Transform.scale(
-              scaleX: -1,
-              alignment: Alignment.center,
-              child: CustomPaint(
-                painter: PosePainter(
-                  snapshot.data!,
-                  _cameraManager.controller!.value.previewSize!,
-                  Platform.isAndroid
-                      ? InputImageRotation.rotation270deg
-                      : InputImageRotation.rotation90deg,
-                  CameraLensDirection.front,
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
+    return AIPoseCameraPreview(cameraManager: _cameraManager);
   }
 
   Widget _buildGuideVideoPlayer({BoxFit fit = BoxFit.contain}) {

@@ -103,70 +103,132 @@ class GeminiRemoteDataSourceImpl implements GeminiRemoteDataSource {
     String model = 'gemini-3-flash-preview',
   }) async {
     try {
-      // Note: Using the specific endpoint for the model passed, or default
-      final endpoint = model == 'gemini-3-flash-preview'
-          ? _generateUrl
-          : 'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent';
-
-      final uri = Uri.parse('$endpoint?key=$apiKey');
-
-      final analystBody = json.encode({
-        'systemInstruction': {
-          'parts': [
-            {'text': systemInstruction},
-          ],
+      final contentParts = [
+        {'text': json.encode(inputContext)},
+        {
+          'file_data': {'mime_type': 'video/mp4', 'file_uri': rgbUri},
+          'media_resolution': {'level': 'MEDIA_RESOLUTION_MEDIUM'},
         },
-        'contents': [
-          {
-            'parts': [
-              {'text': json.encode(inputContext)},
-              {
-                'file_data': {'mime_type': 'video/mp4', 'file_uri': rgbUri},
-                'media_resolution': {'level': 'MEDIA_RESOLUTION_MEDIUM'},
-              },
-              {
-                'file_data': {
-                  'mime_type': 'video/mp4',
-                  'file_uri': controlNetUri,
-                },
-                'media_resolution': {'level': 'MEDIA_RESOLUTION_MEDIUM'},
-              },
-            ],
-          },
-        ],
-        'generationConfig': {
-          'temperature': 0.2,
-          'responseMimeType': 'application/json',
+        {
+          'file_data': {'mime_type': 'video/mp4', 'file_uri': controlNetUri},
+          'media_resolution': {'level': 'MEDIA_RESOLUTION_MEDIUM'},
         },
-      });
+      ];
 
-      final response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: analystBody,
+      return await _postMultimodal(
+        apiKey: apiKey,
+        systemInstruction: systemInstruction,
+        contentParts: contentParts,
+        model: model,
       );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final candidates = data['candidates'] as List?;
-        if (candidates != null && candidates.isNotEmpty) {
-          final content = candidates[0]['content'];
-          final parts = content['parts'] as List?;
-          if (parts != null && parts.isNotEmpty) {
-            final text = parts[0]['text'];
-            if (text != null) {
-              return json.decode(text);
-            }
-          }
-        }
-      } else {
-        debugPrint('Analyst failed: ${response.body}');
-        throw Exception('Analyst failed: ${response.statusCode}');
-      }
-      return null;
     } catch (e) {
       debugPrint('Analyst Error: $e');
       rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>?> analyzeBaseline({
+    required String apiKey,
+    required String systemInstruction,
+    required String prompt,
+    required String videoUri,
+    String model = 'gemini-3-flash-preview',
+  }) async {
+    try {
+      final contentParts = [
+        {'text': prompt},
+        {
+          'file_data': {'mime_type': 'video/mp4', 'file_uri': videoUri},
+          'media_resolution': {'level': 'MEDIA_RESOLUTION_MEDIUM'},
+        },
+      ];
+
+      return await _postMultimodal(
+        apiKey: apiKey,
+        systemInstruction: systemInstruction,
+        contentParts: contentParts,
+        model: model,
+      );
+    } catch (e) {
+      debugPrint('Baseline Analyst Error: $e');
+      rethrow;
+    }
+  }
+
+  /// Helper for Gemini 3 Multimodal API calls
+  Future<Map<String, dynamic>?> _postMultimodal({
+    required String apiKey,
+    required String systemInstruction,
+    required List<Map<String, dynamic>> contentParts,
+    String model = 'gemini-3-flash-preview',
+    double temperature = 0.2,
+  }) async {
+    final endpoint = model == 'gemini-3-flash-preview'
+        ? _generateUrl
+        : 'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent';
+
+    final uri = Uri.parse('$endpoint?key=$apiKey');
+
+    final body = json.encode({
+      'systemInstruction': {
+        'parts': [
+          {'text': systemInstruction},
+        ],
+      },
+      'contents': [
+        {'parts': contentParts},
+      ],
+      'generationConfig': {
+        'temperature': temperature,
+        'responseMimeType': 'application/json',
+      },
+    });
+
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final candidates = data['candidates'] as List?;
+      if (candidates == null || candidates.isEmpty) return null;
+
+      final content = candidates[0]['content'];
+      if (content == null) return null;
+
+      final parts = content['parts'] as List?;
+      if (parts == null || parts.isEmpty) return null;
+
+      final text = parts[0]['text'];
+      if (text == null) return null;
+
+      // Robust JSON extraction in case there are markdown markers
+      String cleanText = (text as String).trim();
+      if (cleanText.startsWith('```json')) {
+        cleanText = cleanText.substring(7);
+      }
+      if (cleanText.endsWith('```')) {
+        cleanText = cleanText.substring(0, cleanText.length - 3);
+      }
+
+      try {
+        return json.decode(cleanText.trim());
+      } catch (e) {
+        debugPrint(
+          'JSON decode error in Gemini response: $e\nOriginal text: $text',
+        );
+        return null;
+      }
+    } else {
+      debugPrint(
+        'Gemini Multimodal failed: ${response.statusCode} - ${response.body}',
+      );
+      throw Exception(
+        'Gemini Multimodal failed with status ${response.statusCode}',
+      );
     }
   }
 }

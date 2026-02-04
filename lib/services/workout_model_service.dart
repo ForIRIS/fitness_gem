@@ -53,33 +53,35 @@ class WorkoutModelService {
           '$basePath/pose_model.mlpackage.zip',
           'pose_model.mlpackage',
         );
-        // The unzippedPath is the directory path containing the .mlpackage content
-        // On iOS, we point to this directory
-        // However, loadModel expects the PARENT directory of the model file if using the old logic,
-        // let's check loadModel.
-        // loadModel adds /pose_model.mlpackage to the path passed.
-        // So if unzippedPath IS .../pose_model.mlpackage, we should pass the PARENT.
-        // Actually, let's fix loadModel to be more flexible or adjust the call here.
-
-        // Wait, loadModel(String modelPath) does: assetPath = '$modelPath/pose_model.mlpackage';
-        // So if I pass unzippedPath which ends in pose_model.mlpackage,
-        // loadModel will look for unzippedPath/pose_model.mlpackage, effectively .../pose_model.mlpackage/pose_model.mlpackage.
-        // This is wrong if I unzipped IT as the directory.
-
-        // Let's modify loadModel logic slightly or pass the parent.
-        // AssetUtils.unzipAssetToTemp returns targetDir.path which is .../pose_model.mlpackage
-
-        // So I should pass the parent of unzippedPath to loadModel?
-        // Or better, reuse loadModel logic logic properly.
-
-        // Let's look at loadModel again.
-        // loadModel(String modelPath) -> uses $modelPath/pose_model.mlpackage.
-        // So modelPath is expected to be the directory CONTAINING the mlpackage directory.
-
         final tempDir = Directory(unzippedPath).parent.path;
         return await loadModel(tempDir);
       } catch (e) {
         print("Failed to load iOS model: $e");
+        return false;
+      }
+    } else {
+      const assetPath = '$basePath/pose_model.onnx';
+      return await loadModelFromAsset(assetPath);
+    }
+  }
+
+  /// Load the baseline assessment model (Air Squat)
+  Future<bool> loadBaselineModel() async {
+    const basePath = 'assets/models/air_squat';
+
+    if (Platform.isIOS) {
+      try {
+        // Unzip the .mlpackage.zip to temp directory
+        final unzippedPath = await AssetUtils.unzipAssetToTemp(
+          '$basePath/pose_model.mlpackage.zip',
+          'pose_model.mlpackage',
+        );
+
+        // Pass the parent directory of the .mlpackage
+        final tempDir = Directory(unzippedPath).parent.path;
+        return await loadModel(tempDir);
+      } catch (e) {
+        print("Failed to load iOS baseline model: $e");
         return false;
       }
     } else {

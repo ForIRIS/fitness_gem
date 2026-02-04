@@ -1,0 +1,27 @@
+{
+  "classes": [
+    "1_Ready",
+    "2_Down",
+    "3_Peak",
+    "4_Up"
+  ],
+  "num_classes": 4,
+  "input_shape": [
+    1,
+    30,
+    33,
+    3
+  ],
+  "input_name": "landmarks",
+  "feature_set": "strength_legs",
+  "countingMode": "SEQUENTIAL",
+  "triggerPhase": "PEAK",
+  "class_phases": {
+    "1_Ready": "READY",
+    "2_Down": "MOVEMENT",
+    "3_Peak": "PEAK",
+    "4_Up": "MOVEMENT"
+  },
+  "runtime": "onnxruntime-mobile",
+  "opset_version": 18
+}

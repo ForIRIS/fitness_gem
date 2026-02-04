@@ -138,8 +138,9 @@ class WorkoutSessionController extends ChangeNotifier {
   void processPose(Pose pose) {
     if (_state.isTestMode ||
         _state.phase == SessionPhase.paused ||
-        _state.phase == SessionPhase.completed)
+        _state.phase == SessionPhase.completed) {
       return;
+    }
 
     // 1. Ready Pose Detection Phase
     if (_state.phase == SessionPhase.ready) {
@@ -225,8 +226,9 @@ class WorkoutSessionController extends ChangeNotifier {
 
   Future<void> _onSetComplete() async {
     if (_state.phase == SessionPhase.resting ||
-        _state.phase == SessionPhase.analyzing)
+        _state.phase == SessionPhase.analyzing) {
       return;
+    }
 
     // 1. Stop Current Set
     _timerService.stopWorkoutTimer();

@@ -30,6 +30,7 @@ class AIRepositoryImpl implements AIRepository {
   String _consultantSystemInstruction = '';
   String _interviewSystemInstruction = '';
   String _curriculumSystemInstruction = '';
+  String _baselineSystemInstruction = '';
   bool _instructionsLoaded = false;
 
   AIRepositoryImpl({
@@ -64,6 +65,9 @@ class AIRepositoryImpl implements AIRepository {
       );
       _curriculumSystemInstruction = await rootBundle.loadString(
         'assets/prompts/curriculum_planner_system_instruction.md',
+      );
+      _baselineSystemInstruction = await rootBundle.loadString(
+        'assets/prompts/baseline_analyst_system_instruction.md',
       );
       _instructionsLoaded = true;
     } catch (e) {
@@ -411,6 +415,55 @@ Please provide the Next Step advice in the User Language.
       return const Right(false);
     } catch (e) {
       return Left(ServerFailure('Fall Detection Analysis Failed: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> analyzeBaselineVideo(
+    String videoPath,
+  ) async {
+    await _ensureInitialized();
+    try {
+      final videoFile = File(videoPath);
+      final videoUri = await remoteDataSource.uploadFile(
+        apiKey: _apiKey,
+        file: videoFile,
+      );
+
+      if (videoUri == null) {
+        return const Left(ServerFailure('Failed to upload baseline video'));
+      }
+
+      // Wait for processing
+      await Future.delayed(const Duration(seconds: 2));
+
+      final prompt = '''
+TASK: BASELINE_ASSESSMENT
+ANALYZE: The user is performing an Air Squat for a baseline fitness assessment.
+
+metrics_to_extract:
+- stability_score (0-100): How stable is the core and balance?
+- mobility_score (0-100): Depth of squat and ankle/hip mobility.
+- alignment_issues (List<String>): e.g., "Knees caving in", "Heels lifting", "Excessive forward lean".
+- recommendation (String): Specific advice based on the form.
+
+Output JSON only.
+''';
+
+      final responseMap = await remoteDataSource.analyzeBaseline(
+        apiKey: _apiKey,
+        systemInstruction: _baselineSystemInstruction,
+        prompt: prompt,
+        videoUri: videoUri,
+      );
+
+      if (responseMap == null) {
+        return const Left(ServerFailure('Baseline analysis returned null'));
+      }
+
+      return Right(responseMap);
+    } catch (e) {
+      return Left(ServerFailure('Baseline Analysis Failed: $e'));
     }
   }
 

@@ -40,8 +40,9 @@ class CacheService {
 
   /// Check if file exists in cache
   Future<bool> isCached(String url) async {
-    if (url.isEmpty || url.startsWith('assets/'))
+    if (url.isEmpty || url.startsWith('assets/')) {
       return true; // No caching needed for empty or assets
+    }
     final file = await _getCacheFile(url);
     return file.existsSync();
   }

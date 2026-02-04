@@ -22,6 +22,9 @@ class UserProfileModel {
   final String? interviewSummary;
   final Map<String, String>? extractedDetails;
   final DateTime? lastInterviewDate;
+  final double? stabilityBaseline;
+  final double? mobilityScore;
+  final String? baselineAnalysis;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -44,6 +47,9 @@ class UserProfileModel {
     this.interviewSummary,
     this.extractedDetails,
     this.lastInterviewDate,
+    this.stabilityBaseline,
+    this.mobilityScore,
+    this.baselineAnalysis,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -69,6 +75,9 @@ class UserProfileModel {
       interviewSummary: interviewSummary,
       extractedDetails: extractedDetails,
       lastInterviewDate: lastInterviewDate,
+      stabilityBaseline: stabilityBaseline,
+      mobilityScore: mobilityScore,
+      baselineAnalysis: baselineAnalysis,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -95,6 +104,9 @@ class UserProfileModel {
       interviewSummary: entity.interviewSummary,
       extractedDetails: entity.extractedDetails,
       lastInterviewDate: entity.lastInterviewDate,
+      stabilityBaseline: entity.stabilityBaseline,
+      mobilityScore: entity.mobilityScore,
+      baselineAnalysis: entity.baselineAnalysis,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );
@@ -125,6 +137,9 @@ class UserProfileModel {
       lastInterviewDate: map['lastInterviewDate'] != null
           ? DateTime.parse(map['lastInterviewDate'])
           : null,
+      stabilityBaseline: _toDouble(map['stabilityBaseline']),
+      mobilityScore: _toDouble(map['mobilityScore']),
+      baselineAnalysis: map['baselineAnalysis'],
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'])
           : DateTime.now(),
@@ -155,6 +170,9 @@ class UserProfileModel {
       'interviewSummary': interviewSummary,
       'extractedDetails': extractedDetails,
       'lastInterviewDate': lastInterviewDate?.toIso8601String(),
+      'stabilityBaseline': stabilityBaseline,
+      'mobilityScore': mobilityScore,
+      'baselineAnalysis': baselineAnalysis,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };

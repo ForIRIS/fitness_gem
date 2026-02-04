@@ -24,6 +24,15 @@ abstract class GeminiRemoteDataSource {
     String model = 'gemini-3-flash-preview',
   });
 
+  /// Analyze baseline video (Single Video) via raw HTTP
+  Future<Map<String, dynamic>?> analyzeBaseline({
+    required String apiKey,
+    required String systemInstruction,
+    required String prompt,
+    required String videoUri,
+    String model = 'gemini-3-flash-preview',
+  });
+
   /// Start a chat session
   ChatSession startChat({
     required String apiKey,

@@ -21,6 +21,9 @@ class UserProfile extends Equatable {
   final String? interviewSummary;
   final Map<String, String>? extractedDetails;
   final DateTime? lastInterviewDate;
+  final double? stabilityBaseline;
+  final double? mobilityScore;
+  final String? baselineAnalysis;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -43,6 +46,9 @@ class UserProfile extends Equatable {
     this.interviewSummary,
     this.extractedDetails,
     this.lastInterviewDate,
+    this.stabilityBaseline,
+    this.mobilityScore,
+    this.baselineAnalysis,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -124,6 +130,9 @@ class UserProfile extends Equatable {
       'interviewSummary': interviewSummary,
       'extractedDetails': extractedDetails,
       'lastInterviewDate': lastInterviewDate?.toIso8601String(),
+      'stabilityBaseline': stabilityBaseline,
+      'mobilityScore': mobilityScore,
+      'baselineAnalysis': baselineAnalysis,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -152,6 +161,9 @@ class UserProfile extends Equatable {
     String? interviewSummary,
     Map<String, String>? extractedDetails,
     DateTime? lastInterviewDate,
+    double? stabilityBaseline,
+    double? mobilityScore,
+    String? baselineAnalysis,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -174,6 +186,9 @@ class UserProfile extends Equatable {
       interviewSummary: interviewSummary ?? this.interviewSummary,
       extractedDetails: extractedDetails ?? this.extractedDetails,
       lastInterviewDate: lastInterviewDate ?? this.lastInterviewDate,
+      stabilityBaseline: stabilityBaseline ?? this.stabilityBaseline,
+      mobilityScore: mobilityScore ?? this.mobilityScore,
+      baselineAnalysis: baselineAnalysis ?? this.baselineAnalysis,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -197,6 +212,9 @@ class UserProfile extends Equatable {
     interviewSummary,
     extractedDetails,
     lastInterviewDate,
+    stabilityBaseline,
+    mobilityScore,
+    baselineAnalysis,
     createdAt,
     updatedAt,
   ];

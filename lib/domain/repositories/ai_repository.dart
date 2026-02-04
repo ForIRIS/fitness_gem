@@ -47,6 +47,11 @@ abstract class AIRepository {
     required UserProfile profile,
   });
 
+  /// Analyze baseline assessment video
+  Future<Either<Failure, Map<String, dynamic>>> analyzeBaselineVideo(
+    String videoPath,
+  );
+
   /// Start an AI interview session
   Future<Either<Failure, String?>> startInterviewChat(UserProfile profile);
 

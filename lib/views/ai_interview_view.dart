@@ -13,6 +13,7 @@ import '../services/firebase_service.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'home_view.dart' as home;
+import 'onboarding/baseline_assessment_view.dart';
 
 /// AIInterviewView - AI Interview Chat Screen
 class AIInterviewView extends StatefulWidget {
@@ -511,51 +512,91 @@ class _AIInterviewViewState extends State<AIInterviewView>
                 ),
               ),
 
-              // Completion Button (When Interview Complete)
+              // Completion Buttons (When Interview Complete)
               if (_isInterviewComplete)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
                   ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF5E35B1), Color(0xFF9575CD)],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFF5E35B1,
-                            ).withValues(alpha: 0.3),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton.icon(
-                        onPressed: _completeInterview,
-                        icon: const Icon(Icons.check_circle),
-                        label: Text(
-                          AppLocalizations.of(context)!.completeAndStart,
-                          style: GoogleFonts.barlow(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: Container(
+                          decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(30),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF5E35B1), Color(0xFF9575CD)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF5E35B1,
+                                ).withValues(alpha: 0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: _completeInterview,
+                            icon: const Icon(Icons.check_circle),
+                            label: Text(
+                              AppLocalizations.of(context)!.completeAndStart,
+                              style: GoogleFonts.barlow(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => BaselineAssessmentView(
+                                  userProfile: widget.userProfile,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.camera_alt),
+                          label: Text(
+                            "AI PHYSICAL ASSESSMENT (RECOMMENDED)",
+                            style: GoogleFonts.barlow(
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF5E35B1),
+                            side: const BorderSide(
+                              color: Color(0xFF5E35B1),
+                              width: 2,
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                   ),
                 ),
 
