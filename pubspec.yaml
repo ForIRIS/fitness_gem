@@ -83,6 +83,7 @@ dependencies:
   equatable: ^2.0.5        # Value equality
   flutter_riverpod: ^2.4.0 # State management
   url_launcher: ^6.3.2
+  share_plus: ^12.0.1
 
 dev_dependencies:
   flutter_test:

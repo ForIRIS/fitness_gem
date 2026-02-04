@@ -8,6 +8,7 @@ class HomeHeader extends StatelessWidget {
   final UserProfile? userProfile;
   final VoidCallback onOpenAIChat;
   final VoidCallback onOpenSettings;
+  final VoidCallback? onOpenStatistics;
   final bool isCompleted;
   final bool isInProgress;
   final bool areNotificationsEnabled;
@@ -17,10 +18,9 @@ class HomeHeader extends StatelessWidget {
   const HomeHeader({
     super.key,
     required this.userProfile,
-    required this.onOpenAIChat, // Keeping this if needed, but unused for notification now?
-    // Actually, let's deprecate/remove it from here if it's not used.
-    // But to minimize breakage, I'll keep it but NOT use it for notification.
+    required this.onOpenAIChat,
     required this.onOpenSettings,
+    this.onOpenStatistics,
     this.isCompleted = false,
     this.isInProgress = false,
     this.areNotificationsEnabled = false,
@@ -105,6 +105,22 @@ class HomeHeader extends StatelessWidget {
                         ),
                       ),
                   ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: onOpenStatistics,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.brightMarigold,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.bar_chart_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),

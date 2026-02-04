@@ -1,9 +1,9 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Data sources
 import '../../data/datasources/local/workout_local_datasource.dart';
 import '../../data/datasources/local/user_local_datasource.dart';
+import '../../data/datasources/local/session_local_datasource.dart';
 import '../../data/datasources/remote/firebase_datasource.dart';
 import '../../data/datasources/remote/gemini_datasource.dart';
 
@@ -11,9 +11,11 @@ import '../../data/datasources/remote/gemini_datasource.dart';
 import '../../domain/repositories/workout_repository.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../domain/repositories/exercise_repository.dart';
+import '../../domain/repositories/session_repository.dart';
 import '../../data/repositories/workout_repository_impl.dart';
 import '../../data/repositories/user_repository_impl.dart';
 import '../../data/repositories/exercise_repository_impl.dart';
+import '../../data/repositories/session_repository_impl.dart';
 
 // Use cases - Workout
 import '../../domain/usecases/workout/get_today_curriculum.dart';
@@ -40,6 +42,11 @@ import '../../domain/usecases/ai/analyze_video_session_usecase.dart';
 import '../../domain/usecases/ai/get_api_key_usecase.dart';
 import '../../domain/usecases/ai/set_api_key_usecase.dart';
 import '../../domain/usecases/ai/analyze_baseline_video_usecase.dart';
+
+// Use cases - Session
+import '../../domain/usecases/session/save_session_usecase.dart';
+import '../../domain/usecases/session/get_weekly_sessions_usecase.dart';
+import '../../domain/usecases/session/get_monthly_sessions_usecase.dart';
 
 import '../../domain/repositories/ai_repository.dart';
 import '../../data/repositories/ai_repository_impl.dart';
@@ -75,6 +82,10 @@ Future<void> setupDependencyInjection() async {
 
   getIt.registerLazySingleton<UserLocalDataSource>(
     () => UserLocalDataSourceImpl(getIt()),
+  );
+
+  getIt.registerLazySingleton<SessionLocalDataSource>(
+    () => SessionLocalDataSourceImpl(getIt()),
   );
 
   // Remote Data Sources
@@ -128,6 +139,10 @@ Future<void> setupDependencyInjection() async {
     ),
   );
 
+  getIt.registerLazySingleton<SessionRepository>(
+    () => SessionRepositoryImpl(localDataSource: getIt()),
+  );
+
   // ============ Use Cases - Workout ============
 
   getIt.registerLazySingleton(() => GetTodayCurriculumUseCase(getIt()));
@@ -158,6 +173,12 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton(() => GetApiKeyUseCase(getIt()));
   getIt.registerLazySingleton(() => SetApiKeyUseCase(getIt()));
   getIt.registerLazySingleton(() => AnalyzeBaselineVideoUseCase(getIt()));
+
+  // ============ Use Cases - Session ============
+
+  getIt.registerLazySingleton(() => SaveSessionUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetWeeklySessionsUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetMonthlySessionsUseCase(getIt()));
 
   // ============ ViewModels ============
 

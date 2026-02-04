@@ -9,6 +9,7 @@ import 'settings_view.dart';
 import 'ai_chat_view.dart';
 import 'workout_detail_view.dart';
 import 'featured_program_detail_view.dart';
+import 'statistics_view.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
 import '../domain/entities/workout_curriculum.dart';
@@ -57,6 +58,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
         });
       }
     }
+  }
+
+  void _openStatistics() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const StatisticsView()));
   }
 
   void _openSettings() {
@@ -163,6 +170,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   isInProgress: viewModel.isInProgress,
                   onOpenAIChat: _openAIChat,
                   onOpenSettings: _openSettings,
+                  onOpenStatistics: _openStatistics,
                   areNotificationsEnabled: viewModel.areNotificationsEnabled,
                   hasUnreadNotifications: viewModel.hasUnreadNotifications,
                   onNotificationTap: () {
