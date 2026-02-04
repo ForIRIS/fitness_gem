@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'dart:ui';
+import '../../core/di/injection.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../presentation/controllers/baseline_assessment_controller.dart';
 import '../../l10n/app_localizations.dart';
@@ -27,14 +29,56 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
   @override
   void initState() {
     super.initState();
-    _controller = BaselineAssessmentController();
+    _controller = getIt<BaselineAssessmentController>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _controller.initialize(
-          widget.userProfile,
-          AppLocalizations.of(context)!,
-        );
+        _checkCameraPermission();
       }
+    });
+  }
+
+  Future<void> _checkCameraPermission() async {
+    final status = await Permission.camera.status;
+    if (!status.isGranted) {
+      // Show reasoning if needed, but since this Page IS the camera view,
+      // requesting immediately is 'contextual'.
+      final newStatus = await Permission.camera.request();
+      if (!newStatus.isGranted) {
+        if (!mounted) return;
+        _showPermissionDialog();
+        return;
+      }
+    }
+
+    // Proceed to initialize
+    if (mounted) {
+      _controller.initialize(widget.userProfile, AppLocalizations.of(context)!);
+    }
+  }
+
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Must decide
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.permissionRequired),
+        content: Text(AppLocalizations.of(context)!.cameraPermissionReason),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context), // Go back?
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              openAppSettings();
+            },
+            child: Text(AppLocalizations.of(context)!.openSettings),
+          ),
+        ],
+      ),
+    ).then((_) {
+      // If they cancel out of dialog, usually pop the view
+      Navigator.pop(context);
     });
   }
 

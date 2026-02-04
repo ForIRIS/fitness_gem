@@ -52,6 +52,7 @@ class _ShareableCardWidgetState extends State<ShareableCardWidget> {
       final file = File(filePath);
       await file.writeAsBytes(pngBytes);
 
+      // ignore: deprecated_member_use
       await Share.shareXFiles([
         XFile(filePath),
       ], text: 'Check out my workout progress! 💪 #FitnessGem');

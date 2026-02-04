@@ -721,4 +721,69 @@ class AppLocalizationsKo extends AppLocalizations {
   String errorAnalysisFailed(String message) {
     return '분석 실패: $message';
   }
+
+  @override
+  String get onboardingStep1 => '1단계: 프로필 및 안전 설정';
+
+  @override
+  String get onboardingStep2 => '2단계: AI 상담';
+
+  @override
+  String get onboardingStep3 => '3단계: 신체 균형 측정';
+
+  @override
+  String onboardingStepPreview(int current, String stepName) {
+    return '총 3단계 중 $current단계: $stepName';
+  }
+
+  @override
+  String onboardingNextStep(String stepName) {
+    return '다음 단계: $stepName';
+  }
+
+  @override
+  String get aiInviteMessageComplete =>
+      '목표 분석이 완료되었습니다! 더 정확한 자세 교정을 위해 30초 움직임 측정을 추천합니다.';
+
+  @override
+  String get aiInviteAssessmentButton => '자세 측정 시작하기';
+
+  @override
+  String get aiInviteAssessmentSkip => '나중에 하기';
+
+  @override
+  String get onboardingWelcomeTitle => 'Fitness Gem에 오신 것을 환영합니다';
+
+  @override
+  String get onboardingWelcomeSubtitle => 'AI와 함께하는 맞춤형 피트니스 여정';
+
+  @override
+  String get onboardingStep1Description => '더 나은 경험을 위해 프로필을 설정해주세요.';
+
+  @override
+  String get onboardingStep2Description => 'Gemini와 음성으로 상담하며 플랜을 만듭니다.';
+
+  @override
+  String get onboardingStep3Description => '30초 카메라 측정으로 자세를 교정받으세요.';
+
+  @override
+  String get getStarted => '시작하기';
+
+  @override
+  String get micPermissionReason => 'AI 음성 채팅과 긴급 상황 감지를 위해 마이크 권한이 필요합니다.';
+
+  @override
+  String get cameraPermissionReason => 'AI 자세 교정 및 분석을 위해 카메라 권한이 필요합니다.';
+
+  @override
+  String get listening => '듣고 있어요...';
+
+  @override
+  String get typeMessageHint => '메시지를 입력하세요...';
+
+  @override
+  String get assessmentRecommended => '신체 측정 권장';
+
+  @override
+  String get assessmentRecommendedDesc => '자세 레벨을 확인해보세요.';
 }

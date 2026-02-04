@@ -1,30 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
-import '../domain/entities/user_profile.dart';
-import '../../core/di/injection.dart';
-import '../../domain/usecases/ai/start_interview_usecase.dart';
-import '../../domain/usecases/ai/send_interview_message_usecase.dart';
-import '../../domain/usecases/ai/generate_curriculum_from_interview_usecase.dart';
-import '../../domain/usecases/workout/save_curriculum.dart';
-// import '../../domain/entities/workout_curriculum.dart'; // Unused
-import '../services/tts_service.dart';
-import '../services/stt_service.dart';
-import '../services/firebase_service.dart';
-
 import 'package:google_fonts/google_fonts.dart';
-import 'home_view.dart' as home;
-import 'onboarding/baseline_assessment_view.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shimmer/shimmer.dart';
+import 'onboarding/baseline_assessment_view.dart'; // Added import
 
-/// AIInterviewView - AI Interview Chat Screen
+import '../core/di/injection.dart';
+import '../domain/entities/user_profile.dart';
+import '../presentation/controllers/ai_interview_controller.dart'
+    hide ChatMessage;
+import '../presentation/controllers/ai_interview_controller.dart'
+    as controller_model;
+// To avoid conflict with local simplified usage or alias,
+// though we will use the controller's model directly.
+// Ideally, ChatMessage should be in a model file.
+// For now, I will use controller_model.ChatMessage.
+
 class AIInterviewView extends StatefulWidget {
   final UserProfile userProfile;
-  final bool isFromOnboarding;
 
-  const AIInterviewView({
-    super.key,
-    required this.userProfile,
-    this.isFromOnboarding = true,
-  });
+  const AIInterviewView({super.key, required this.userProfile});
 
   @override
   State<AIInterviewView> createState() => _AIInterviewViewState();
@@ -32,685 +27,284 @@ class AIInterviewView extends StatefulWidget {
 
 class _AIInterviewViewState extends State<AIInterviewView>
     with SingleTickerProviderStateMixin {
-  final TextEditingController _messageController = TextEditingController();
+  late final AIInterviewController _controller;
   final ScrollController _scrollController = ScrollController();
-  final List<_ChatMessage> _messages = [];
-  // final GeminiService _geminiService = GeminiService(); // Removed
-  final TTSService _ttsService = TTSService();
-  final STTService _sttService = STTService();
-
-  bool _isLoading = false;
-  bool _isInterviewComplete = false;
-  bool _hasError = false;
-  bool _isTtsEnabled = true;
-  bool _isListening = false;
-
-  late AnimationController _shimmerController;
+  late final AnimationController _shimmerController;
 
   @override
   void initState() {
     super.initState();
+    _controller = getIt<AIInterviewController>();
     _shimmerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat();
 
-    _initializeServices();
-    _startInterview();
+    // Initialize controller
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.initialize(widget.userProfile);
+    });
   }
 
-  Future<void> _initializeServices() async {
-    await _ttsService.initialize();
-    await _sttService.initialize();
-  }
-
-  Future<void> _startInterview() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final startInterview = getIt<StartInterviewUseCase>();
-      final result = await startInterview.execute(widget.userProfile);
-
-      String? response;
-      result.fold(
-        (failure) => debugPrint('Start interview failed: ${failure.message}'),
-        (r) => response = r,
-      );
-
-      if (!mounted) return;
-
-      if (response != null) {
-        final nonNullResponse = response!;
-        setState(() {
-          _messages.add(_ChatMessage(text: nonNullResponse, isUser: false));
-          _isLoading = false;
-        });
-        if (_isTtsEnabled) {
-          _ttsService.speak(nonNullResponse);
-        }
-      } else {
-        setState(() {
-          _hasError = true;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _hasError = true;
-        _isLoading = false;
-      });
-    }
-    _scrollToBottom();
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _shimmerController.dispose();
+    // Do NOT dispose _controller here if it's a singleton/factory that might be reused?
+    // It is registered as a factory, so we own this instance.
+    // However, ChangeNotifier doesn't always need disposal if garbage collected, but better to be safe if it holds streams.
+    // Our controller holds TextEditingController and Service references.
+    _controller.dispose();
+    super.dispose();
   }
 
   void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
-  Future<void> _sendMessage() async {
-    final message = _messageController.text.trim();
-    if (message.isEmpty || _isLoading) return;
-
-    setState(() {
-      _messages.add(_ChatMessage(text: message, isUser: true));
-      _isLoading = true;
-      _hasError = false;
-    });
-    _messageController.clear();
-    _scrollToBottom();
-
-    final sendMessage = getIt<SendInterviewMessageUseCase>();
-    final result = await sendMessage.execute(message);
-
+  void _onPermissionDenied() {
     if (!mounted) return;
-
-    result.fold(
-      (failure) {
-        if (!mounted) return;
-        setState(() {
-          _hasError = true;
-          _isLoading = false;
-        });
-      },
-      (response) async {
-        if (!mounted) return;
-
-        if (response.hasError) {
-          setState(() {
-            _hasError = true;
-            _isLoading = false;
-          });
-          return;
-        }
-
-        // Remove JSON part from message and display
-        String displayMessage = response.message;
-        if (response.isComplete) {
-          // Remove JSON part
-          displayMessage = displayMessage
-              .replaceAll(RegExp(r'```json[\s\S]*```', multiLine: true), '')
-              .replaceAll(
-                RegExp(
-                  r'\{[\s\S]*"interview_complete"[\s\S]*\}',
-                  multiLine: true,
-                ),
-                '',
-              )
-              .trim();
-          if (displayMessage.isEmpty) {
-            displayMessage = AppLocalizations.of(context)!.downloadComplete;
-          }
-        }
-
-        setState(() {
-          _messages.add(_ChatMessage(text: displayMessage, isUser: false));
-          _isLoading = false;
-          _isInterviewComplete = response.isComplete;
-        });
-
-        if (_isTtsEnabled && !response.isComplete) {
-          _ttsService.speak(displayMessage);
-        } else if (response.isComplete) {
-          _ttsService.speak(AppLocalizations.of(context)!.downloadComplete);
-        }
-
-        // Update profile when interview is complete
-        if (response.isComplete) {
-          // Show generating message (can be handled by UI state or message)
-          setState(() {
-            _messages.add(
-              _ChatMessage(
-                text: 'Generating your personalized curriculum...',
-                isUser: false,
-              ),
-            );
-            _isLoading = true;
-          });
-
-          await _processInterviewResult(
-            response.summaryText,
-            response.extractedDetails,
-          );
-        }
-      },
-    );
-    _scrollToBottom();
-  }
-
-  Future<void> _processInterviewResult(
-    String? summaryText,
-    Map<String, String>? extractedDetails,
-  ) async {
-    // Note: Profile saving not supported with immutable entities
-    // The profile updates would need to be handled through a repository/use case
-    // For now, we'll skip profile persistence and just generate the curriculum
-    debugPrint('Interview complete - Summary: $summaryText');
-    debugPrint('Extracted details: $extractedDetails');
-
-    // TODO: Implement profile update through repository when available
-    // final profile = widget.userProfile;
-    // profile.interviewSummary = summaryText;
-    // profile.extractedDetails = extractedDetails;
-    // profile.lastInterviewDate = DateTime.now();
-    // await UserProfile.saveProfile(profile);
-
-    // 2. Generate Curriculum
-    if (extractedDetails != null) {
-      try {
-        final firebaseService = FirebaseService();
-        await firebaseService.initialize();
-        final allWorkouts = await firebaseService.fetchWorkoutAllList();
-
-        final generateCurriculum =
-            getIt<GenerateCurriculumFromInterviewUseCase>();
-
-        final result = await generateCurriculum.execute(
-          GenerateCurriculumFromInterviewParams(
-            profile: widget.userProfile,
-            availableWorkouts: allWorkouts,
-            interviewDetails: extractedDetails,
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.permissionRequired),
+        content: Text(AppLocalizations.of(context)!.micPermissionReason),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
-        );
-
-        // Handling the result type Either<Failure, WorkoutCurriculum?>
-        final curriculum = result.fold((failure) => null, (c) => c);
-
-        if (curriculum != null) {
-          // Save the curriculum using the use case
-          try {
-            final saveCurriculum = getIt<SaveCurriculumUseCase>();
-            await saveCurriculum.execute(curriculum);
-
-            if (mounted) {
-              setState(() {
-                _messages.add(
-                  _ChatMessage(
-                    text:
-                        'Curriculum created: ${curriculum.title}\n'
-                        'Duration: ${curriculum.estimatedMinutes} min\n'
-                        '${curriculum.description}',
-                    isUser: false,
-                  ),
-                );
-                _isLoading = false;
-                _isInterviewComplete = true; // Use this to show "Start" button
-              });
-
-              if (mounted) {
-                _scrollToBottom();
-                _ttsService.speak(
-                  AppLocalizations.of(context)!.downloadComplete,
-                );
-              }
-              return;
-            }
-          } catch (e) {
-            debugPrint('Error saving curriculum: $e');
-            // Continue to show error or fallback
-          }
-        } else {
-          // Handle generation failure (null curriculum from Right or Failure from Left)
-          if (mounted) {
-            setState(() {
-              _messages.add(
-                _ChatMessage(
-                  text: 'Failed to generate curriculum. Please try again.',
-                  isUser: false,
-                ),
-              );
-              _hasError = true;
-              _isLoading = false;
-            });
-          }
-          return;
-        }
-      } catch (e) {
-        debugPrint('Error generating curriculum in view: $e');
-        if (mounted) {
-          setState(() {
-            _messages.add(
-              _ChatMessage(
-                text: 'An error occurred while creating your plan.',
-                isUser: false,
-              ),
-            );
-            _hasError = true;
-            _isLoading = false;
-          });
-        }
-        return;
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        _isInterviewComplete = true;
-      });
-    }
-  }
-
-  void _skipInterview() {
-    // _geminiService.endInterviewSession(); // No-op, removed
-    if (widget.isFromOnboarding) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const home.HomeView()),
-        (route) => false,
-      );
-    } else {
-      Navigator.pop(context, false); // false = Interview skipped
-    }
-  }
-
-  void _completeInterview() {
-    // _geminiService.endInterviewSession(); // No-op, removed
-    if (widget.isFromOnboarding) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const home.HomeView()),
-        (route) => false,
-      );
-    } else {
-      Navigator.pop(context, true); // true = Interview complete
-    }
-  }
-
-  void _retryConnection() {
-    setState(() {
-      _hasError = false;
-    });
-
-    // If empty, start fresh
-    if (_messages.isEmpty) {
-      _startInterview();
-      return;
-    }
-
-    // If last message was from user, retry sending it
-    if (_messages.isNotEmpty && _messages.last.isUser) {
-      final lastMessage = _messages.last.text;
-
-      // Remove the last message from UI to avoid duplication when _sendMessage adds it back
-      setState(() {
-        _messages.removeLast();
-        _messageController.text = lastMessage;
-      });
-
-      _sendMessage();
-    }
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            child: Text(AppLocalizations.of(context)!.openSettings),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF3E5F5), // Light purple/pink
+      backgroundColor: const Color(0xFFF5F5FA),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
-        title: Text(
-          'AI Consultant',
-          style: GoogleFonts.barlow(
-            color: const Color(0xFF1A237E),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        iconTheme: const IconThemeData(color: Color(0xFF1A237E)),
         leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: _skipInterview,
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          l10n.aiConsulting,
+          style: GoogleFonts.barlow(
+            color: Colors.black87,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         actions: [
-          TextButton(
-            onPressed: _skipInterview,
-            child: Text(
-              AppLocalizations.of(context)!.skip,
-              style: GoogleFonts.barlow(
-                color: const Color(0xFF1A237E).withValues(alpha: 0.7),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(
-              _isTtsEnabled ? Icons.volume_up : Icons.volume_off,
-              color: const Color(0xFF1A237E),
-            ),
-            onPressed: () {
-              setState(() => _isTtsEnabled = !_isTtsEnabled);
-              if (!_isTtsEnabled) _ttsService.stop();
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, _) {
+              return IconButton(
+                icon: Icon(
+                  _controller.isTtsEnabled ? Icons.volume_up : Icons.volume_off,
+                  color: _controller.isTtsEnabled
+                      ? Colors.deepPurple
+                      : Colors.grey,
+                ),
+                onPressed: _controller.toggleTts,
+              );
             },
           ),
         ],
       ),
-      body: Stack(
+      body: Column(
         children: [
-          // Background Gradient
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFE1BEE7), // Lighter Purple
-                    Color(0xFFF3E5F5), // Base
-                    Color(0xFFE3F2FD), // Light Blue tint
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-          ),
+          Expanded(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) {
+                // Scroll to bottom when messages change
+                // Note: simple check like length comparison might be better than doing it every build.
+                // But AnimatedBuilder triggers on notifyListeners.
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _scrollToBottom(),
+                );
 
-          Column(
-            children: [
-              // Guidance Banner
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                color: const Color(0xFFFFF8E1), // Light Amber
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.auto_awesome,
-                      color: Colors.amber,
-                      size: 20,
+                if (_controller.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.networkError,
+                        ), // Ensure this string exists or use fallback
+                        ElevatedButton(
+                          onPressed: _controller.retryConnection,
+                          child: Text(l10n.retry), // Ensure string exists
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        widget.isFromOnboarding
-                            ? AppLocalizations.of(context)!.aiConsultantBanner
-                            : AppLocalizations.of(
-                                context,
-                              )!.aiProfileAnalysisBanner,
-                        style: GoogleFonts.barlow(
-                          color: Colors.amber[900],
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  );
+                }
 
-              // Error Banner
-              if (_hasError)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  color: const Color(0xFFFFEBEE), // Light Red
-                  child: Row(
-                    children: [
-                      const Icon(Icons.wifi_off, color: Colors.red, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'A network error occurred',
-                          style: GoogleFonts.barlow(
-                            color: Colors.red[900],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: _retryConnection,
-                        child: Text(
-                          AppLocalizations.of(context)!.retry,
-                          style: GoogleFonts.barlow(
-                            color: Colors.red[900],
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              // Chat Message List
-              Expanded(
-                child: ListView.builder(
+                return ListView.builder(
                   controller: _scrollController,
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _messages.length + (_isLoading ? 1 : 0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 20,
+                  ),
+                  itemCount:
+                      _controller.messages.length +
+                      (_controller.isLoading ? 1 : 0),
                   itemBuilder: (context, index) {
-                    if (_isLoading && index == _messages.length) {
+                    if (index == _controller.messages.length) {
                       return _buildLoadingBubble();
                     }
-                    return _buildMessageBubble(_messages[index]);
+                    final message = _controller.messages[index];
+                    return _buildMessageBubble(message);
                   },
-                ),
-              ),
-
-              // Completion Buttons (When Interview Complete)
-              if (_isInterviewComplete)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(30),
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF5E35B1), Color(0xFF9575CD)],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(
-                                  0xFF5E35B1,
-                                ).withValues(alpha: 0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ElevatedButton.icon(
-                            onPressed: _completeInterview,
-                            icon: const Icon(Icons.check_circle),
-                            label: Text(
-                              AppLocalizations.of(context)!.completeAndStart,
-                              style: GoogleFonts.barlow(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              shadowColor: Colors.transparent,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => BaselineAssessmentView(
-                                  userProfile: widget.userProfile,
-                                ),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.camera_alt),
-                          label: Text(
-                            "AI PHYSICAL ASSESSMENT (RECOMMENDED)",
-                            style: GoogleFonts.barlow(
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF5E35B1),
-                            side: const BorderSide(
-                              color: Color(0xFF5E35B1),
-                              width: 2,
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                  ),
-                ),
-
-              // Input Field
-              if (!_isInterviewComplete)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, -4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _messageController,
-                          style: GoogleFonts.barlow(color: Colors.black87),
-                          decoration: InputDecoration(
-                            hintText: AppLocalizations.of(
-                              context,
-                            )!.answerPlaceholder,
-                            hintStyle: GoogleFonts.barlow(
-                              color: Colors.black38,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: const Color(0xFFF5F5F5),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                          onSubmitted: (_) => _sendMessage(),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Voice Input Button
-                      GestureDetector(
-                        onLongPressStart: (_) => _startListening(),
-                        onLongPressEnd: (_) => _stopListening(),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: _isListening
-                                ? Colors.red.withValues(alpha: 0.1)
-                                : Colors.transparent,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            _isListening ? Icons.mic : Icons.mic_none,
-                            color: _isListening
-                                ? Colors.red
-                                : const Color(0xFF5E35B1),
-                            size: 28,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: _isLoading ? null : _sendMessage,
-                        icon: const Icon(Icons.send),
-                        color: const Color(0xFF5E35B1),
-                        iconSize: 28,
-                      ),
-                    ],
-                  ),
-                ),
-            ],
+                );
+              },
+            ),
           ),
+          _buildInputArea(l10n),
         ],
       ),
     );
   }
 
-  Future<void> _startListening() async {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    final available = await _sttService.initialize();
-    if (available) {
-      if (!mounted) return;
-      setState(() => _isListening = true);
-      _sttService.startListening(
-        onResult: (text) {
-          if (mounted) {
-            setState(() {
-              _messageController.text = text;
-            });
-          }
+  Widget _buildInputArea(AppLocalizations l10n) {
+    return Container(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).padding.bottom + 10,
+        left: 16,
+        right: 16,
+        top: 10,
+      ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          return Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _controller.messageController,
+                  enabled:
+                      !_controller.isLoading &&
+                      !_controller.isInterviewComplete,
+                  decoration: InputDecoration(
+                    hintText: _controller.isListening
+                        ? l10n.listening
+                        : l10n.typeMessageHint,
+                    hintStyle: GoogleFonts.barlow(
+                      color: _controller.isListening
+                          ? Colors.deepPurpleAccent
+                          : Colors.grey[400],
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFFF5F5FA),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                  ),
+                  onSubmitted: _controller.sendMessage,
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (!_controller.isInterviewComplete) ...[
+                // Mic Button
+                GestureDetector(
+                  onLongPress: () => _controller.startListening(
+                    onPermissionDenied: _onPermissionDenied,
+                  ),
+                  onLongPressUp: _controller.stopListening,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _controller.isListening
+                          ? Colors.redAccent
+                          : Colors.deepPurple.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _controller.isListening ? Icons.mic : Icons.mic_none,
+                      color: _controller.isListening
+                          ? Colors.white
+                          : Colors.deepPurple,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Send Button
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.deepPurple,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.send, color: Colors.white, size: 20),
+                    onPressed: _controller.isLoading
+                        ? null
+                        : () => _controller.sendMessage(
+                            _controller.messageController.text,
+                          ),
+                  ),
+                ),
+              ],
+            ],
+          );
         },
-        languageCode: languageCode == 'ko' ? 'ko-KR' : 'en-US',
-      );
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(controller_model.ChatMessage message) {
+    if (message.isCard) {
+      if (message.cardWidget != null) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: message.cardWidget!,
+        );
+      }
+      // Fallback or specific handling for system generated card signals
+      // Since Controller logic just added a blank "isCard: true" message for the curriculum:
+      return _buildAssessmentRecommendation(context);
     }
-  }
 
-  Future<void> _stopListening() async {
-    setState(() => _isListening = false);
-    await _sttService.stopListening();
-  }
-
-  Widget _buildMessageBubble(_ChatMessage message) {
     return Align(
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -799,6 +393,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
     return RichText(text: TextSpan(children: spans));
   }
 
+  // Reused from original but optimized
   Widget _buildLoadingBubble() {
     return Align(
       alignment: Alignment.centerLeft,
@@ -848,19 +443,104 @@ class _AIInterviewViewState extends State<AIInterviewView>
     );
   }
 
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    _shimmerController.dispose();
-    // _geminiService.endInterviewSession(); // No-op, removed
-    super.dispose();
+  // This was previously part of the view, keeping it as valid UI logic
+  Widget _buildAssessmentRecommendation(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.deepPurpleAccent.withValues(alpha: 0.3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.deepPurple.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurpleAccent.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.fitness_center,
+                  color: Colors.deepPurple,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.assessmentRecommended, // "Physical Assessment Recommended"
+                      style: GoogleFonts.barlow(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      l10n.assessmentRecommendedDesc, // "Let's check your form level."
+                      style: GoogleFonts.barlow(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                // Navigation to Assessment
+                // Using named route or direct push
+                // Assuming BaselineAssessmentView is in the onboarding folder or main views
+                // We need to import it if we push directly.
+                // For now, I will use Navigator.pushNamed if possible or import it.
+                // The original code used Navigator.push(MaterialPageRoute(builder: (_) => BaselineAssessmentView(userProfile: widget.userProfile)));
+                // I need to import BaselineAssessmentView.
+                // Let's add that import!
+                _navigateToAssessment();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Text(l10n.aiInviteAssessmentButton),
+            ),
+          ),
+        ],
+      ),
+    );
   }
-}
 
-class _ChatMessage {
-  final String text;
-  final bool isUser;
-
-  _ChatMessage({required this.text, required this.isUser});
+  void _navigateToAssessment() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            BaselineAssessmentView(userProfile: widget.userProfile),
+      ),
+    );
+  }
 }

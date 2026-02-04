@@ -4,8 +4,9 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Still used if we need legacy migration or other prefs? No, removing per plan.
 
 import '../../core/error/failures.dart';
 import '../../domain/entities/user_profile.dart';
@@ -19,6 +20,7 @@ import '../../services/functions_service.dart';
 class AIRepositoryImpl implements AIRepository {
   final GeminiRemoteDataSource remoteDataSource;
   final FunctionsService functionsService;
+  final FlutterSecureStorage secureStorage;
 
   static const String _apiKeyPrefKey = 'gemini_api_key';
 
@@ -36,6 +38,7 @@ class AIRepositoryImpl implements AIRepository {
   AIRepositoryImpl({
     required this.remoteDataSource,
     FunctionsService? functionsService,
+    this.secureStorage = const FlutterSecureStorage(),
   }) : functionsService = functionsService ?? FunctionsService();
 
   Future<void> initialize() async {
@@ -46,8 +49,19 @@ class AIRepositoryImpl implements AIRepository {
   }
 
   Future<void> _initializeApiKey() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedKey = prefs.getString(_apiKeyPrefKey);
+    final savedKey = await secureStorage.read(key: _apiKeyPrefKey);
+    // Fallback to legacy SharedPreferences if not found (Migration Strategy)
+    if (savedKey == null) {
+      final prefs = await SharedPreferences.getInstance();
+      final legacyKey = prefs.getString(_apiKeyPrefKey);
+      if (legacyKey != null && legacyKey.isNotEmpty) {
+        _apiKey = legacyKey;
+        // Migrate to secure storage
+        await secureStorage.write(key: _apiKeyPrefKey, value: legacyKey);
+        await prefs.remove(_apiKeyPrefKey);
+        return;
+      }
+    }
     _apiKey = savedKey ?? dotenv.env['GEMINI_API_KEY'] ?? '';
   }
 
@@ -82,12 +96,11 @@ class AIRepositoryImpl implements AIRepository {
 
   @override
   Future<void> setApiKey(String apiKey) async {
-    final prefs = await SharedPreferences.getInstance();
     if (apiKey.isEmpty) {
-      await prefs.remove(_apiKeyPrefKey);
+      await secureStorage.delete(key: _apiKeyPrefKey);
       _apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
     } else {
-      await prefs.setString(_apiKeyPrefKey, apiKey);
+      await secureStorage.write(key: _apiKeyPrefKey, value: apiKey);
       _apiKey = apiKey;
     }
   }

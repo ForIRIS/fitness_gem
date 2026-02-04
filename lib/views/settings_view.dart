@@ -1011,8 +1011,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            AIInterviewView(userProfile: profile, isFromOnboarding: false),
+        builder: (context) => AIInterviewView(userProfile: profile),
       ),
     );
 

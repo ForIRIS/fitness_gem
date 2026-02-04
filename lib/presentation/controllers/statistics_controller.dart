@@ -1,12 +1,15 @@
 import 'package:flutter/foundation.dart';
 import '../../domain/entities/workout_session.dart';
 import '../../domain/usecases/session/get_weekly_sessions_usecase.dart';
+import '../../domain/usecases/session/get_previous_week_sessions_usecase.dart';
 import '../../core/di/injection.dart';
 
 /// Controller for statistics and progress analysis
 class StatisticsController extends ChangeNotifier {
   final GetWeeklySessionsUseCase _getWeeklySessions =
       getIt<GetWeeklySessionsUseCase>();
+  final GetPreviousWeekSessionsUseCase _getPreviousWeekSessions =
+      getIt<GetPreviousWeekSessionsUseCase>();
 
   List<WorkoutSession> _currentWeekSessions = [];
   List<WorkoutSession> _previousWeekSessions = [];
@@ -22,15 +25,17 @@ class StatisticsController extends ChangeNotifier {
     notifyListeners();
 
     final weeklyResult = await _getWeeklySessions.execute();
+    final previousResult = await _getPreviousWeekSessions.execute();
+
     weeklyResult.fold(
       (failure) => debugPrint('Failed to load current week sessions: $failure'),
-      (sessions) {
-        _currentWeekSessions = sessions;
-        // TODO: filtering logic or separate use case for previous week?
-        // For now, let's assume I need another use case or filter.
-        // But wait, getWeeklySessions gets *one* week.
-        // I need a way to get *previous* week.
-      },
+      (sessions) => _currentWeekSessions = sessions,
+    );
+
+    previousResult.fold(
+      (failure) =>
+          debugPrint('Failed to load previous week sessions: $failure'),
+      (sessions) => _previousWeekSessions = sessions,
     );
 
     _isLoading = false;
@@ -147,7 +152,7 @@ class StatisticsController extends ChangeNotifier {
 
     // Duration insight
     if (totalDurationMinutes > 0) {
-      buffer.write(' Total time: ${totalDurationMinutes} minutes.');
+      buffer.write(' Total time: $totalDurationMinutes minutes.');
     }
 
     // Reps insight

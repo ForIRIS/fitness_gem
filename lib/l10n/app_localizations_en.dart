@@ -746,4 +746,75 @@ class AppLocalizationsEn extends AppLocalizations {
   String errorAnalysisFailed(String message) {
     return 'Analysis failed: $message';
   }
+
+  @override
+  String get onboardingStep1 => 'Step 1: Profile & Safety';
+
+  @override
+  String get onboardingStep2 => 'Step 2: AI Consultation';
+
+  @override
+  String get onboardingStep3 => 'Step 3: Physical Alignment';
+
+  @override
+  String onboardingStepPreview(int current, String stepName) {
+    return 'Step $current of 3: $stepName';
+  }
+
+  @override
+  String onboardingNextStep(String stepName) {
+    return 'Coming Up: $stepName';
+  }
+
+  @override
+  String get aiInviteMessageComplete =>
+      'I\'ve analyzed your goals! To customize your form correction, I recommend a quick 30-second mobility check.';
+
+  @override
+  String get aiInviteAssessmentButton => 'START ALIGNMENT CHECK';
+
+  @override
+  String get aiInviteAssessmentSkip => 'Skip for now';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to Fitness Gem';
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'Your AI Fitness Journey starts here.';
+
+  @override
+  String get onboardingStep1Description =>
+      'Tell us about yourself to tailor your experience.';
+
+  @override
+  String get onboardingStep2Description =>
+      'Consult with Gemini via voice to build your plan.';
+
+  @override
+  String get onboardingStep3Description =>
+      'A 30-second camera check to perfect your form.';
+
+  @override
+  String get getStarted => 'Get Started';
+
+  @override
+  String get micPermissionReason =>
+      'Microphone access is needed for AI voice chat and emergency detection.';
+
+  @override
+  String get cameraPermissionReason =>
+      'Camera access is needed for AI physical alignment and pose analysis.';
+
+  @override
+  String get listening => 'Listening...';
+
+  @override
+  String get typeMessageHint => 'Type a message...';
+
+  @override
+  String get assessmentRecommended => 'Physical Assessment Recommended';
+
+  @override
+  String get assessmentRecommendedDesc => 'Let\'s check your form level.';
 }

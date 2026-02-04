@@ -18,6 +18,10 @@ import '../../data/repositories/exercise_repository_impl.dart';
 import '../../data/repositories/session_repository_impl.dart';
 
 // Use cases - Workout
+import '../../domain/usecases/session/save_session_usecase.dart';
+import '../../domain/usecases/session/get_weekly_sessions_usecase.dart';
+import '../../domain/usecases/session/get_monthly_sessions_usecase.dart';
+import '../../domain/usecases/session/get_previous_week_sessions_usecase.dart';
 import '../../domain/usecases/workout/get_today_curriculum.dart';
 import '../../domain/usecases/workout/generate_curriculum.dart';
 import '../../domain/usecases/workout/save_curriculum.dart';
@@ -31,6 +35,7 @@ import '../../domain/usecases/user/get_user_profile.dart';
 import '../../domain/usecases/user/update_user_profile.dart';
 
 // Use cases - AI
+// Use cases - AI
 import '../../domain/usecases/ai/start_interview_usecase.dart';
 import '../../domain/usecases/ai/send_interview_message_usecase.dart';
 import '../../domain/usecases/ai/generate_curriculum_usecase.dart';
@@ -42,11 +47,6 @@ import '../../domain/usecases/ai/analyze_video_session_usecase.dart';
 import '../../domain/usecases/ai/get_api_key_usecase.dart';
 import '../../domain/usecases/ai/set_api_key_usecase.dart';
 import '../../domain/usecases/ai/analyze_baseline_video_usecase.dart';
-
-// Use cases - Session
-import '../../domain/usecases/session/save_session_usecase.dart';
-import '../../domain/usecases/session/get_weekly_sessions_usecase.dart';
-import '../../domain/usecases/session/get_monthly_sessions_usecase.dart';
 
 import '../../domain/repositories/ai_repository.dart';
 import '../../data/repositories/ai_repository_impl.dart';
@@ -64,6 +64,11 @@ import '../../domain/services/coaching_manager.dart';
 import '../../domain/interfaces/feedback_output.dart';
 // ViewModels
 import '../../presentation/viewmodels/home_viewmodel.dart';
+
+// Controllers (added)
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../presentation/controllers/baseline_assessment_controller.dart';
+import '../../presentation/controllers/ai_interview_controller.dart';
 
 final getIt = GetIt.instance;
 
@@ -129,7 +134,7 @@ Future<void> setupDependencyInjection() async {
   );
 
   getIt.registerLazySingleton<AIRepository>(
-    () => AIRepositoryImpl(remoteDataSource: getIt()),
+    () => AIRepositoryImpl(remoteDataSource: getIt(), secureStorage: getIt()),
   );
 
   getIt.registerLazySingleton<ExerciseRepository>(
@@ -142,6 +147,8 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton<SessionRepository>(
     () => SessionRepositoryImpl(localDataSource: getIt()),
   );
+
+  getIt.registerLazySingleton(() => const FlutterSecureStorage());
 
   // ============ Use Cases - Workout ============
 
@@ -179,10 +186,10 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton(() => SaveSessionUseCase(getIt()));
   getIt.registerLazySingleton(() => GetWeeklySessionsUseCase(getIt()));
   getIt.registerLazySingleton(() => GetMonthlySessionsUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetPreviousWeekSessionsUseCase(getIt()));
 
-  // ============ ViewModels ============
+  // ============ ViewModels / Controllers ============
 
-  // Use factory for ViewModels so we get new instances each time
   getIt.registerFactory(
     () => HomeViewModel(
       getTodayCurriculum: getIt(),
@@ -191,6 +198,19 @@ Future<void> setupDependencyInjection() async {
       getDailyHotCategories: getIt(),
       getFeaturedProgram: getIt(),
       getUserProfile: getIt(),
+    ),
+  );
+
+  getIt.registerFactory(() => BaselineAssessmentController());
+
+  getIt.registerFactory(
+    () => AIInterviewController(
+      startInterviewUseCase: getIt(),
+      sendInterviewMessageUseCase: getIt(),
+      generateCurriculumUseCase: getIt(),
+      saveCurriculumUseCase: getIt(),
+      ttsService: getIt(),
+      sttService: getIt(),
     ),
   );
 }

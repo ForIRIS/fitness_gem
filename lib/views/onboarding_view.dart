@@ -11,7 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 
 // Sub-pages
-import 'onboarding/onboarding_permissions_page.dart';
+import 'onboarding/onboarding_intro_page.dart';
 import 'onboarding/onboarding_profile_page.dart';
 import 'onboarding/onboarding_exercise_page.dart';
 import 'onboarding/onboarding_guardian_page.dart';
@@ -96,8 +96,8 @@ class _OnboardingViewState extends State<OnboardingView> {
               children: [
                 Column(
                   children: [
-                    // Progress indicator
-                    _buildProgressIndicator(),
+                    // Progress indicator (Hide on Intro Page)
+                    if (_currentPage > 0) _buildProgressIndicator(),
 
                     Expanded(
                       child: PageView(
@@ -106,8 +106,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                         onPageChanged: (page) =>
                             setState(() => _currentPage = page),
                         children: [
-                          // 1. Permissions Page
-                          OnboardingPermissionsPage(
+                          // 1. Intro Page (Replaces Permissions)
+                          OnboardingIntroPage(
                             onNext: _nextPage,
                             onShowApiKeyDialog: _showApiKeyDialog,
                           ),
@@ -208,21 +208,46 @@ class _OnboardingViewState extends State<OnboardingView> {
   Widget _buildProgressIndicator() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-      child: Row(
-        children: List.generate(4, (index) {
-          return Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              height: 6,
-              decoration: BoxDecoration(
-                color: index <= _currentPage
-                    ? const Color(0xFF5E35B1) // Deep Purple
-                    : Colors.black12,
-                borderRadius: BorderRadius.circular(3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                AppLocalizations.of(context)!.onboardingStepPreview(
+                  1,
+                  AppLocalizations.of(context)!.onboardingStep1,
+                ),
+                style: GoogleFonts.barlow(
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1A237E),
+                ),
               ),
-            ),
-          );
-        }),
+              Text(
+                "${_currentPage + 1}/4",
+                style: GoogleFonts.barlow(color: Colors.black45, fontSize: 12),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: List.generate(4, (index) {
+              return Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: index <= _currentPage
+                        ? const Color(0xFF5E35B1) // Deep Purple
+                        : Colors.black12,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
@@ -239,6 +264,38 @@ class _OnboardingViewState extends State<OnboardingView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Container(
+              margin: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF5E35B1).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: const Color(0xFF5E35B1).withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 16,
+                    color: Color(0xFF5E35B1),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    AppLocalizations.of(context)!.onboardingNextStep(
+                      AppLocalizations.of(context)!.onboardingStep2,
+                    ),
+                    style: GoogleFonts.barlow(
+                      color: const Color(0xFF5E35B1),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

@@ -1459,6 +1459,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Analysis failed: {message}'**
   String errorAnalysisFailed(String message);
+
+  /// No description provided for @onboardingStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 1: Profile & Safety'**
+  String get onboardingStep1;
+
+  /// No description provided for @onboardingStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 2: AI Consultation'**
+  String get onboardingStep2;
+
+  /// No description provided for @onboardingStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 3: Physical Alignment'**
+  String get onboardingStep3;
+
+  /// No description provided for @onboardingStepPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of 3: {stepName}'**
+  String onboardingStepPreview(int current, String stepName);
+
+  /// No description provided for @onboardingNextStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming Up: {stepName}'**
+  String onboardingNextStep(String stepName);
+
+  /// No description provided for @aiInviteMessageComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve analyzed your goals! To customize your form correction, I recommend a quick 30-second mobility check.'**
+  String get aiInviteMessageComplete;
+
+  /// No description provided for @aiInviteAssessmentButton.
+  ///
+  /// In en, this message translates to:
+  /// **'START ALIGNMENT CHECK'**
+  String get aiInviteAssessmentButton;
+
+  /// No description provided for @aiInviteAssessmentSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get aiInviteAssessmentSkip;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Fitness Gem'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your AI Fitness Journey starts here.'**
+  String get onboardingWelcomeSubtitle;
+
+  /// No description provided for @onboardingStep1Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us about yourself to tailor your experience.'**
+  String get onboardingStep1Description;
+
+  /// No description provided for @onboardingStep2Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Consult with Gemini via voice to build your plan.'**
+  String get onboardingStep2Description;
+
+  /// No description provided for @onboardingStep3Description.
+  ///
+  /// In en, this message translates to:
+  /// **'A 30-second camera check to perfect your form.'**
+  String get onboardingStep3Description;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get getStarted;
+
+  /// No description provided for @micPermissionReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access is needed for AI voice chat and emergency detection.'**
+  String get micPermissionReason;
+
+  /// No description provided for @cameraPermissionReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is needed for AI physical alignment and pose analysis.'**
+  String get cameraPermissionReason;
+
+  /// No description provided for @listening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening...'**
+  String get listening;
+
+  /// No description provided for @typeMessageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a message...'**
+  String get typeMessageHint;
+
+  /// No description provided for @assessmentRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical Assessment Recommended'**
+  String get assessmentRecommended;
+
+  /// No description provided for @assessmentRecommendedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s check your form level.'**
+  String get assessmentRecommendedDesc;
 }
 
 class _AppLocalizationsDelegate

@@ -323,5 +323,43 @@
         "type": "String"
       }
     }
-  }
+  },
+  "onboardingStep1": "Step 1: Profile & Safety",
+  "onboardingStep2": "Step 2: AI Consultation",
+  "onboardingStep3": "Step 3: Physical Alignment",
+  "onboardingStepPreview": "Step {current} of 3: {stepName}",
+  "@onboardingStepPreview": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "stepName": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingNextStep": "Coming Up: {stepName}",
+  "@onboardingNextStep": {
+    "placeholders": {
+      "stepName": {
+        "type": "String"
+      }
+    }
+  },
+  "aiInviteMessageComplete": "I've analyzed your goals! To customize your form correction, I recommend a quick 30-second mobility check.",
+  "aiInviteAssessmentButton": "START ALIGNMENT CHECK",
+  "aiInviteAssessmentSkip": "Skip for now",
+  "@_NEW_ONBOARDING_STRINGS": {},
+  "onboardingWelcomeTitle": "Welcome to Fitness Gem",
+  "onboardingWelcomeSubtitle": "Your AI Fitness Journey starts here.",
+  "onboardingStep1Description": "Tell us about yourself to tailor your experience.",
+  "onboardingStep2Description": "Consult with Gemini via voice to build your plan.",
+  "onboardingStep3Description": "A 30-second camera check to perfect your form.",
+  "getStarted": "Get Started",
+  "micPermissionReason": "Microphone access is needed for AI voice chat and emergency detection.",
+  "cameraPermissionReason": "Camera access is needed for AI physical alignment and pose analysis.",
+  "listening": "Listening...",
+  "typeMessageHint": "Type a message...",
+  "assessmentRecommended": "Physical Assessment Recommended",
+  "assessmentRecommendedDesc": "Let's check your form level."
 }
