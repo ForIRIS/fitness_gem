@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:mime/mime.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -410,12 +411,15 @@ Please provide the Next Step advice in the User Language.
         "user_profile": profile.toJson(),
       };
 
+      final mimeType = lookupMimeType(videoFile.path) ?? 'video/mp4';
+
       final analystJson = await remoteDataSource.analyzeInterSet(
         apiKey: _apiKey,
         systemInstruction: _analystSystemInstruction,
         inputContext: inputContext,
         rgbUri: videoUri,
         controlNetUri: videoUri,
+        mimeType: mimeType,
       );
 
       if (analystJson == null) return const Right(false);

@@ -11,7 +11,7 @@ class FallDetectionService {
   // Settings
   static const double _headDropThreshold =
       0.3; // Drop more than 30% of screen height
-  static const int _noMovementDurationMs = 5000; // No movement for 5 seconds
+  static const int _noMovementDurationMs = 3000; // No movement for 3 seconds
   static const double _movementThreshold = 20.0; // Movement threshold in pixels
 
   // State

@@ -30,23 +30,6 @@ class FunctionsService {
     }
   }
 
-  /// Hello World call (for testing)
-  Future<Map<String, dynamic>?> callHelloWorld({String? name}) async {
-    try {
-      final HttpsCallable callable = _functions.httpsCallable('helloWorld');
-      final results = await callable.call({'name': name ?? 'Flutter User'});
-
-      debugPrint('Hello World Response: ${results.data}');
-      return results.data as Map<String, dynamic>;
-    } on FirebaseFunctionsException catch (e) {
-      debugPrint('Cloud Function Error: ${e.code}');
-      return null;
-    } catch (e) {
-      debugPrint('Error calling helloWorld: $e');
-      return null;
-    }
-  }
-
   /// Request workout assets safely (Bundle Zip, Video, etc.)
   Future<List<Map<String, dynamic>>> getWorkoutAssets(
     List<String> taskIds,

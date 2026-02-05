@@ -817,4 +817,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assessmentRecommendedDesc => 'Let\'s check your form level.';
+
+  @override
+  String get interviewComplete => 'Interview Complete';
+
+  @override
+  String get safetyGuardianTitle => 'Safety Guardian';
+
+  @override
+  String get safetyGuardianDescription =>
+      'Protect yourself with real-time AI safety monitoring.';
+
+  @override
+  String get benefitFallDetectionTitle => 'Fall Detection Available';
+
+  @override
+  String get benefitFallDetectionDesc =>
+      'AI detects sudden drops during workouts.';
+
+  @override
+  String get benefitGuardianEmailTitle => 'Guardian Connection';
+
+  @override
+  String get benefitGuardianEmailDesc =>
+      'Link via Guardian\'s email in Settings.';
+
+  @override
+  String get benefitEmergencyPushTitle => 'Emergency Protection';
+
+  @override
+  String get benefitEmergencyPushDesc =>
+      'Push notifications sent to guardian if no response.';
+
+  @override
+  String get guardianEmailNotice =>
+      'Your Guardian must also be a registered user. You can link them by entering their email address in Settings > Account.';
 }

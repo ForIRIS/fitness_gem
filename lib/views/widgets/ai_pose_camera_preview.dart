@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import '../../services/camera_manager.dart';
@@ -47,7 +47,7 @@ class AIPoseCameraPreview extends StatelessWidget {
                 painter: PosePainter(
                   snapshot.data!,
                   cameraManager.controller!.value.previewSize!,
-                  Platform.isAndroid
+                  defaultTargetPlatform == TargetPlatform.android
                       ? InputImageRotation.rotation270deg
                       : InputImageRotation.rotation90deg,
                   CameraLensDirection.front,

@@ -77,8 +77,10 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
         ],
       ),
     ).then((_) {
-      // If they cancel out of dialog, usually pop the view
-      Navigator.pop(context);
+      if (mounted) {
+        // If they cancel out of dialog, usually pop the view
+        Navigator.pop(context);
+      }
     });
   }
 

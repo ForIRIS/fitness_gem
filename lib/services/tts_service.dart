@@ -1,5 +1,4 @@
 import 'package:flutter_tts/flutter_tts.dart';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../l10n/app_localizations.dart';
 
@@ -26,7 +25,8 @@ class TTSService {
     await _flutterTts.setLanguage('en-US');
 
     // iOS audio category configuration (mix with other audio)
-    if (!kIsWeb && Platform.isIOS) {
+    final isIOS = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    if (!kIsWeb && isIOS) {
       await _flutterTts.setIosAudioCategory(
         IosTextToSpeechAudioCategory.playback,
         [

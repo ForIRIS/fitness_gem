@@ -56,7 +56,7 @@ class FirebaseService {
 
     try {
       final snapshot = await FirebaseFirestore.instance
-          .collection('workouts')
+          .collection('exercises')
           .get();
 
       if (snapshot.docs.isEmpty) {
@@ -87,7 +87,7 @@ class FirebaseService {
 
     try {
       final snapshot = await FirebaseFirestore.instance
-          .collection('workouts')
+          .collection('exercises')
           .where('category', isEqualTo: category.toLowerCase())
           .get();
 
@@ -134,7 +134,7 @@ class FirebaseService {
       }
 
       final snapshot = await FirebaseFirestore.instance
-          .collection('workouts')
+          .collection('exercises')
           .where('id', whereIn: workoutTaskIds)
           .get();
 
@@ -198,7 +198,7 @@ class FirebaseService {
               timeoutSec: task.timeoutSec,
               durationSec: task.durationSec,
               isCountable: task.isCountable,
-              thumbnail: taskData['thumbnail'] ?? task.thumbnail,
+              thumbnail: taskData['thumbnailUrl'] ?? task.thumbnail,
               readyPoseImageUrl:
                   taskData['readyPoseImageUrl'] ?? task.readyPoseImageUrl,
               exampleVideoUrl: taskData['videoUrl'] ?? task.exampleVideoUrl,
@@ -228,7 +228,7 @@ class FirebaseService {
       final batch = FirebaseFirestore.instance.batch();
       for (final task in _dummyWorkoutTasks) {
         final docRef = FirebaseFirestore.instance
-            .collection('workouts')
+            .collection('exercises')
             .doc(task.id);
         batch.set(docRef, WorkoutTaskModel.fromEntity(task).toMap());
       }

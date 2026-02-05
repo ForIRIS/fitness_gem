@@ -1,26 +1,172 @@
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onDocumentCreated } from "firebase-functions/v2/firestore";
 
 admin.initializeApp();
 
+// ---------------------------------------------------------
+// Auth Triggers (Gen 1)
+// ---------------------------------------------------------
+
 /**
- * getWorkoutAssets - Firestore 기반 운동 자산 보안 URL 발급
+ * onUserAccountDeleted
  */
-export const getWorkoutAssets = functions.https.onCall(async (request) => {
+export const onUserAccountDeleted = functions.auth.user().onDelete(async (user: any) => {
+    const uid = user.uid;
+    const db = admin.firestore();
+    const batch = db.batch();
+
+    const sentRefs = await db.collection('guardian_relations').where('requester_uid', '==', uid).get();
+    sentRefs.forEach(doc => batch.delete(doc.ref));
+
+    const receivedRefs = await db.collection('guardian_relations').where('guardian_uid', '==', uid).get();
+    receivedRefs.forEach(doc => batch.delete(doc.ref));
+
+    await batch.commit();
+});
+
+// ---------------------------------------------------------
+// HTTPS Callable Functions (Gen 2)
+// ---------------------------------------------------------
+
+/**
+ * checkServerStatus
+ */
+export const checkServerStatus = onCall(async (request) => {
+    return {
+        status: "online",
+        timestamp: Date.now(),
+        message: "Health & Fitness Gem API is operational."
+    };
+});
+
+/**
+ * requestTaskInfo
+ */
+export const requestTaskInfo = onCall(async (request) => {
     if (!request.auth) {
-        throw new functions.https.HttpsError("unauthenticated", "User must be signed in.");
+        throw new HttpsError("unauthenticated", "User must be signed in.");
     }
 
     const { task_ids } = request.data;
     if (!task_ids || !Array.isArray(task_ids)) {
-        throw new functions.https.HttpsError("invalid-argument", "Missing task_ids array.");
+        throw new HttpsError("invalid-argument", "Missing task_ids array.");
     }
 
     const db = admin.firestore();
     const bucket = admin.storage().bucket();
     const expiration = Date.now() + 60 * 60 * 1000; // 1 hour
 
-    const results = await Promise.all(task_ids.map(async (id) => {
+    const results = await Promise.all(task_ids.map(async (id: string) => {
+        try {
+            const doc = await db.collection("exercises").doc(id).get();
+            if (!doc.exists) {
+                return { id, error: "not_found" };
+            }
+
+            const data = doc.data() || {};
+            const sign = async (path: string | undefined) => {
+                if (!path) return null;
+                try {
+                    const [url] = await bucket.file(path).getSignedUrl({ action: 'read', expires: expiration });
+                    return url;
+                } catch (e) {
+                    console.error(`Signing error for ${path}:`, e);
+                    return null;
+                }
+            };
+
+            return {
+                id,
+                bundleUrl: await sign(data.bundlePath),
+                videoUrl: await sign(data.videoPath),
+                thumbnailUrl: await sign(data.thumbnailPath),
+                readyPoseImageUrl: await sign(data.samplePosePath),
+                audioUrl: null,
+                coremlUrl: null,
+                onnxUrl: null
+            };
+        } catch (error) {
+            console.error(`Process error for ${id}:`, error);
+            return { id, error: "processing_failed" };
+        }
+    }));
+
+    return { task_urls: results };
+});
+
+/**
+ * getDailyHotCategories
+ */
+export const getDailyHotCategories = onCall(async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "User must be signed in.");
+    }
+
+    return {
+        categories: [
+            'Upper Body',
+            'Build Strength',
+            'Beginner',
+            'Core Workout',
+            'Lower Body',
+            'HIIT Training',
+        ]
+    };
+});
+
+/**
+ * getFeaturedProgram
+ */
+export const getFeaturedProgram = onCall(async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "User must be signed in.");
+    }
+
+    return {
+        id: 'summer_shred_mock',
+        title: 'Summer Shred Challenge',
+        description: 'High-intensity routine to burn calories and build muscle.',
+        imageUrl: 'assets/images/workouts/squat_04.png',
+        slogan: 'Get Set, Stay Ignite.',
+        membersCount: '5.8k+',
+        rating: 5.0,
+        difficulty: 3,
+        task_ids: [
+            'squat_04',
+            'push_03',
+            'lunge_03',
+            'core_03',
+            'squat_03',
+            'push_02',
+        ],
+        userAvatars: [
+            'https://i.pravatar.cc/150?img=12',
+            'https://i.pravatar.cc/150?img=24',
+            'https://i.pravatar.cc/150?img=33',
+        ]
+    };
+});
+
+/**
+ * getWorkoutAssets
+ */
+export const getWorkoutAssets = onCall(async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "User must be signed in.");
+    }
+
+    const { task_ids } = request.data;
+    if (!task_ids || !Array.isArray(task_ids)) {
+        throw new HttpsError("invalid-argument", "Missing task_ids array.");
+    }
+
+    const db = admin.firestore();
+    const bucket = admin.storage().bucket();
+    const expiration = Date.now() + 60 * 60 * 1000; // 1 hour
+
+    const results = await Promise.all(task_ids.map(async (id: string) => {
         try {
             const doc = await db.collection("exercises").doc(id).get();
             if (!doc.exists) {
@@ -58,9 +204,9 @@ export const getWorkoutAssets = functions.https.onCall(async (request) => {
 /**
  * getAvailableWorkouts
  */
-export const getAvailableWorkouts = functions.https.onCall(async (request) => {
+export const getAvailableWorkouts = onCall(async (request) => {
     if (!request.auth) {
-        throw new functions.https.HttpsError("unauthenticated", "User must be signed in.");
+        throw new HttpsError("unauthenticated", "User must be signed in.");
     }
 
     try {
@@ -81,16 +227,16 @@ export const getAvailableWorkouts = functions.https.onCall(async (request) => {
         });
         return { workouts };
     } catch (error) {
-        throw new functions.https.HttpsError("internal", "Failed to fetch workouts.");
+        throw new HttpsError("internal", "Failed to fetch workouts.");
     }
 });
 
 /**
  * notifyGuardian
  */
-export const notifyGuardian = functions.https.onCall(async (request) => {
+export const notifyGuardian = onCall(async (request) => {
     if (!request.auth) {
-        throw new functions.https.HttpsError("unauthenticated", "User must be signed in.");
+        throw new HttpsError("unauthenticated", "User must be signed in.");
     }
 
     const callerUid = request.auth.uid;
@@ -99,15 +245,16 @@ export const notifyGuardian = functions.https.onCall(async (request) => {
     try {
         const callerDoc = await db.collection("users").doc(callerUid).get();
         if (!callerDoc.exists) {
-            throw new functions.https.HttpsError("not-found", "User profile not found.");
+            throw new HttpsError("not-found", "User profile not found.");
         }
 
         const callerData = callerDoc.data() || {};
         const guardianEmail = callerData.guardianEmail;
         const callerName = callerData.nickname || "User";
+        const location = request.data.location; // Optional location string/url
 
         if (!guardianEmail) {
-            throw new functions.https.HttpsError("failed-precondition", "No guardian linked.");
+            throw new HttpsError("failed-precondition", "No guardian linked.");
         }
 
         const guardianQuery = await db.collection("users")
@@ -116,7 +263,7 @@ export const notifyGuardian = functions.https.onCall(async (request) => {
             .get();
 
         if (guardianQuery.empty) {
-            throw new functions.https.HttpsError("not-found", "Guardian user not found.");
+            throw new HttpsError("not-found", "Guardian user not found.");
         }
 
         const guardianDoc = guardianQuery.docs[0];
@@ -124,14 +271,14 @@ export const notifyGuardian = functions.https.onCall(async (request) => {
         const fcmToken = guardianData.fcmToken;
 
         if (!fcmToken) {
-            throw new functions.https.HttpsError("failed-precondition", "Guardian has no notification token.");
+            throw new HttpsError("failed-precondition", "Guardian has no notification token.");
         }
 
         const message = {
             token: fcmToken,
             notification: {
                 title: "Emergency Alert! 🚨",
-                body: `${callerName} may have fallen and needs help!`,
+                body: `${callerName} may have fallen and needs help!${location ? `\nLocation: ${location}` : ''}`,
             },
             data: {
                 type: "fall_alert",
@@ -160,15 +307,8 @@ export const notifyGuardian = functions.https.onCall(async (request) => {
 
     } catch (error) {
         console.error("Emergency notification failed:", error);
-        throw new functions.https.HttpsError("internal", "Failed to notify guardian.");
+        throw new HttpsError("internal", "Failed to notify guardian.");
     }
-});
-
-/**
- * helloWorld
- */
-export const helloWorld = functions.https.onCall(async (request) => {
-    return { message: "Health & Fitness Gem API is ready!" };
 });
 
 // ---------------------------------------------------------
@@ -178,14 +318,14 @@ export const helloWorld = functions.https.onCall(async (request) => {
 /**
  * sendGuardianRequest
  */
-export const sendGuardianRequest = functions.https.onCall(async (request) => {
+export const sendGuardianRequest = onCall(async (request) => {
     if (!request.auth) {
-        throw new functions.https.HttpsError("unauthenticated", "User must be signed in.");
+        throw new HttpsError("unauthenticated", "User must be signed in.");
     }
 
     const { email } = request.data;
     if (!email) {
-        throw new functions.https.HttpsError("invalid-argument", "Email is required.");
+        throw new HttpsError("invalid-argument", "Email is required.");
     }
 
     const db = admin.firestore();
@@ -194,14 +334,14 @@ export const sendGuardianRequest = functions.https.onCall(async (request) => {
     try {
         const userQuery = await db.collection("users").where("email", "==", email).limit(1).get();
         if (userQuery.empty) {
-            throw new functions.https.HttpsError("not-found", "User with this email not found.");
+            throw new HttpsError("not-found", "User with this email not found.");
         }
 
         const targetUser = userQuery.docs[0];
         const targetUid = targetUser.id;
 
         if (requesterUid === targetUid) {
-            throw new functions.https.HttpsError("invalid-argument", "You cannot be your own guardian.");
+            throw new HttpsError("invalid-argument", "You cannot be your own guardian.");
         }
 
         const existing = await db.collection("guardian_relations")
@@ -210,7 +350,7 @@ export const sendGuardianRequest = functions.https.onCall(async (request) => {
             .get();
 
         if (!existing.empty) {
-            throw new functions.https.HttpsError("already-exists", "Request already sent to this user.");
+            throw new HttpsError("already-exists", "Request already sent to this user.");
         }
 
         await db.collection("guardian_relations").add({
@@ -227,17 +367,17 @@ export const sendGuardianRequest = functions.https.onCall(async (request) => {
 
     } catch (error) {
         console.error("sendGuardianRequest failed:", error);
-        if (error instanceof functions.https.HttpsError) throw error;
-        throw new functions.https.HttpsError("internal", "Failed to send request.");
+        if (error instanceof HttpsError) throw error;
+        throw new HttpsError("internal", "Failed to send request.");
     }
 });
 
 /**
  * respondToGuardianRequest
  */
-export const respondToGuardianRequest = functions.https.onCall(async (request) => {
+export const respondToGuardianRequest = onCall(async (request) => {
     if (!request.auth) {
-        throw new functions.https.HttpsError("unauthenticated", "User must be signed in.");
+        throw new HttpsError("unauthenticated", "User must be signed in.");
     }
 
     const { docId, accept } = request.data;
@@ -249,12 +389,12 @@ export const respondToGuardianRequest = functions.https.onCall(async (request) =
         const doc = await docRef.get();
 
         if (!doc.exists) {
-            throw new functions.https.HttpsError("not-found", "Request not found.");
+            throw new HttpsError("not-found", "Request not found.");
         }
 
         const data = doc.data();
         if (data?.guardian_uid !== uid) {
-            throw new functions.https.HttpsError("permission-denied", "Not authorized to respond.");
+            throw new HttpsError("permission-denied", "Not authorized to respond.");
         }
 
         if (accept) {
@@ -270,16 +410,20 @@ export const respondToGuardianRequest = functions.https.onCall(async (request) =
 
     } catch (error) {
         console.error("respondToGuardianRequest failed:", error);
-        throw new functions.https.HttpsError("internal", "Failed to respond.");
+        throw new HttpsError("internal", "Failed to respond.");
     }
 });
 
 /**
  * sendGuardianRequestNotification
  */
-export const sendGuardianRequestNotification = functions.firestore
-    .document('guardian_relations/{docId}')
-    .onCreate(async (snapshot: any, context: any) => {
+export const sendGuardianRequestNotification = onDocumentCreated(
+    "guardian_relations/{docId}",
+    async (event) => {
+        const snapshot = event.data;
+        if (!snapshot) {
+            return;
+        }
         const data = snapshot.data();
         const guardianUid = data.guardian_uid;
         const requesterEmail = data.requester_email;
@@ -300,26 +444,10 @@ export const sendGuardianRequestNotification = functions.firestore
             },
             data: {
                 type: "guardian_request",
-                docId: context.params.docId,
+                docId: event.params.docId,
             }
         };
 
         await admin.messaging().send(message);
-    });
-
-/**
- * onUserAccountDeleted
- */
-export const onUserAccountDeleted = functions.auth.user().onDelete(async (user: any) => {
-    const uid = user.uid;
-    const db = admin.firestore();
-    const batch = db.batch();
-
-    const sentRefs = await db.collection('guardian_relations').where('requester_uid', '==', uid).get();
-    sentRefs.forEach(doc => batch.delete(doc.ref));
-
-    const receivedRefs = await db.collection('guardian_relations').where('guardian_uid', '==', uid).get();
-    receivedRefs.forEach(doc => batch.delete(doc.ref));
-
-    await batch.commit();
-});
+    }
+);

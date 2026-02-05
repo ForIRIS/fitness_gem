@@ -56,8 +56,10 @@ class STTService {
         onResult(result.recognizedWords);
       },
       localeId: languageCode ?? 'en-US',
-      cancelOnError: true,
-      partialResults: true,
+      listenOptions: SpeechListenOptions(
+        cancelOnError: true,
+        partialResults: true,
+      ),
     );
   }
 

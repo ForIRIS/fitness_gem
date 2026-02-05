@@ -361,5 +361,15 @@
   "listening": "듣고 있어요...",
   "typeMessageHint": "메시지를 입력하세요...",
   "assessmentRecommended": "신체 측정 권장",
-  "assessmentRecommendedDesc": "자세 레벨을 확인해보세요."
+  "assessmentRecommendedDesc": "자세 레벨을 확인해보세요.",
+  "interviewComplete": "상담 완료",
+  "safetyGuardianTitle": "안전 가디언",
+  "safetyGuardianDescription": "AI 실시간 모니터링으로 안전하게 운동하세요.",
+  "benefitFallDetectionTitle": "낙상 감지 지원",
+  "benefitFallDetectionDesc": "운동 중 갑작스러운 넘어짐을 AI가 감지합니다.",
+  "benefitGuardianEmailTitle": "보호자 연결",
+  "benefitGuardianEmailDesc": "설정에서 보호자의 이메일로 연결하세요.",
+  "benefitEmergencyPushTitle": "비상 상황 보호",
+  "benefitEmergencyPushDesc": "응답이 없을 경우 보호자에게 푸시 알림을 보냅니다.",
+  "guardianEmailNotice": "보호자분도 가입된 사용자여야 합니다. 설정 > 계정에서 보호자의 이메일 주소를 입력하여 연결할 수 있습니다."
 }

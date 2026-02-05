@@ -31,7 +31,7 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
   Future<List<WorkoutTaskModel>> fetchWorkoutTasks(String category) async {
     try {
       final snapshot = await _firestore
-          .collection('workouts')
+          .collection('exercises')
           .where('category', isEqualTo: category.toLowerCase())
           .get();
 
@@ -81,7 +81,7 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
       }
 
       final snapshot = await _firestore
-          .collection('workouts')
+          .collection('exercises')
           .where('id', whereIn: ids)
           .get();
 

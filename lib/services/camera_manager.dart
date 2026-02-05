@@ -1,6 +1,5 @@
-import 'dart:io';
-import 'dart:async';
 import 'package:camera/camera.dart';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import '../utils/camera_utils.dart';
@@ -41,7 +40,8 @@ class CameraManager {
       _camera!,
       ResolutionPreset.high,
       enableAudio: false,
-      imageFormatGroup: Platform.isAndroid
+      imageFormatGroup:
+          (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
           ? ImageFormatGroup.nv21
           : ImageFormatGroup.bgra8888,
     );

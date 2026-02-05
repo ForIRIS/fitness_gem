@@ -100,13 +100,14 @@ class GeminiRemoteDataSourceImpl implements GeminiRemoteDataSource {
     required Map<String, dynamic> inputContext,
     required String rgbUri,
     required String controlNetUri,
+    String mimeType = 'video/mp4',
     String model = 'gemini-3-flash-preview',
   }) async {
     try {
       final contentParts = [
         {'text': json.encode(inputContext)},
         {
-          'file_data': {'mime_type': 'video/mp4', 'file_uri': rgbUri},
+          'file_data': {'mime_type': mimeType, 'file_uri': rgbUri},
           'media_resolution': {'level': 'MEDIA_RESOLUTION_MEDIUM'},
         },
         {

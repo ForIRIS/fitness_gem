@@ -786,4 +786,35 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get assessmentRecommendedDesc => '자세 레벨을 확인해보세요.';
+
+  @override
+  String get interviewComplete => '상담 완료';
+
+  @override
+  String get safetyGuardianTitle => '안전 가디언';
+
+  @override
+  String get safetyGuardianDescription => 'AI 실시간 모니터링으로 안전하게 운동하세요.';
+
+  @override
+  String get benefitFallDetectionTitle => '낙상 감지 지원';
+
+  @override
+  String get benefitFallDetectionDesc => '운동 중 갑작스러운 넘어짐을 AI가 감지합니다.';
+
+  @override
+  String get benefitGuardianEmailTitle => '보호자 연결';
+
+  @override
+  String get benefitGuardianEmailDesc => '설정에서 보호자의 이메일로 연결하세요.';
+
+  @override
+  String get benefitEmergencyPushTitle => '비상 상황 보호';
+
+  @override
+  String get benefitEmergencyPushDesc => '응답이 없을 경우 보호자에게 푸시 알림을 보냅니다.';
+
+  @override
+  String get guardianEmailNotice =>
+      '보호자분도 가입된 사용자여야 합니다. 설정 > 계정에서 보호자의 이메일 주소를 입력하여 연결할 수 있습니다.';
 }

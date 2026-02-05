@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:io';
 import 'guardian_strategy.dart';
 
 class OnboardingGuardianPage extends StatefulWidget {
@@ -24,12 +23,15 @@ class OnboardingGuardianPage extends StatefulWidget {
 }
 
 class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
-  late final GuardianStrategy _strategy;
+  GuardianStrategy? _strategy;
 
   @override
-  void initState() {
-    super.initState();
-    _strategy = GuardianStrategyFactory.getStrategy(Platform.isIOS);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_strategy == null) {
+      final platform = Theme.of(context).platform;
+      _strategy = GuardianStrategyFactory.getStrategy(platform);
+    }
   }
 
   @override
@@ -47,21 +49,21 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: _strategy.getThemeColor().withValues(alpha: 0.15),
+                  color: _strategy!.getThemeColor().withValues(alpha: 0.15),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
               ],
             ),
             child: Icon(
-              _strategy.getIcon(),
+              _strategy!.getIcon(),
               size: 64,
-              color: _strategy.getThemeColor(),
+              color: _strategy!.getThemeColor(),
             ),
           ),
           const SizedBox(height: 32),
           Text(
-            _strategy.getTitle(context),
+            _strategy!.getTitle(context),
             textAlign: TextAlign.center,
             style: GoogleFonts.barlowCondensed(
               color: const Color(0xFF1A237E),
@@ -71,14 +73,14 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            _strategy.getDescription(context),
+            _strategy!.getDescription(context),
             textAlign: TextAlign.center,
             style: GoogleFonts.barlow(color: Colors.black54, fontSize: 16),
           ),
           const SizedBox(height: 48),
 
           // Strategy Content
-          _strategy.buildContent(
+          _strategy!.buildContent(
             context,
             fallDetectionEnabled: widget.fallDetectionEnabled,
             onFallDetectionChanged: widget.onFallDetectionChanged,

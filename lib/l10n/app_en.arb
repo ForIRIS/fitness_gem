@@ -361,5 +361,15 @@
   "listening": "Listening...",
   "typeMessageHint": "Type a message...",
   "assessmentRecommended": "Physical Assessment Recommended",
-  "assessmentRecommendedDesc": "Let's check your form level."
+  "assessmentRecommendedDesc": "Let's check your form level.",
+  "interviewComplete": "Interview Complete",
+  "safetyGuardianTitle": "Safety Guardian",
+  "safetyGuardianDescription": "Protect yourself with real-time AI safety monitoring.",
+  "benefitFallDetectionTitle": "Fall Detection Available",
+  "benefitFallDetectionDesc": "AI detects sudden drops during workouts.",
+  "benefitGuardianEmailTitle": "Guardian Connection",
+  "benefitGuardianEmailDesc": "Link via Guardian's email in Settings.",
+  "benefitEmergencyPushTitle": "Emergency Protection",
+  "benefitEmergencyPushDesc": "Push notifications sent to guardian if no response.",
+  "guardianEmailNotice": "Your Guardian must also be a registered user. You can link them by entering their email address in Settings > Account."
 }

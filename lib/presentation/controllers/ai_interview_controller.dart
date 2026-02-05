@@ -1,11 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart'; // For TextEditingController
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../core/di/injection.dart';
-import '../../core/error/failures.dart';
 import '../../domain/entities/user_profile.dart';
-import '../../domain/entities/interview_response.dart';
 import '../../domain/usecases/ai/start_interview_usecase.dart';
 import '../../domain/usecases/ai/send_interview_message_usecase.dart';
 import '../../domain/usecases/ai/generate_curriculum_from_interview_usecase.dart';
@@ -63,6 +61,7 @@ class AIInterviewController extends ChangeNotifier {
   final TextEditingController messageController = TextEditingController();
 
   UserProfile? _userProfile;
+  AppLocalizations? _l10n;
 
   AIInterviewController({
     StartInterviewUseCase? startInterviewUseCase,
@@ -83,9 +82,11 @@ class AIInterviewController extends ChangeNotifier {
        _ttsService = ttsService ?? getIt<TTSService>(),
        _sttService = sttService ?? getIt<STTService>();
 
-  Future<void> initialize(UserProfile profile) async {
+  Future<void> initialize(UserProfile profile, AppLocalizations l10n) async {
     _userProfile = profile;
+    _l10n = l10n;
     await _ttsService.initialize();
+    _ttsService.updateLocalizations(l10n);
     await _sttService.initialize();
     await _startInterview();
   }
@@ -171,8 +172,7 @@ class AIInterviewController extends ChangeNotifier {
               )
               .trim();
           if (displayMessage.isEmpty) {
-            displayMessage =
-                "Interview Complete"; // Fallback, usually localized in View
+            displayMessage = _l10n?.interviewComplete ?? "Interview Complete";
           }
         }
 
@@ -205,7 +205,9 @@ class AIInterviewController extends ChangeNotifier {
     _isLoading = true;
     _messages.add(
       ChatMessage(
-        text: "Generating your personalized curriculum...",
+        text:
+            _l10n?.generatingWorkout ??
+            "Generating your personalized curriculum...",
         isUser: false,
       ),
     );
@@ -228,7 +230,10 @@ class AIInterviewController extends ChangeNotifier {
       result.fold(
         (failure) {
           _messages.add(
-            ChatMessage(text: "Failed to generate curriculum.", isUser: false),
+            ChatMessage(
+              text: _l10n?.generationFailed ?? "Failed to generate curriculum.",
+              isUser: false,
+            ),
           );
           _hasError = true;
           _isLoading = false;
@@ -262,7 +267,8 @@ class AIInterviewController extends ChangeNotifier {
           } else {
             _messages.add(
               ChatMessage(
-                text: "Failed to generate curriculum.",
+                text:
+                    _l10n?.generationFailed ?? "Failed to generate curriculum.",
                 isUser: false,
               ),
             );
@@ -318,7 +324,7 @@ class AIInterviewController extends ChangeNotifier {
           messageController.text = text;
           notifyListeners();
         },
-        languageCode: 'en-US', // TODO: Make dynamic
+        languageCode: _l10n?.localeName == 'ko' ? 'ko-KR' : 'en-US',
       );
     }
   }

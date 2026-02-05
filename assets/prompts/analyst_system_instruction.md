@@ -53,4 +53,18 @@ Provide data for the Coach (Consultant) to make adaptive training decisions.
   },
   "immediate_action_required": Boolean (True if user should stop or significantly modify)
 }
+
+**SPECIAL INSTRUCTION FOR QUERY_TYPE: "FALL_VERIFICATION"**:
+If `query_type` is "FALL_VERIFICATION":
+1.  **Ignore** performance metrics.
+2.  **Focus ONLY** on the video.
+3.  **Check for**:
+    - Subject laying horizontally on the floor.
+    - Lack of purposeful movement for >3 seconds.
+    - Signs of distress (if visible).
+4.  **Output**:
+    - Set `safety_status.risk_flag` to `true` if fall is confirmed.
+    - Set `safety_status.severity` to "Critical".
+    - `reasoning_trace.visual_evidence` MUST state: "Subject is horizontal and immobile" or similar.
+    - JSON structure must remain compatible.
 ```

@@ -1579,6 +1579,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Let\'s check your form level.'**
   String get assessmentRecommendedDesc;
+
+  /// No description provided for @interviewComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Interview Complete'**
+  String get interviewComplete;
+
+  /// No description provided for @safetyGuardianTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety Guardian'**
+  String get safetyGuardianTitle;
+
+  /// No description provided for @safetyGuardianDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect yourself with real-time AI safety monitoring.'**
+  String get safetyGuardianDescription;
+
+  /// No description provided for @benefitFallDetectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fall Detection Available'**
+  String get benefitFallDetectionTitle;
+
+  /// No description provided for @benefitFallDetectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AI detects sudden drops during workouts.'**
+  String get benefitFallDetectionDesc;
+
+  /// No description provided for @benefitGuardianEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian Connection'**
+  String get benefitGuardianEmailTitle;
+
+  /// No description provided for @benefitGuardianEmailDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Link via Guardian\'s email in Settings.'**
+  String get benefitGuardianEmailDesc;
+
+  /// No description provided for @benefitEmergencyPushTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Protection'**
+  String get benefitEmergencyPushTitle;
+
+  /// No description provided for @benefitEmergencyPushDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications sent to guardian if no response.'**
+  String get benefitEmergencyPushDesc;
+
+  /// No description provided for @guardianEmailNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Guardian must also be a registered user. You can link them by entering their email address in Settings > Account.'**
+  String get guardianEmailNotice;
 }
 
 class _AppLocalizationsDelegate

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:ui';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../core/di/injection.dart';
@@ -17,8 +16,8 @@ import 'widgets/ai_pose_camera_preview.dart';
 import '../widgets/coaching_overlay.dart'; // Restored import
 
 import '../services/fall_detection_service.dart';
-import '../services/emergency_notification_service.dart';
-import '../views/widgets/fall_confirmation_dialog.dart';
+import '../services/emergency_flow_manager.dart';
+import 'widgets/emergency_flow_overlay.dart';
 import '../widgets/glass_dialog.dart';
 
 class CameraView extends StatefulWidget {
@@ -35,7 +34,8 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   late final WorkoutSessionController _controller;
   late final CameraManager _cameraManager;
   final CoachingManager _coachingManager = getIt<CoachingManager>();
-  late final FallDetectionService _fallDetectionService; // Service Instance
+  late final FallDetectionService _fallDetectionService;
+  late final EmergencyFlowManager _emergencyFlowManager;
   StreamSubscription? _poseSubscription;
 
   // Guide Video
@@ -59,6 +59,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     // Initialize Fall Detection Service
     _fallDetectionService = FallDetectionService();
     _fallDetectionService.onFallSuspected = _onFallSuspected;
+
+    // Initialize Emergency Flow Manager
+    _emergencyFlowManager = EmergencyFlowManager();
 
     _initialize();
   }
@@ -135,6 +138,14 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
     _cameraManager.startPoseDetection();
 
+    // Initialize Emergency Flow Manager with context
+    if (widget.userProfile != null) {
+      _emergencyFlowManager.initialize(
+        userProfile: widget.userProfile!,
+        cameraManager: _cameraManager,
+      );
+    }
+
     // 4. Initialize Video
     _initializeGuideVideo();
 
@@ -157,18 +168,17 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       );
     }
 
-    _guideVideoController!
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {});
-          _guideVideoController!.setLooping(true);
-          // Only play if in a phase that requires guide and NOT in test mode
-          if (!_controller.state.isWaitingForReadyPose &&
-              !_controller.state.isTestMode) {
-            _guideVideoController!.play();
-          }
+    _guideVideoController!.initialize().then((_) {
+      if (mounted) {
+        setState(() {});
+        _guideVideoController!.setLooping(true);
+        // Only play if in a phase that requires guide and NOT in test mode
+        if (!_controller.state.isWaitingForReadyPose &&
+            !_controller.state.isTestMode) {
+          _guideVideoController!.play();
         }
-      });
+      }
+    });
   }
 
   @override
@@ -177,7 +187,8 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     _poseSubscription?.cancel();
     _controller.removeListener(_onControllerChanged);
     _cameraManager.dispose();
-    _fallDetectionService.stopMonitoring(); // Stop monitoring
+    _fallDetectionService.stopMonitoring();
+    _emergencyFlowManager.dispose();
     _controller.dispose();
     _guideVideoController?.dispose();
     super.dispose();
@@ -195,45 +206,12 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
   // --- Fall Detection Handling ---
   void _onFallSuspected() {
-    debugPrint("Fall Suspected! Pausing workout...");
-    _controller.pause(); // Pause workout logic
-    _fallDetectionService
-        .stopMonitoring(); // Stop monitoring to prevent double triggers
+    debugPrint("Fall Suspected! Entering Amber Mode...");
+    _controller.pause();
+    _fallDetectionService.stopMonitoring();
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => FallConfirmationDialog(
-        onOk: () {
-          Navigator.pop(context); // Close dialog
-          _fallDetectionService.userResponded();
-          _fallDetectionService.startMonitoring(); // Resume monitoring
-          _controller.resume(); // Resume workout if desired
-        },
-        onTimeout: () {
-          Navigator.pop(context); // Close dialog
-          _triggerEmergencyProtocol();
-        },
-      ),
-    );
-  }
-
-  void _triggerEmergencyProtocol() {
-    debugPrint("Emergency Protocol Triggered!");
-
-    // Phase 3: Send Notification & Analyze with Gemini
-    if (widget.userProfile != null) {
-      EmergencyNotificationService().triggerEmergency(widget.userProfile!);
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Emergency System Activated! Contacting Guardian..."),
-        backgroundColor: Colors.red,
-        duration: Duration(seconds: 5),
-      ),
-    );
-    // TODO: _fallDetectionService.analyzeWithGemini(...)
+    // Trigger Amber mode via EmergencyFlowManager
+    _emergencyFlowManager.startAmber();
   }
 
   @override
@@ -298,6 +276,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               // 9. Coaching Overlay
               if (!state.isTestMode)
                 CoachingOverlay(messageStream: _coachingManager.messageStream),
+
+              // 10. Emergency Flow Overlay (Amber/Red)
+              EmergencyFlowOverlay(manager: _emergencyFlowManager),
             ],
           ),
         );
@@ -328,7 +309,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         color: Colors.black54,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -400,12 +381,14 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                       ? Image.network(
                           state.currentTask!.readyPoseImageUrl,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const SizedBox(),
+                          errorBuilder: (context, error, stackTrace) =>
+                              const SizedBox(),
                         )
                       : Image.asset(
                           state.currentTask!.readyPoseImageUrl,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const SizedBox(),
+                          errorBuilder: (context, error, stackTrace) =>
+                              const SizedBox(),
                         ),
                 ),
               ),
@@ -554,8 +537,8 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                         ),
                         Text(
                           'SET ${state.currentSet}',
-                          style: const TextStyle(
-                            color: Colors.white70,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 12,
                           ),
                         ),

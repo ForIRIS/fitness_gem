@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shimmer/shimmer.dart';
 import 'onboarding/baseline_assessment_view.dart'; // Added import
 
 import '../core/di/injection.dart';
@@ -42,7 +41,12 @@ class _AIInterviewViewState extends State<AIInterviewView>
 
     // Initialize controller
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller.initialize(widget.userProfile);
+      if (mounted) {
+        _controller.initialize(
+          widget.userProfile,
+          AppLocalizations.of(context)!,
+        );
+      }
     });
   }
 

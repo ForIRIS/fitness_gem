@@ -1,8 +1,8 @@
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/exercise_model_output.dart';
 import '../utils/asset_utils.dart';
-import 'dart:io';
+import 'package:path/path.dart' as p;
 
 class WorkoutModelService {
   static const MethodChannel _channel = MethodChannel(
@@ -14,7 +14,8 @@ class WorkoutModelService {
   Future<bool> loadModel(String modelPath) async {
     try {
       String assetPath;
-      if (Platform.isIOS) {
+      final isIOS = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+      if (isIOS) {
         assetPath = '$modelPath/pose_model.mlpackage';
       } else {
         assetPath = '$modelPath/pose_model.onnx';
@@ -26,7 +27,7 @@ class WorkoutModelService {
 
       return result;
     } on PlatformException catch (e) {
-      print("Failed to load model: '${e.message}'.");
+      debugPrint("Failed to load model: '${e.message}'.");
       return false;
     }
   }
@@ -37,7 +38,7 @@ class WorkoutModelService {
       final localPath = await AssetUtils.getAssetPath(assetPath);
       return await loadModel(localPath);
     } catch (e) {
-      print("Failed to load model from asset: $e");
+      debugPrint("Failed to load model from asset: $e");
       return false;
     }
   }
@@ -46,17 +47,18 @@ class WorkoutModelService {
   Future<bool> loadSampleModel() async {
     const basePath = 'assets/models/31c7abde-ede2-4647-b366-4cfb9bf55bbe';
 
-    if (Platform.isIOS) {
+    final isIOSTarget = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    if (isIOSTarget) {
       try {
         // Unzip the .mlpackage.zip to temp directory
         final unzippedPath = await AssetUtils.unzipAssetToTemp(
           '$basePath/pose_model.mlpackage.zip',
           'pose_model.mlpackage',
         );
-        final tempDir = Directory(unzippedPath).parent.path;
+        final tempDir = p.dirname(unzippedPath);
         return await loadModel(tempDir);
       } catch (e) {
-        print("Failed to load iOS model: $e");
+        debugPrint("Failed to load iOS model: $e");
         return false;
       }
     } else {
@@ -69,7 +71,8 @@ class WorkoutModelService {
   Future<bool> loadBaselineModel() async {
     const basePath = 'assets/models/air_squat';
 
-    if (Platform.isIOS) {
+    final isIOSTarget = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    if (isIOSTarget) {
       try {
         // Unzip the .mlpackage.zip to temp directory
         final unzippedPath = await AssetUtils.unzipAssetToTemp(
@@ -78,10 +81,10 @@ class WorkoutModelService {
         );
 
         // Pass the parent directory of the .mlpackage
-        final tempDir = Directory(unzippedPath).parent.path;
+        final tempDir = p.dirname(unzippedPath);
         return await loadModel(tempDir);
       } catch (e) {
-        print("Failed to load iOS baseline model: $e");
+        debugPrint("Failed to load iOS baseline model: $e");
         return false;
       }
     } else {
@@ -114,7 +117,7 @@ class WorkoutModelService {
         return ExerciseModelOutput.fromMap(Map<String, dynamic>.from(result));
       }
     } on PlatformException catch (e) {
-      print("Failed to run inference: '${e.message}'.");
+      debugPrint("Failed to run inference: '${e.message}'.");
     }
     return null;
   }
@@ -124,7 +127,7 @@ class WorkoutModelService {
     try {
       await _channel.invokeMethod('dispose');
     } on PlatformException catch (e) {
-      print("Failed to dispose model: '${e.message}'.");
+      debugPrint("Failed to dispose model: '${e.message}'.");
     }
   }
 }

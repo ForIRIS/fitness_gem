@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
@@ -19,8 +20,8 @@ abstract class GuardianStrategy {
   Color getThemeColor();
 }
 
-/// Android Strategy: SMS Emergency Contact
-class AndroidGuardianStrategy implements GuardianStrategy {
+/// SMS Strategy: SMS Emergency Contact (Primary for Android)
+class SMSGuardianStrategy implements GuardianStrategy {
   @override
   String getTitle(BuildContext context) =>
       AppLocalizations.of(context)!.safetySettings;
@@ -167,21 +168,21 @@ class AndroidGuardianStrategy implements GuardianStrategy {
   }
 }
 
-/// iOS Strategy: AI Safety Consulting (Push Notifications)
-class IOSGuardianStrategy implements GuardianStrategy {
+/// Push Strategy: AI Safety Consulting (Push Notifications for iOS, Web, Desktop)
+class PushGuardianStrategy implements GuardianStrategy {
   @override
   String getTitle(BuildContext context) =>
-      AppLocalizations.of(context)!.welcomeReady; // New localization or reuse
+      AppLocalizations.of(context)!.safetyGuardianTitle;
 
   @override
   String getDescription(BuildContext context) =>
-      "You can begin your journey now, or consult with our AI specialist to further personalize your curriculum.";
+      AppLocalizations.of(context)!.safetyGuardianDescription;
 
   @override
   IconData getIcon() => Icons.celebration; // Celebration icon for final page
 
   @override
-  Color getThemeColor() => const Color(0xFF007AFF); // iOS Blue
+  Color getThemeColor() => const Color(0xFF5E35B1); // Deep Purple
 
   @override
   Widget buildContent(
@@ -201,7 +202,7 @@ class IOSGuardianStrategy implements GuardianStrategy {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.blue.withValues(alpha: 0.1),
+                color: const Color(0xFF5E35B1).withValues(alpha: 0.1),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
@@ -229,7 +230,7 @@ class IOSGuardianStrategy implements GuardianStrategy {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Safety Guardian",
+                          AppLocalizations.of(context)!.safetyGuardianTitle,
                           style: GoogleFonts.barlow(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -237,7 +238,9 @@ class IOSGuardianStrategy implements GuardianStrategy {
                           ),
                         ),
                         Text(
-                          "Protect yourself with AI",
+                          AppLocalizations.of(
+                            context,
+                          )!.safetyGuardianDescription,
                           style: GoogleFonts.barlow(
                             fontSize: 14,
                             color: Colors.black54,
@@ -253,20 +256,20 @@ class IOSGuardianStrategy implements GuardianStrategy {
               const SizedBox(height: 16),
               _buildBenefitItem(
                 Icons.check_circle_outline,
-                "Fall Detection Available",
-                "AI detects sudden drops during workouts.",
+                AppLocalizations.of(context)!.benefitFallDetectionTitle,
+                AppLocalizations.of(context)!.benefitFallDetectionDesc,
               ),
               const SizedBox(height: 12),
               _buildBenefitItem(
                 Icons.sms_outlined,
-                "Guardian Connection",
-                "Link via Guardian's email in Settings.",
+                AppLocalizations.of(context)!.benefitGuardianEmailTitle,
+                AppLocalizations.of(context)!.benefitGuardianEmailDesc,
               ),
               const SizedBox(height: 12),
               _buildBenefitItem(
                 Icons.security,
-                "Emergency Protection",
-                "Push notifications sent to guardian if no response.",
+                AppLocalizations.of(context)!.benefitEmergencyPushTitle,
+                AppLocalizations.of(context)!.benefitEmergencyPushDesc,
               ),
             ],
           ),
@@ -285,7 +288,7 @@ class IOSGuardianStrategy implements GuardianStrategy {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  "Your Guardian must also be a registered user. You can link them by entering their email address in Settings > Account.",
+                  AppLocalizations.of(context)!.guardianEmailNotice,
                   style: GoogleFonts.barlow(
                     color: Colors.orange[800],
                     fontSize: 13,
@@ -331,11 +334,11 @@ class IOSGuardianStrategy implements GuardianStrategy {
 
 /// Simple Factory to get Strategy
 class GuardianStrategyFactory {
-  static GuardianStrategy getStrategy(bool isIOS) {
-    if (isIOS) {
-      return IOSGuardianStrategy();
+  static GuardianStrategy getStrategy(TargetPlatform platform) {
+    if (!kIsWeb && platform == TargetPlatform.android) {
+      return SMSGuardianStrategy();
     } else {
-      return AndroidGuardianStrategy();
+      return PushGuardianStrategy();
     }
   }
 }

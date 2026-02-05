@@ -1,21 +1,18 @@
-import '../widgets/ai_consultant_button.dart';
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:ui';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../domain/entities/user_profile.dart';
 import '../core/di/injection.dart';
 import '../domain/usecases/ai/get_api_key_usecase.dart';
 import '../domain/usecases/ai/set_api_key_usecase.dart';
-import '../domain/usecases/user/update_user_profile.dart'; // Added
-import 'package:google_fonts/google_fonts.dart';
-import 'dart:ui';
-
-// Sub-pages
+import '../domain/usecases/user/update_user_profile.dart';
 import 'onboarding/onboarding_intro_page.dart';
 import 'onboarding/onboarding_profile_page.dart';
 import 'onboarding/onboarding_exercise_page.dart';
 import 'onboarding/onboarding_guardian_page.dart';
 import 'ai_interview_view.dart';
+import '../widgets/ai_consultant_button.dart';
 import 'home_view.dart' as home;
 
 /// OnboardingView - Onboarding Screen
@@ -96,8 +93,13 @@ class _OnboardingViewState extends State<OnboardingView> {
               children: [
                 Column(
                   children: [
-                    // Progress indicator (Hide on Intro Page)
-                    if (_currentPage > 0) _buildProgressIndicator(),
+                    // Progress indicator (Maintain height to avoid jump)
+                    SizedBox(
+                      height: 100, // Increased height for more breathing room
+                      child: _currentPage > 0
+                          ? _buildProgressIndicator()
+                          : null,
+                    ),
 
                     Expanded(
                       child: PageView(
@@ -108,12 +110,14 @@ class _OnboardingViewState extends State<OnboardingView> {
                         children: [
                           // 1. Intro Page (Replaces Permissions)
                           OnboardingIntroPage(
+                            key: const ValueKey('onboarding_intro'),
                             onNext: _nextPage,
                             onShowApiKeyDialog: _showApiKeyDialog,
                           ),
 
                           // 2. Profile Page
                           OnboardingProfilePage(
+                            key: const ValueKey('onboarding_profile'),
                             selectedAgeRange: _selectedAgeRange,
                             onAgePickerTap: _showAgePickerBottomSheet,
                             nicknameController: _nicknameController,
@@ -132,11 +136,13 @@ class _OnboardingViewState extends State<OnboardingView> {
 
                           // 3. Exercise Page
                           OnboardingExercisePage(
+                            key: const ValueKey('onboarding_exercise'),
                             exerciseController: _exerciseController,
                           ),
 
                           // 4. Guardian Page
                           OnboardingGuardianPage(
+                            key: const ValueKey('onboarding_guardian'),
                             fallDetectionEnabled: _fallDetectionEnabled,
                             onFallDetectionChanged: (val) =>
                                 setState(() => _fallDetectionEnabled = val),
@@ -207,7 +213,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   Widget _buildProgressIndicator() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -217,7 +223,9 @@ class _OnboardingViewState extends State<OnboardingView> {
               Text(
                 AppLocalizations.of(context)!.onboardingStepPreview(
                   1,
-                  AppLocalizations.of(context)!.onboardingStep1,
+                  AppLocalizations.of(
+                    context,
+                  )!.profileInfo, // Use "Profile Information"
                 ),
                 style: GoogleFonts.barlow(
                   fontWeight: FontWeight.bold,
@@ -225,20 +233,20 @@ class _OnboardingViewState extends State<OnboardingView> {
                 ),
               ),
               Text(
-                "${_currentPage + 1}/4",
+                "$_currentPage/3",
                 style: GoogleFonts.barlow(color: Colors.black45, fontSize: 12),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Row(
-            children: List.generate(4, (index) {
+            children: List.generate(3, (index) {
               return Expanded(
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   height: 6,
                   decoration: BoxDecoration(
-                    color: index <= _currentPage
+                    color: index < _currentPage
                         ? const Color(0xFF5E35B1) // Deep Purple
                         : Colors.black12,
                     borderRadius: BorderRadius.circular(3),
@@ -264,38 +272,6 @@ class _OnboardingViewState extends State<OnboardingView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.only(bottom: 24),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF5E35B1).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: const Color(0xFF5E35B1).withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 16,
-                    color: Color(0xFF5E35B1),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    AppLocalizations.of(context)!.onboardingNextStep(
-                      AppLocalizations.of(context)!.onboardingStep2,
-                    ),
-                    style: GoogleFonts.barlow(
-                      color: const Color(0xFF5E35B1),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

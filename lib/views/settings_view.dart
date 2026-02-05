@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/entities/user_profile.dart';
 import '../presentation/viewmodels/home_viewmodel.dart';
@@ -74,8 +73,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       _guardianController.text = profile.guardianPhone ?? '';
       _guardianEmailController.text = profile.guardianEmail ?? '';
       _fallDetectionEnabled = profile.fallDetectionEnabled;
-      _emergencyMethod =
-          profile.emergencyMethod ?? (Platform.isIOS ? 'push' : 'sms');
+      final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+      _emergencyMethod = profile.emergencyMethod ?? (isIOS ? 'push' : 'sms');
       _isInitialized = true;
     }
   }
@@ -230,7 +229,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
   @override
   Widget build(BuildContext context) {
-    if (Platform.isIOS && _emergencyMethod == 'sms') {
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    if (isIOS && _emergencyMethod == 'sms') {
       _emergencyMethod = 'push';
     }
 
@@ -489,7 +489,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     children: [
                       const SizedBox(height: 12),
 
-                      if (Platform.isAndroid) ...[
+                      if (Theme.of(context).platform ==
+                          TargetPlatform.android) ...[
                         Row(
                           children: [
                             Expanded(

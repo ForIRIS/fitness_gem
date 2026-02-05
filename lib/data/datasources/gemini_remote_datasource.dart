@@ -21,6 +21,7 @@ abstract class GeminiRemoteDataSource {
     required Map<String, dynamic> inputContext,
     required String rgbUri,
     required String controlNetUri,
+    String mimeType = 'video/mp4',
     String model = 'gemini-3-flash-preview',
   });
 
@@ -45,8 +46,4 @@ abstract class GeminiRemoteDataSource {
     required ChatSession chatSession,
     required String message,
   });
-
-  /// Send message to existing chat (Simplified for now - managing chat session state might need to be in Repo or separate class)
-  // For the `startInterviewChat` reference, it returns a session but we can wrap it.
-  // We might need a way to keep the session alive.
 }
