@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 
 /// Amber Mode Content Widget
 /// Displayed when a fall is suspected but not yet confirmed.
@@ -36,7 +37,7 @@ class AmberModeContent extends StatelessWidget {
 
             // Title
             Text(
-              "Checking your status...",
+              AppLocalizations.of(context)!.emergencyCheckingStatus,
               style: GoogleFonts.barlowCondensed(
                 color: Colors.white,
                 fontSize: 36,
@@ -48,7 +49,7 @@ class AmberModeContent extends StatelessWidget {
 
             // Subtitle
             Text(
-              "Please rest for a moment.",
+              AppLocalizations.of(context)!.emergencyPleaseRest,
               style: GoogleFonts.barlow(
                 color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 18,
@@ -86,7 +87,7 @@ class AmberModeContent extends StatelessWidget {
                     elevation: 4,
                   ),
                   child: Text(
-                    "I'm OK",
+                    AppLocalizations.of(context)!.emergencyImOk,
                     style: GoogleFonts.barlow(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,

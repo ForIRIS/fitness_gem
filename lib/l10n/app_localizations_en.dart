@@ -852,4 +852,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get guardianEmailNotice =>
       'Your Guardian must also be a registered user. You can link them by entering their email address in Settings > Account.';
+
+  @override
+  String get emergencyFallSuspected => 'Fall Suspected?';
+
+  @override
+  String get emergencyAreYouOkay => 'Are you okay?';
+
+  @override
+  String get emergencyCheckingStatus => 'Checking your status...';
+
+  @override
+  String get emergencyPleaseRest => 'Please rest for a moment.';
+
+  @override
+  String get emergencyImOk => 'I\'M OK';
+
+  @override
+  String get emergencyTitle => 'EMERGENCY';
+
+  @override
+  String get emergencySubtitle => 'Fall detected. Help is on the way.';
+
+  @override
+  String get emergencySlideToCall => 'Slide to Call SOS';
+
+  @override
+  String get emergencyHoldToCancel => 'Hold to Cancel';
+
+  @override
+  String get emergencyTtsWarning => 'Emergency Detected. Help is on the way.';
+
+  @override
+  String emergencySmsBody(String name) {
+    return '🚨 EMERGENCY: $name may have fallen during a workout. Please check on them immediately.';
+  }
+
+  @override
+  String emergencyLocationLink(String url) {
+    return 'Location: $url';
+  }
 }

@@ -817,4 +817,44 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get guardianEmailNotice =>
       '보호자분도 가입된 사용자여야 합니다. 설정 > 계정에서 보호자의 이메일 주소를 입력하여 연결할 수 있습니다.';
+
+  @override
+  String get emergencyFallSuspected => '넘어짐이 감지되었나요?';
+
+  @override
+  String get emergencyAreYouOkay => '괜찮으신가요?';
+
+  @override
+  String get emergencyCheckingStatus => '상태를 확인하고 있습니다...';
+
+  @override
+  String get emergencyPleaseRest => '잠시만 안정을 취해 주세요.';
+
+  @override
+  String get emergencyImOk => '괜찮아요';
+
+  @override
+  String get emergencyTitle => '비상 상황';
+
+  @override
+  String get emergencySubtitle => '넘어짐이 감지되었습니다. 도움이 필요합니다.';
+
+  @override
+  String get emergencySlideToCall => '밀어서 SOS 호출';
+
+  @override
+  String get emergencyHoldToCancel => '길게 눌러 취소';
+
+  @override
+  String get emergencyTtsWarning => '비상 상황이 감지되었습니다. 도움이 필요합니다.';
+
+  @override
+  String emergencySmsBody(String name) {
+    return '🚨 긴급 알림: $name님이 운동 중 넘어졌을 가능성이 있습니다. 즉시 확인해 주세요.';
+  }
+
+  @override
+  String emergencyLocationLink(String url) {
+    return '위치: $url';
+  }
 }

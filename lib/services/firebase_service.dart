@@ -7,6 +7,7 @@ import '../firebase_options.dart';
 import '../domain/entities/workout_task.dart';
 import '../domain/entities/workout_curriculum.dart';
 import '../data/models/workout_task_model.dart';
+import '../core/constants/mock_data.dart';
 
 /// FirebaseService - Manage Firebase initialization and workout library
 class FirebaseService {
@@ -15,7 +16,7 @@ class FirebaseService {
   FirebaseService._internal();
 
   bool _initialized = false;
-  bool _isOffline = false; // Operates in offline mode if Auth fails
+  bool _isOffline = false;
 
   /// Firebase initialization
   Future<void> initialize() async {
@@ -25,9 +26,7 @@ class FirebaseService {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // Anonymous Sign-in
     await _signInAnonymously();
-
     _initialized = true;
   }
 
@@ -41,18 +40,23 @@ class FirebaseService {
       }
     } catch (e) {
       debugPrint('Anonymous sign in failed: $e (Falling back to offline mode)');
-      _isOffline = true; // Enable offline mode on failure
+      _isOffline = true;
     }
   }
 
   /// Current User ID
   String? get currentUserId => FirebaseAuth.instance.currentUser?.uid;
 
-  // ============ Workout Library (Dummy Data) ============
+  // ============ Workout Library ============
+
+  /// Convert mock WorkoutTaskModel to WorkoutTask entity
+  List<WorkoutTask> _mockToEntities(Iterable<WorkoutTaskModel> models) {
+    return models.map((m) => m.toEntity()).toList();
+  }
 
   /// Fetch all workout list
   Future<List<WorkoutTask>> fetchWorkoutAllList() async {
-    if (_isOffline) return _dummyWorkoutTasks;
+    if (_isOffline) return _mockToEntities(mockWorkoutTasks);
 
     try {
       final snapshot = await FirebaseFirestore.instance
@@ -60,9 +64,7 @@ class FirebaseService {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        // Upload dummy data if no data exists (development convenience)
-        await uploadDummyData();
-        return _dummyWorkoutTasks;
+        return _mockToEntities(mockWorkoutTasks);
       }
 
       return snapshot.docs
@@ -70,19 +72,18 @@ class FirebaseService {
           .toList();
     } catch (e) {
       debugPrint('Error fetching workouts: $e');
-      // Return dummy data on error (offline, etc.)
-      return _dummyWorkoutTasks;
+      return _mockToEntities(mockWorkoutTasks);
     }
   }
 
   /// Search workouts by category
   Future<List<WorkoutTask>> searchWorkoutParts(String category) async {
     if (_isOffline) {
-      return _dummyWorkoutTasks
-          .where(
-            (task) => task.category.toLowerCase() == category.toLowerCase(),
-          )
-          .toList();
+      return _mockToEntities(
+        mockWorkoutTasks.where(
+          (task) => task.category.toLowerCase() == category.toLowerCase(),
+        ),
+      );
     }
 
     try {
@@ -92,12 +93,11 @@ class FirebaseService {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        // Search in dummy if not in Firestore
-        return _dummyWorkoutTasks
-            .where(
-              (task) => task.category.toLowerCase() == category.toLowerCase(),
-            )
-            .toList();
+        return _mockToEntities(
+          mockWorkoutTasks.where(
+            (task) => task.category.toLowerCase() == category.toLowerCase(),
+          ),
+        );
       }
 
       return snapshot.docs
@@ -105,30 +105,28 @@ class FirebaseService {
           .toList();
     } catch (e) {
       debugPrint('Error searching workouts: $e');
-      return _dummyWorkoutTasks
-          .where(
-            (task) => task.category.toLowerCase() == category.toLowerCase(),
-          )
-          .toList();
+      return _mockToEntities(
+        mockWorkoutTasks.where(
+          (task) => task.category.toLowerCase() == category.toLowerCase(),
+        ),
+      );
     }
   }
 
-  /// Fetch specific workouts
+  /// Fetch specific workouts by IDs
   Future<List<WorkoutTask>> fetchWorkoutTask(
     List<String> workoutTaskIds,
   ) async {
     if (workoutTaskIds.isEmpty) return [];
+
     if (_isOffline) {
-      return _dummyWorkoutTasks
-          .where((task) => workoutTaskIds.contains(task.id))
-          .toList();
+      return _mockToEntities(
+        mockWorkoutTasks.where((task) => workoutTaskIds.contains(task.id)),
+      );
     }
 
     try {
-      // whereIn is limited to 10 items, so handle in chunks (simplified here)
       if (workoutTaskIds.length > 10) {
-        // For simplicity, individual query parallel processing or just fetchAll and filter
-        // MVP: Fetch All and Filter (as data is small)
         final all = await fetchWorkoutAllList();
         return all.where((t) => workoutTaskIds.contains(t.id)).toList();
       }
@@ -142,29 +140,25 @@ class FirebaseService {
           .map((doc) => WorkoutTaskModel.fromMap(doc.data()).toEntity())
           .toList();
 
-      // If some items not found in Firestore, search in dummy (Mixed scenarios)
       if (fetched.length < workoutTaskIds.length) {
         final foundIds = fetched.map((e) => e.id).toSet();
         final missingIds = workoutTaskIds.where((id) => !foundIds.contains(id));
-
-        final dummyFound = _dummyWorkoutTasks
-            .where((task) => missingIds.contains(task.id))
-            .toList();
-
-        fetched.addAll(dummyFound);
+        final mockFound = _mockToEntities(
+          mockWorkoutTasks.where((task) => missingIds.contains(task.id)),
+        );
+        fetched.addAll(mockFound);
       }
 
       return fetched;
     } catch (e) {
       debugPrint('Error fetching workout tasks: $e');
-      return _dummyWorkoutTasks
-          .where((task) => workoutTaskIds.contains(task.id))
-          .toList();
+      return _mockToEntities(
+        mockWorkoutTasks.where((task) => workoutTaskIds.contains(task.id)),
+      );
     }
   }
 
-  /// Request workout media URLs (Signed URLs) via Cloud Function
-  /// Returns updated tasks with URLs populated
+  /// Request workout media URLs via Cloud Function
   Future<List<WorkoutTask>> requestTaskUrls(List<WorkoutTask> tasks) async {
     if (tasks.isEmpty) return tasks;
 
@@ -184,7 +178,6 @@ class FirebaseService {
         );
 
         if (taskData != null) {
-          // Create new task with updated URLs
           updatedTasks.add(
             WorkoutTask(
               id: task.id,
@@ -218,28 +211,11 @@ class FirebaseService {
       return updatedTasks;
     } catch (e) {
       debugPrint('Error calling requestTaskInfo: $e');
-      return tasks; // Return original tasks on error
+      return tasks;
     }
   }
 
-  /// Upload dummy data (for development)
-  Future<void> uploadDummyData() async {
-    try {
-      final batch = FirebaseFirestore.instance.batch();
-      for (final task in _dummyWorkoutTasks) {
-        final docRef = FirebaseFirestore.instance
-            .collection('exercises')
-            .doc(task.id);
-        batch.set(docRef, WorkoutTaskModel.fromEntity(task).toMap());
-      }
-      await batch.commit();
-      debugPrint('Dummy data uploaded successfully');
-    } catch (e) {
-      debugPrint('Error uploading dummy data: $e');
-    }
-  }
-
-  /// Workout list text to provide to Gemini
+  /// Workout list text for Gemini
   Future<String> getWorkoutListForGemini(String category) async {
     final tasks = await searchWorkoutParts(category);
     final buffer = StringBuffer();
@@ -257,10 +233,7 @@ class FirebaseService {
 
   /// Fetch daily hot categories
   Future<List<String>> fetchDailyHotCategories() async {
-    if (_isOffline) {
-      // Return mockup data in offline mode
-      return mockDailyHotCategories;
-    }
+    if (_isOffline) return mockDailyHotCategories;
 
     try {
       final result = await FirebaseFunctions.instance
@@ -271,7 +244,6 @@ class FirebaseService {
       return categories.map((e) => e.toString()).toList();
     } catch (e) {
       debugPrint('Error fetching daily hot categories: $e');
-      // Return mockup data on error
       return mockDailyHotCategories;
     }
   }
@@ -282,7 +254,7 @@ class FirebaseService {
       Map<String, dynamic> data;
 
       if (_isOffline) {
-        data = mockFeaturedProgram;
+        data = mockFeaturedPrograms['Build Strength']!;
       } else {
         try {
           final result = await FirebaseFunctions.instance
@@ -291,7 +263,7 @@ class FirebaseService {
           data = Map<String, dynamic>.from(result.data);
         } catch (e) {
           debugPrint('Error fetching featured program: $e');
-          data = mockFeaturedProgram;
+          data = mockFeaturedPrograms['Build Strength']!;
         }
       }
 
@@ -320,341 +292,4 @@ class FirebaseService {
       return null;
     }
   }
-
-  // ============ Dummy Data (16 Exercise Types) ============
-
-  static const Map<String, dynamic> mockFeaturedProgram = {
-    'id': 'summer_shred_mock',
-    'title': 'Summer Shred Challenge (Mock)',
-    'description': 'High-intensity routine to burn calories and build muscle.',
-    'task_ids': [
-      'squat_04',
-      'push_03',
-      'lunge_03',
-      'core_03',
-      'squat_03',
-      'push_02',
-    ],
-    'imageUrl': 'assets/images/workouts/squat_04.png',
-    'slogan': 'Get Set, Stay Ignite.',
-    'membersCount': '5.8k+',
-    'rating': 5.0,
-    'difficulty': 3,
-    'userAvatars': [
-      'https://i.pravatar.cc/150?img=12',
-      'https://i.pravatar.cc/150?img=24',
-      'https://i.pravatar.cc/150?img=33',
-    ],
-  };
-
-  static const List<String> mockDailyHotCategories = [
-    'Upper Body',
-    'Build Strength',
-    'Beginner',
-    'Core Workout',
-    'Lower Body',
-    'HIIT Training',
-  ];
-
-  static final List<WorkoutTask> _dummyWorkoutTasks = [
-    // === Lower Body (Squat) ===
-    WorkoutTask(
-      id: 'squat_01',
-      title: 'Box Squat',
-      description: 'Beginner-friendly squat using a chair or box',
-      advice:
-          'Place a chair or box behind you and practice sitting and standing up safely. Ensure your knees do not extend significantly past your toes.',
-      thumbnail: 'assets/images/workouts/squat_01.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 15,
-      sets: 3,
-      timeoutSec: 60,
-      isCountable: true,
-      category: 'squat',
-      difficulty: 1,
-    ),
-    WorkoutTask(
-      id: 'squat_02',
-      title: 'Air Squat',
-      description: 'Basic air squat',
-      advice:
-          'Keep your back straight and engage your core muscles. Maintain a neutral spine and focus on proper form to prevent injury.',
-      thumbnail: 'assets/images/workouts/squat_02.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 15,
-      sets: 3,
-      timeoutSec: 60,
-      isCountable: true,
-      category: 'squat',
-      difficulty: 2,
-    ),
-    WorkoutTask(
-      id: 'squat_03',
-      title: 'Split Squat',
-      description: 'One-legged squat with balance maintenance',
-      advice:
-          'Hold one leg and maintain balance. Adjust the back knee to touch the floor as if you were about to sit down.',
-      thumbnail: 'assets/images/workouts/squat_03.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 12,
-      sets: 3,
-      timeoutSec: 60,
-      isCountable: true,
-      category: 'squat',
-      difficulty: 3,
-    ),
-    WorkoutTask(
-      id: 'squat_04',
-      title: 'Jump Squat',
-      description: 'High-intensity jump squat',
-      advice:
-          'Land softly on your knees to absorb impact. Land quietly by lightly jumping.',
-      thumbnail: 'assets/images/workouts/squat_04.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 10,
-      sets: 3,
-      timeoutSec: 60,
-      isCountable: true,
-      category: 'squat',
-      difficulty: 4,
-    ),
-
-    // === Upper Body (Push) ===
-    WorkoutTask(
-      id: 'push_01',
-      title: 'Wall Push-up',
-      description: 'Wall push-up',
-      advice:
-          'Stand facing a wall with your hands shoulder-width apart. Lean forward until your chest touches the wall. Push back up to the starting position.',
-      thumbnail: 'assets/images/workouts/push_01.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 15,
-      sets: 3,
-      timeoutSec: 60,
-      isCountable: true,
-      category: 'push',
-      difficulty: 1,
-    ),
-    WorkoutTask(
-      id: 'push_02',
-      title: 'Knee Push-up',
-      description: 'Knee push-up',
-      advice:
-          'Stand with your knees bent and hands shoulder-width apart. Lower your body until your chest touches the floor. Push back up to the starting position.',
-      thumbnail: 'assets/images/workouts/push_02.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 12,
-      sets: 3,
-      timeoutSec: 60,
-      isCountable: true,
-      category: 'push',
-      difficulty: 2,
-    ),
-    WorkoutTask(
-      id: 'push_03',
-      title: 'Standard Push-up',
-      description: 'Standard push-up',
-      advice:
-          'Stand with your feet shoulder-width apart and hands shoulder-width apart. Lower your body until your chest touches the floor. Push back up to the starting position.',
-      thumbnail: 'assets/images/workouts/push_03.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 10,
-      sets: 3,
-      timeoutSec: 60,
-      isCountable: true,
-      category: 'push',
-      difficulty: 3,
-    ),
-    WorkoutTask(
-      id: 'push_04',
-      title: 'Diamond Push-up',
-      description: 'Diamond push-up',
-      advice:
-          'Stand with your feet shoulder-width apart and hands shoulder-width apart. Lower your body until your chest touches the floor. Push back up to the starting position.',
-      thumbnail: 'assets/images/workouts/push_04.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 8,
-      sets: 3,
-      timeoutSec: 60,
-      isCountable: true,
-      category: 'push',
-      difficulty: 4,
-    ),
-
-    // === Core ===
-    WorkoutTask(
-      id: 'core_01',
-      title: 'Elbow Plank',
-      description: 'Elbow plank',
-      advice:
-          'Maintain a straight line from head to heels. Engage your core and avoid letting your hips sag. Hold the position for the specified duration.',
-      thumbnail: 'assets/images/workouts/core_01.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 0, // Duration-based exercise
-      sets: 3,
-      timeoutSec: 30,
-      durationSec: 30,
-      isCountable: false,
-      category: 'core',
-      difficulty: 1,
-    ),
-    WorkoutTask(
-      id: 'core_02',
-      title: 'High Plank',
-      description: 'High plank',
-      advice:
-          'Keep your body in a straight line with arms fully extended. Engage your core and maintain proper alignment. Hold for the specified duration.',
-      thumbnail: 'assets/images/workouts/core_02.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 0, // Duration-based exercise
-      sets: 3,
-      timeoutSec: 30,
-      durationSec: 40,
-      isCountable: false,
-      category: 'core',
-      difficulty: 2,
-    ),
-    WorkoutTask(
-      id: 'core_03',
-      title: 'Side Plank',
-      description: 'Side plank',
-      advice:
-          'Balance on one forearm with your body in a straight line. Stack your feet or stagger them for stability. Hold the position for the specified duration.',
-      thumbnail: 'assets/images/workouts/core_03.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 0, // Duration-based exercise
-      sets: 3,
-      timeoutSec: 30,
-      durationSec: 30,
-      isCountable: false,
-      category: 'core',
-      difficulty: 3,
-    ),
-    WorkoutTask(
-      id: 'core_04',
-      title: 'Plank with Leg Lift',
-      description: 'Plank with leg lift',
-      advice:
-          'Start in a high plank position. Alternate lifting each leg while maintaining core stability. Hold the position for the specified duration.',
-      thumbnail: 'assets/images/workouts/core_04.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 0, // Duration-based exercise
-      sets: 3,
-      timeoutSec: 30,
-      durationSec: 45,
-      isCountable: false,
-      category: 'core',
-      difficulty: 4,
-    ),
-
-    // === Lunge ===
-    WorkoutTask(
-      id: 'lunge_01',
-      title: 'Static Lunge',
-      description: 'Static lunge',
-      advice:
-          'Keep your front knee aligned over your ankle. Lower your back knee toward the floor while maintaining an upright torso. Push through your front heel to return to starting position.',
-      thumbnail: 'assets/images/workouts/lunge_01.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 12,
-      sets: 3,
-      timeoutSec: 60,
-      isCountable: true,
-      category: 'lunge',
-      difficulty: 1,
-    ),
-    WorkoutTask(
-      id: 'lunge_02',
-      title: 'Forward Lunge',
-      description: 'Forward lunge',
-      advice:
-          'Step forward with one leg and lower your hips until both knees are bent at 90 degrees. Push back to the starting position. Alternate legs with each rep.',
-      thumbnail: 'assets/images/workouts/lunge_02.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 12,
-      sets: 3,
-      timeoutSec: 60,
-      isCountable: true,
-      category: 'lunge',
-      difficulty: 2,
-    ),
-    WorkoutTask(
-      id: 'lunge_03',
-      title: 'Reverse Lunge',
-      description: 'Reverse lunge',
-      advice:
-          'Step backward with one leg and lower your hips until both knees are bent at 90 degrees. Push through your front heel to return to starting position. Alternate legs.',
-      thumbnail: 'assets/images/workouts/lunge_03.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 10,
-      sets: 3,
-      timeoutSec: 60,
-      isCountable: true,
-      category: 'lunge',
-      difficulty: 3,
-    ),
-    WorkoutTask(
-      id: 'lunge_04',
-      title: 'Walking Lunge',
-      description: 'Walking lunge',
-      advice:
-          'Step forward into a lunge and continue walking forward, alternating legs with each step. Maintain balance and control throughout the movement.',
-      thumbnail: 'assets/images/workouts/lunge_04.png',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-      reps: 10,
-      sets: 3,
-      timeoutSec: 60,
-      isCountable: true,
-      category: 'lunge',
-      difficulty: 4,
-    ),
-  ];
 }

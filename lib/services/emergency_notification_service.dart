@@ -1,13 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:cloud_functions/cloud_functions.dart'; // Added
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../domain/entities/user_profile.dart';
 
 /// Service to trigger emergency notifications
 class EmergencyNotificationService {
   /// Trigger notification based on platform and user preference
-  Future<void> triggerEmergency(UserProfile profile) async {
+  Future<void> triggerEmergency(
+    UserProfile profile,
+    AppLocalizations l10n,
+  ) async {
     final isAndroid =
         !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
     final method = profile.emergencyMethod ?? (isAndroid ? 'sms' : 'push');
@@ -18,23 +22,26 @@ class EmergencyNotificationService {
         debugPrint("Emergency Triggered (SMS), but no guardian phone set.");
         return;
       }
-      await _sendAndroidSMS(guardianPhone, profile.nickname);
+      await _sendAndroidSMS(guardianPhone, profile.nickname, l10n);
     } else {
       // Push Notification
-      await _triggerBackendPushNotification(profile);
+      await _triggerBackendPushNotification(profile, l10n);
     }
   }
 
   /// Android: Send SMS via Intent
-  Future<void> _sendAndroidSMS(String phone, String nickname) async {
-    String message =
-        "🚨 EMERGENCY: $nickname may have fallen during a workout. Please check on them immediately.";
+  Future<void> _sendAndroidSMS(
+    String phone,
+    String nickname,
+    AppLocalizations l10n,
+  ) async {
+    String message = l10n.emergencySmsBody(nickname);
 
     // Append Location
     final position = await _getCurrentLocation();
     if (position != null) {
       message +=
-          "\nLocation: https://maps.google.com/?q=${position.latitude},${position.longitude}";
+          "\n${l10n.emergencyLocationLink("https://maps.google.com/?q=${position.latitude},${position.longitude}")}";
     }
 
     final uri = Uri(
@@ -80,7 +87,10 @@ class EmergencyNotificationService {
   }
 
   /// Trigger Backend Push Notification via Cloud Functions
-  Future<void> _triggerBackendPushNotification(UserProfile profile) async {
+  Future<void> _triggerBackendPushNotification(
+    UserProfile profile,
+    AppLocalizations l10n,
+  ) async {
     try {
       debugPrint("Triggering Cloud Function: notifyGuardian...");
 

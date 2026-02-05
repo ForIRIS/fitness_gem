@@ -371,5 +371,31 @@
   "benefitGuardianEmailDesc": "설정에서 보호자의 이메일로 연결하세요.",
   "benefitEmergencyPushTitle": "비상 상황 보호",
   "benefitEmergencyPushDesc": "응답이 없을 경우 보호자에게 푸시 알림을 보냅니다.",
-  "guardianEmailNotice": "보호자분도 가입된 사용자여야 합니다. 설정 > 계정에서 보호자의 이메일 주소를 입력하여 연결할 수 있습니다."
+  "guardianEmailNotice": "보호자분도 가입된 사용자여야 합니다. 설정 > 계정에서 보호자의 이메일 주소를 입력하여 연결할 수 있습니다.",
+  "emergencyFallSuspected": "넘어짐이 감지되었나요?",
+  "emergencyAreYouOkay": "괜찮으신가요?",
+  "emergencyCheckingStatus": "상태를 확인하고 있습니다...",
+  "emergencyPleaseRest": "잠시만 안정을 취해 주세요.",
+  "emergencyImOk": "괜찮아요",
+  "emergencyTitle": "비상 상황",
+  "emergencySubtitle": "넘어짐이 감지되었습니다. 도움이 필요합니다.",
+  "emergencySlideToCall": "밀어서 SOS 호출",
+  "emergencyHoldToCancel": "길게 눌러 취소",
+  "emergencyTtsWarning": "비상 상황이 감지되었습니다. 도움이 필요합니다.",
+  "emergencySmsBody": "🚨 긴급 알림: {name}님이 운동 중 넘어졌을 가능성이 있습니다. 즉시 확인해 주세요.",
+  "@emergencySmsBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyLocationLink": "위치: {url}",
+  "@emergencyLocationLink": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  }
 }

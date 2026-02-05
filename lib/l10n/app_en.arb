@@ -371,5 +371,31 @@
   "benefitGuardianEmailDesc": "Link via Guardian's email in Settings.",
   "benefitEmergencyPushTitle": "Emergency Protection",
   "benefitEmergencyPushDesc": "Push notifications sent to guardian if no response.",
-  "guardianEmailNotice": "Your Guardian must also be a registered user. You can link them by entering their email address in Settings > Account."
+  "guardianEmailNotice": "Your Guardian must also be a registered user. You can link them by entering their email address in Settings > Account.",
+  "emergencyFallSuspected": "Fall Suspected?",
+  "emergencyAreYouOkay": "Are you okay?",
+  "emergencyCheckingStatus": "Checking your status...",
+  "emergencyPleaseRest": "Please rest for a moment.",
+  "emergencyImOk": "I'M OK",
+  "emergencyTitle": "EMERGENCY",
+  "emergencySubtitle": "Fall detected. Help is on the way.",
+  "emergencySlideToCall": "Slide to Call SOS",
+  "emergencyHoldToCancel": "Hold to Cancel",
+  "emergencyTtsWarning": "Emergency Detected. Help is on the way.",
+  "emergencySmsBody": "🚨 EMERGENCY: {name} may have fallen during a workout. Please check on them immediately.",
+  "@emergencySmsBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyLocationLink": "Location: {url}",
+  "@emergencyLocationLink": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  }
 }

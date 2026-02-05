@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -99,6 +101,18 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.userProfile != null) {
+      _emergencyFlowManager.initialize(
+        userProfile: widget.userProfile!,
+        cameraManager: _cameraManager,
+        l10n: AppLocalizations.of(context),
+      );
+    }
+  }
+
   Future<void> _initialize() async {
     await [Permission.camera, Permission.microphone].request();
 
@@ -138,13 +152,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
     _cameraManager.startPoseDetection();
 
-    // Initialize Emergency Flow Manager with context
-    if (widget.userProfile != null) {
-      _emergencyFlowManager.initialize(
-        userProfile: widget.userProfile!,
-        cameraManager: _cameraManager,
-      );
-    }
+    _cameraManager.startPoseDetection();
 
     // 4. Initialize Video
     _initializeGuideVideo();

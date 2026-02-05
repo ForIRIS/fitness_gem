@@ -228,3 +228,73 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
     difficulty: 2,
   ),
 ];
+
+/// Mock daily hot categories
+const List<String> mockDailyHotCategories = [
+  'Upper Body',
+  'Build Strength',
+  'Beginner',
+  'Core Workout',
+  'Lower Body',
+  'HIIT Training',
+];
+
+/// Mock featured programs by category
+const Map<String, Map<String, dynamic>> mockFeaturedPrograms = {
+  'Build Strength': {
+    'id': 'summer_shred_mock',
+    'title': 'Summer Shred Challenge',
+    'slogan': 'Get Set, Stay Ignite.',
+    'description': 'High-intensity routine to burn calories and build muscle.',
+    'imageUrl': 'assets/images/workouts/squat_04.png',
+    'membersCount': '5.8k+',
+    'rating': 5.0,
+    'difficulty': 3,
+    'duration': '18 Min',
+    'task_ids': [
+      'squat_04',
+      'push_03',
+      'lunge_03',
+      'core_03',
+      'squat_03',
+      'push_02',
+    ],
+    'userAvatars': [
+      'https://i.pravatar.cc/150?img=11',
+      'https://i.pravatar.cc/150?img=12',
+      'https://i.pravatar.cc/150?img=33',
+    ],
+  },
+  'Upper Body': {
+    'id': 'upper_blast_mock',
+    'title': 'Boulder Shoulders 30',
+    'slogan': 'Sculpt Your Upper Body.',
+    'description': 'Focus on deltoids and chest with this intense circuit.',
+    'imageUrl': 'assets/images/workouts/push_01.png',
+    'membersCount': '2.1k+',
+    'rating': 4.8,
+    'difficulty': 4,
+    'duration': '20 Min',
+    'task_ids': ['push_01', 'push_02', 'core_01', 'core_02'],
+    'userAvatars': [
+      'https://i.pravatar.cc/150?img=59',
+      'https://i.pravatar.cc/150?img=60',
+    ],
+  },
+  'Beginner': {
+    'id': 'starter_mock',
+    'title': 'Zero to Hero: Week 1',
+    'slogan': 'Start Your Journey Today.',
+    'description': 'Low impact movements designed for absolute beginners.',
+    'imageUrl': 'assets/images/workouts/squat_01.png',
+    'membersCount': '12k+',
+    'rating': 4.9,
+    'difficulty': 1,
+    'duration': '10 Min',
+    'task_ids': ['squat_01', 'core_01'],
+    'userAvatars': [
+      'https://i.pravatar.cc/150?img=1',
+      'https://i.pravatar.cc/150?img=2',
+    ],
+  },
+};

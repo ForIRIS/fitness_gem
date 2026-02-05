@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:camera/camera.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 
 import '../core/di/injection.dart';
 import '../domain/entities/user_profile.dart';
@@ -47,14 +48,17 @@ class EmergencyFlowManager extends ChangeNotifier {
   UserProfile? _userProfile;
   CameraManager? _cameraManager;
   String? _capturedVideoPath;
+  AppLocalizations? _l10n;
 
   /// Initialize with context needed for analysis and notifications.
   void initialize({
     required UserProfile userProfile,
     CameraManager? cameraManager,
+    AppLocalizations? l10n,
   }) {
     _userProfile = userProfile;
     _cameraManager = cameraManager;
+    _l10n = l10n;
   }
 
   /// Transition to Amber state when on-device detection triggers.
@@ -207,8 +211,8 @@ class EmergencyFlowManager extends ChangeNotifier {
     notifyListeners();
 
     // Trigger guardian notification
-    if (_userProfile != null) {
-      _notificationService.triggerEmergency(_userProfile!);
+    if (_userProfile != null && _l10n != null) {
+      _notificationService.triggerEmergency(_userProfile!, _l10n!);
     }
 
     _incidentLog.logIncident(type: 'red', status: 'escalated_to_emergency');

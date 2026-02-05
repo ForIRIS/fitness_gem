@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 /// Red Mode Content Widget
@@ -75,7 +76,12 @@ class _RedModeContentState extends State<RedModeContent>
   }
 
   void _speakWarning() {
-    _flutterTts.speak("Emergency Detected. Help is on the way.");
+    final l10n = AppLocalizations.of(context);
+    if (l10n != null) {
+      _flutterTts.speak(l10n.emergencyTtsWarning);
+    } else {
+      _flutterTts.speak("Emergency Detected. Help is on the way.");
+    }
   }
 
   void _stopAudioAlert() {
@@ -156,7 +162,7 @@ class _RedModeContentState extends State<RedModeContent>
 
                 // Title
                 Text(
-                  "EMERGENCY",
+                  AppLocalizations.of(context)!.emergencyTitle,
                   style: GoogleFonts.barlowCondensed(
                     color: Colors.white,
                     fontSize: 56,
@@ -168,7 +174,7 @@ class _RedModeContentState extends State<RedModeContent>
                 const SizedBox(height: 12),
 
                 Text(
-                  "Fall detected. Help is on the way.",
+                  AppLocalizations.of(context)!.emergencySubtitle,
                   style: GoogleFonts.barlow(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 18,
@@ -183,7 +189,7 @@ class _RedModeContentState extends State<RedModeContent>
                   child: Column(
                     children: [
                       Text(
-                        "Slide to Call SOS (119)",
+                        AppLocalizations.of(context)!.emergencySlideToCall,
                         style: GoogleFonts.barlow(
                           color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 16,
@@ -304,7 +310,7 @@ class _RedModeContentState extends State<RedModeContent>
                               ),
                             ),
                           Text(
-                            "Hold to Cancel",
+                            AppLocalizations.of(context)!.emergencyHoldToCancel,
                             style: GoogleFonts.barlow(
                               color: Colors.white,
                               fontSize: 18,

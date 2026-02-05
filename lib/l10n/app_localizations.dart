@@ -1639,6 +1639,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your Guardian must also be a registered user. You can link them by entering their email address in Settings > Account.'**
   String get guardianEmailNotice;
+
+  /// No description provided for @emergencyFallSuspected.
+  ///
+  /// In en, this message translates to:
+  /// **'Fall Suspected?'**
+  String get emergencyFallSuspected;
+
+  /// No description provided for @emergencyAreYouOkay.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you okay?'**
+  String get emergencyAreYouOkay;
+
+  /// No description provided for @emergencyCheckingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your status...'**
+  String get emergencyCheckingStatus;
+
+  /// No description provided for @emergencyPleaseRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Please rest for a moment.'**
+  String get emergencyPleaseRest;
+
+  /// No description provided for @emergencyImOk.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'M OK'**
+  String get emergencyImOk;
+
+  /// No description provided for @emergencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'EMERGENCY'**
+  String get emergencyTitle;
+
+  /// No description provided for @emergencySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fall detected. Help is on the way.'**
+  String get emergencySubtitle;
+
+  /// No description provided for @emergencySlideToCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide to Call SOS'**
+  String get emergencySlideToCall;
+
+  /// No description provided for @emergencyHoldToCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to Cancel'**
+  String get emergencyHoldToCancel;
+
+  /// No description provided for @emergencyTtsWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Detected. Help is on the way.'**
+  String get emergencyTtsWarning;
+
+  /// No description provided for @emergencySmsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'🚨 EMERGENCY: {name} may have fallen during a workout. Please check on them immediately.'**
+  String emergencySmsBody(String name);
+
+  /// No description provided for @emergencyLocationLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Location: {url}'**
+  String emergencyLocationLink(String url);
 }
 
 class _AppLocalizationsDelegate

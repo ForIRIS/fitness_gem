@@ -149,57 +149,7 @@ export const getFeaturedProgram = onCall(async (request) => {
     };
 });
 
-/**
- * getWorkoutAssets
- */
-export const getWorkoutAssets = onCall(async (request) => {
-    if (!request.auth) {
-        throw new HttpsError("unauthenticated", "User must be signed in.");
-    }
 
-    const { task_ids } = request.data;
-    if (!task_ids || !Array.isArray(task_ids)) {
-        throw new HttpsError("invalid-argument", "Missing task_ids array.");
-    }
-
-    const db = admin.firestore();
-    const bucket = admin.storage().bucket();
-    const expiration = Date.now() + 60 * 60 * 1000; // 1 hour
-
-    const results = await Promise.all(task_ids.map(async (id: string) => {
-        try {
-            const doc = await db.collection("exercises").doc(id).get();
-            if (!doc.exists) {
-                return { id, error: "not_found" };
-            }
-
-            const data = doc.data() || {};
-            const sign = async (path: string | undefined) => {
-                if (!path) return null;
-                try {
-                    const [url] = await bucket.file(path).getSignedUrl({ action: 'read', expires: expiration });
-                    return url;
-                } catch (e) {
-                    console.error(`Signing error for ${path}:`, e);
-                    return null;
-                }
-            };
-
-            return {
-                id,
-                bundleUrl: await sign(data.bundlePath),
-                videoUrl: await sign(data.videoPath),
-                thumbnailUrl: await sign(data.thumbnailPath),
-                samplePoseUrl: await sign(data.samplePosePath),
-            };
-        } catch (error) {
-            console.error(`Process error for ${id}:`, error);
-            return { id, error: "processing_failed" };
-        }
-    }));
-
-    return { assets: results };
-});
 
 /**
  * getAvailableWorkouts

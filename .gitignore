@@ -55,7 +55,9 @@ lib/config/secrets.dart
 secrets/
 
 # Firebase configuration (contains API keys)
-firebase.json
+# firebase.json is usually OK to track as it defines deployment config.
+# If you want to keep it private, uncomment the line below:
+# firebase.json
 ios/Runner/GoogleService-Info.plist
 android/app/google-services.json
 lib/firebase_options.dart
