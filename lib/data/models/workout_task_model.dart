@@ -146,6 +146,53 @@ class WorkoutTaskModel {
     );
   }
 
+  /// copyWith method
+  WorkoutTaskModel copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? advice,
+    String? thumbnail,
+    String? readyPoseImageUrl,
+    String? exampleVideoUrl,
+    String? configureUrl,
+    String? guideAudioUrl,
+    String? coremlUrl,
+    String? onnxUrl,
+    int? reps,
+    int? sets,
+    int? timeoutSec,
+    int? durationSec,
+    bool? isCountable,
+    String? category,
+    int? difficulty,
+    int? adjustedReps,
+    int? adjustedSets,
+  }) {
+    return WorkoutTaskModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      advice: advice ?? this.advice,
+      thumbnail: thumbnail ?? this.thumbnail,
+      readyPoseImageUrl: readyPoseImageUrl ?? this.readyPoseImageUrl,
+      exampleVideoUrl: exampleVideoUrl ?? this.exampleVideoUrl,
+      configureUrl: configureUrl ?? this.configureUrl,
+      guideAudioUrl: guideAudioUrl ?? this.guideAudioUrl,
+      coremlUrl: coremlUrl ?? this.coremlUrl,
+      onnxUrl: onnxUrl ?? this.onnxUrl,
+      reps: reps ?? this.reps,
+      sets: sets ?? this.sets,
+      timeoutSec: timeoutSec ?? this.timeoutSec,
+      durationSec: durationSec ?? this.durationSec,
+      isCountable: isCountable ?? this.isCountable,
+      category: category ?? this.category,
+      difficulty: difficulty ?? this.difficulty,
+      adjustedReps: adjustedReps ?? this.adjustedReps,
+      adjustedSets: adjustedSets ?? this.adjustedSets,
+    );
+  }
+
   /// Convert to JSON map
   Map<String, dynamic> toMap() {
     return {
