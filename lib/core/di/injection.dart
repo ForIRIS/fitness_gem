@@ -33,6 +33,7 @@ import '../../domain/usecases/workout/get_available_workouts_usecase.dart';
 // Use cases - User
 import '../../domain/usecases/user/get_user_profile.dart';
 import '../../domain/usecases/user/update_user_profile.dart';
+import '../../domain/usecases/user/delete_user_profile.dart';
 
 // Use cases - AI
 // Use cases - AI
@@ -171,6 +172,7 @@ Future<void> setupDependencyInjection() async {
 
   getIt.registerLazySingleton(() => GetUserProfileUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateUserProfileUseCase(getIt()));
+  getIt.registerLazySingleton(() => DeleteUserProfileUseCase(getIt()));
 
   // ============ Use Cases - AI ============
 

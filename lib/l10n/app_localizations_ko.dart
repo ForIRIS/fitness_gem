@@ -857,4 +857,110 @@ class AppLocalizationsKo extends AppLocalizations {
   String emergencyLocationLink(String url) {
     return '위치: $url';
   }
+
+  @override
+  String get privacyPolicyTitle => '개인정보 처리방침';
+
+  @override
+  String get privacyPolicyIntro => '회원님의 개인정보 보호를 최우선으로 합니다:';
+
+  @override
+  String get privacyLocalTitle => '로컬 저장소';
+
+  @override
+  String get privacyLocalDesc => '신체 정보(키/몸무게/성별)는 기기에만 안전하게 저장됩니다.';
+
+  @override
+  String get privacyGeminiTitle => 'Gemini 분석';
+
+  @override
+  String get privacyGeminiDesc => '데이터는 실시간 분석에만 사용되며, 학습용으로 사용되지 않습니다.';
+
+  @override
+  String get privacyMinimalTitle => '최소한의 데이터';
+
+  @override
+  String get privacyMinimalDesc =>
+      '이메일은 낙상 감지 시 보호자 알림 전송용으로만 사용되며, 탈퇴 시 즉시 삭제됩니다.';
+
+  @override
+  String get privacyAgreement => '개인정보 처리방침을 확인하였으며 동의합니다.';
+
+  @override
+  String get genderTitle => '성별을 선택해주세요';
+
+  @override
+  String get genderMale => '남성';
+
+  @override
+  String get genderFemale => '여성';
+
+  @override
+  String get genderNonBinary => '논바이너리';
+
+  @override
+  String get genderPreferNotToSay => '공개 안 함';
+
+  @override
+  String get profilePhotoTitle => '프로필 사진 추가';
+
+  @override
+  String get profilePhotoDesc => '개인 맞춤형 경험을 제공합니다. 기기에만 저장됩니다.';
+
+  @override
+  String get photoPrivacyNote => '참고: 사진은 로컬에 저장되며 서버로 전송되지 않습니다.';
+
+  @override
+  String get removePhoto => '사진 삭제';
+
+  @override
+  String get takePhoto => '사진 촬영';
+
+  @override
+  String get chooseFromGallery => '갤러리에서 선택';
+
+  @override
+  String get bodyStatsTitle => '신체 치수';
+
+  @override
+  String get bodyStatsDesc => '칼로리 계산과 진행 상황 추적에 사용됩니다.';
+
+  @override
+  String get heightLabel => '키 (cm)';
+
+  @override
+  String get height => '키';
+
+  @override
+  String get weightLabel => '몸무게 (kg)';
+
+  @override
+  String get weight => '몸무게';
+
+  @override
+  String get metricUnit => '미터법';
+
+  @override
+  String get imperialUnit => '야드파운드법';
+
+  @override
+  String get fitnessGoalsTitle => '운동 목표';
+
+  @override
+  String get fitnessGoalsDesc => '달성하고자 하는 목표를 선택하세요.';
+
+  @override
+  String get fitnessGoalDesc => '달성하고자 하는 목표를 선택하세요.';
+
+  @override
+  String get goalLoseWeight => '체중 감량';
+
+  @override
+  String get goalBuildMuscle => '근육 증량';
+
+  @override
+  String get goalImproveEndurance => '지구력 향상';
+
+  @override
+  String get goalFlexibility => '유연성 향상';
 }

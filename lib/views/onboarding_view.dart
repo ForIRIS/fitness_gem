@@ -8,11 +8,16 @@ import '../domain/usecases/ai/get_api_key_usecase.dart';
 import '../domain/usecases/ai/set_api_key_usecase.dart';
 import '../domain/usecases/user/update_user_profile.dart';
 import 'onboarding/onboarding_intro_page.dart';
-import 'onboarding/onboarding_profile_page.dart';
+import 'onboarding/onboarding_basic_info_page.dart';
+import 'onboarding/onboarding_photo_page.dart';
+import 'onboarding/onboarding_body_stats_page.dart';
+import 'onboarding/onboarding_fitness_goals_page.dart';
 import 'onboarding/onboarding_exercise_page.dart';
 import 'onboarding/onboarding_guardian_page.dart';
+import 'onboarding/onboarding_privacy_page.dart';
+import 'dart:io';
+
 import 'ai_interview_view.dart';
-import '../widgets/ai_consultant_button.dart';
 import 'home_view.dart' as home;
 
 /// OnboardingView - Onboarding Screen
@@ -30,6 +35,11 @@ class _OnboardingViewState extends State<OnboardingView> {
   // Form Controllers
   final TextEditingController _nicknameController = TextEditingController();
   String _selectedAgeRange = '25~29';
+  String _selectedGender = 'prefer_not_to_say';
+  File? _profilePhoto;
+  double _height = 170.0;
+  double _weight = 70.0;
+
   final Set<String> _selectedInjuries = {};
   final TextEditingController _customInjuryController = TextEditingController();
   bool _showCustomInjury = false;
@@ -63,6 +73,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   // Feature settings
   bool _fallDetectionEnabled = false;
+  bool _privacyAgreed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +107,9 @@ class _OnboardingViewState extends State<OnboardingView> {
                     // Progress indicator (Maintain height to avoid jump)
                     SizedBox(
                       height: 100, // Increased height for more breathing room
-                      child: _currentPage > 0
+                      child:
+                          _currentPage >
+                              1 // Hide on Privacy (0) and Intro (1) ? Or just Privacy?
                           ? _buildProgressIndicator()
                           : null,
                     ),
@@ -108,19 +121,53 @@ class _OnboardingViewState extends State<OnboardingView> {
                         onPageChanged: (page) =>
                             setState(() => _currentPage = page),
                         children: [
-                          // 1. Intro Page (Replaces Permissions)
+                          // 1. Privacy Page (Index 0)
+                          OnboardingPrivacyPage(
+                            isAgreed: _privacyAgreed,
+                            onAgreementChanged: (val) =>
+                                setState(() => _privacyAgreed = val),
+                          ),
+
+                          // 2. Intro Page (Index 1)
                           OnboardingIntroPage(
                             key: const ValueKey('onboarding_intro'),
                             onNext: _nextPage,
                             onShowApiKeyDialog: _showApiKeyDialog,
                           ),
 
-                          // 2. Profile Page
-                          OnboardingProfilePage(
-                            key: const ValueKey('onboarding_profile'),
+                          // 3. Basic Info (Index 2)
+                          OnboardingBasicInfoPage(
+                            key: const ValueKey('onboarding_basic_info'),
+                            nicknameController: _nicknameController,
                             selectedAgeRange: _selectedAgeRange,
                             onAgePickerTap: _showAgePickerBottomSheet,
-                            nicknameController: _nicknameController,
+                            selectedGender: _selectedGender,
+                            onGenderSelected: (val) =>
+                                setState(() => _selectedGender = val),
+                          ),
+
+                          // 4. Photo (Index 3)
+                          OnboardingPhotoPage(
+                            key: const ValueKey('onboarding_photo'),
+                            selectedImage: _profilePhoto,
+                            onImageSelected: (file) =>
+                                setState(() => _profilePhoto = file),
+                          ),
+
+                          // 5. Body Stats (Index 4)
+                          OnboardingBodyStatsPage(
+                            key: const ValueKey('onboarding_body_stats'),
+                            height: _height,
+                            onHeightChanged: (val) =>
+                                setState(() => _height = val),
+                            weight: _weight,
+                            onWeightChanged: (val) =>
+                                setState(() => _weight = val),
+                          ),
+
+                          // 6. Fitness Goals (Index 5)
+                          OnboardingFitnessGoalsPage(
+                            key: const ValueKey('onboarding_fitness_goals'),
                             selectedInjuries: _selectedInjuries,
                             onInjurySelected: _onInjurySelected,
                             showCustomInjury: _showCustomInjury,
@@ -134,13 +181,13 @@ class _OnboardingViewState extends State<OnboardingView> {
                                 setState(() => _experienceLevel = val),
                           ),
 
-                          // 3. Exercise Page
+                          // 7. Exercise (Index 6)
                           OnboardingExercisePage(
                             key: const ValueKey('onboarding_exercise'),
                             exerciseController: _exerciseController,
                           ),
 
-                          // 4. Guardian Page
+                          // 8. Guardian (Index 7)
                           OnboardingGuardianPage(
                             key: const ValueKey('onboarding_guardian'),
                             fallDetectionEnabled: _fallDetectionEnabled,
@@ -212,6 +259,38 @@ class _OnboardingViewState extends State<OnboardingView> {
   // --- Helpers ---
 
   Widget _buildProgressIndicator() {
+    // We show progress for steps 3 to 8 (Index 2 to 7)
+    // Step 1 maps to Index 2 (Basic Info).
+    // Total steps shown in indicator: 6 (Basic Info, Photo, Body, Goals, Exercise, Guardian)
+
+    int currentStepIndex =
+        _currentPage - 1; // 1-based index for display (1 to 6)
+    int totalSteps = 6;
+
+    String stepTitle = '';
+    final l10n = AppLocalizations.of(context)!;
+
+    switch (_currentPage) {
+      case 2:
+        stepTitle = l10n.profileInfo ?? 'Basic Info';
+        break;
+      case 3:
+        stepTitle = l10n.profilePhotoTitle ?? 'Photo';
+        break;
+      case 4:
+        stepTitle = l10n.bodyStatsTitle ?? 'Body Stats';
+        break;
+      case 5:
+        stepTitle = l10n.fitnessGoal ?? 'Goals';
+        break;
+      case 6: // Exercise
+        stepTitle = 'Target Exercise'; // Need l10n?
+        break;
+      case 7: // Guardian
+        stepTitle = 'Guardian'; // Need l10n?
+        break;
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
       child: Column(
@@ -221,32 +300,27 @@ class _OnboardingViewState extends State<OnboardingView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                AppLocalizations.of(context)!.onboardingStepPreview(
-                  1,
-                  AppLocalizations.of(
-                    context,
-                  )!.profileInfo, // Use "Profile Information"
-                ),
+                l10n.onboardingStepPreview(currentStepIndex, stepTitle),
                 style: GoogleFonts.barlow(
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF1A237E),
                 ),
               ),
               Text(
-                "$_currentPage/3",
+                "$currentStepIndex/$totalSteps",
                 style: GoogleFonts.barlow(color: Colors.black45, fontSize: 12),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Row(
-            children: List.generate(3, (index) {
+            children: List.generate(totalSteps, (index) {
               return Expanded(
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   height: 6,
                   decoration: BoxDecoration(
-                    color: index < _currentPage
+                    color: index < currentStepIndex
                         ? const Color(0xFF5E35B1) // Deep Purple
                         : Colors.black12,
                     borderRadius: BorderRadius.circular(3),
@@ -261,68 +335,84 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   Widget _buildBottomControls() {
+    // 1. Privacy Page Controls (Index 0)
     if (_currentPage == 0) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        child: AnimatedOpacity(
+          opacity: _privacyAgreed ? 1.0 : 0.5,
+          duration: const Duration(milliseconds: 300),
+          child: SizedBox(
+            width: double.infinity,
+            child: _buildPrimaryButton(
+              onPressed: _privacyAgreed ? _nextPage : () {},
+              label: AppLocalizations.of(context)!.agreeAndStart,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // 2. Intro Page Controls (Index 1) - Handled internally by Intro Page
+    if (_currentPage == 1) {
       return const SizedBox.shrink();
     }
 
-    // Add AI Consultant button if on Guardian Page (last page)
-    if (_currentPage == 3) {
+    // 3. Last Page Global Controls (Guardian - Index 7)
+    if (_currentPage == 7) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildOutlineButton(
-                  onPressed: _previousPage,
-                  label: AppLocalizations.of(context)!.previous,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildPrimaryButton(
-                    onPressed: _onNextPressed,
-                    label: AppLocalizations.of(context)!.start,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // AI Consultant Button
+            // AI Consultant Button handled in Guardian Page specific UI if needed,
+            // but here we provide the main flow button
             SizedBox(
               width: double.infinity,
-              child: AIConsultantButton(
-                onPressed: () => _finishOnboarding(startAI: true),
+              child: _buildPrimaryButton(
+                onPressed: _completeOnboardingAndNavigate,
+                label:
+                    AppLocalizations.of(context)!.getStarted ?? 'Start Journey',
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              AppLocalizations.of(context)!.aiConsultantDescription,
-              style: GoogleFonts.barlow(color: Colors.black45, fontSize: 12),
-              textAlign: TextAlign.center,
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: _previousPage,
+              child: Text(
+                AppLocalizations.of(context)!.previous ?? 'Back',
+                style: GoogleFonts.barlow(
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
       );
     }
 
-    // Other pages
+    // 4. Standard Controls (Basic Info, Photo, Body, Goals, Exercise - Index 2-6)
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-      child: Row(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Previous button (Compact)
-          _buildOutlineButton(
-            onPressed: _previousPage,
-            label: AppLocalizations.of(context)!.previous,
-          ),
-          const SizedBox(width: 12),
-          // Next button (Extended)
-          Expanded(
+          SizedBox(
+            width: double.infinity,
             child: _buildPrimaryButton(
               onPressed: _onNextPressed,
-              label: AppLocalizations.of(context)!.next,
+              label: AppLocalizations.of(context)!.next ?? 'Next',
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: _previousPage,
+            child: Text(
+              AppLocalizations.of(context)!.previous ?? 'Back',
+              style: GoogleFonts.barlow(
+                color: Colors.black54,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -372,29 +462,6 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  Widget _buildOutlineButton({
-    required VoidCallback onPressed,
-    required String label,
-  }) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        foregroundColor: Colors.black54,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-          side: BorderSide(color: Colors.black12),
-        ),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.barlow(fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-
   void _nextPage() {
     FocusScope.of(context).unfocus();
     _pageController.nextPage(
@@ -412,12 +479,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   void _onNextPressed() {
-    // Start logic on last page (Skip AI)
-    if (_currentPage == 3) {
-      _finishOnboarding(startAI: false);
-    } else {
-      _nextPage();
-    }
+    _nextPage();
   }
 
   Future<void> _finishOnboarding({required bool startAI}) async {
@@ -506,42 +568,54 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   Future<void> _completeOnboardingAndNavigate() async {
-    // Create UserProfile with domain entity
-    final now = DateTime.now();
-    final profile = UserProfile(
-      id: 'user_${now.millisecondsSinceEpoch}', // Generate unique ID
-      nickname: _nicknameController.text.trim().isEmpty
-          ? 'Trainee'
-          : _nicknameController.text.trim(),
-      age:
-          int.tryParse(_selectedAgeRange.split('~').first) ??
-          25, // Parse age from range
-      gender: 'Not specified', // Default - not collected in onboarding
-      height: 170.0, // Default - not collected in onboarding
-      weight: 70.0, // Default - not collected in onboarding
-      fitnessLevel: _experienceLevel, // Maps to experienceLevel
-      targetExercise: _exerciseController.text.isEmpty
-          ? 'squat_01'
-          : _exerciseController.text,
-      healthConditions: _showCustomInjury
-          ? _customInjuryController.text
-          : _selectedInjuries.join(', '), // Maps to injuryHistory
-      goal: _showCustomGoal
-          ? _customGoalController.text
-          : _selectedGoals.join(', '),
-      guardianPhone: _guardianController.text.isEmpty
-          ? null
-          : _completeGuardianPhone ?? _guardianController.text,
+    // Parse Age
+    int age = 30; // Default
+    try {
+      if (_selectedAgeRange.contains('-')) {
+        age = int.parse(_selectedAgeRange.split('-')[0]);
+      } else if (_selectedAgeRange.contains('~')) {
+        age = int.parse(_selectedAgeRange.split('~')[0]);
+      } else {
+        age = int.parse(_selectedAgeRange.replaceAll(RegExp(r'[^0-9]'), ''));
+      }
+    } catch (_) {}
+
+    final goalsString = _selectedGoals.isNotEmpty
+        ? _selectedGoals.join(', ')
+        : 'None';
+    final injuriesString = _selectedInjuries.isNotEmpty
+        ? _selectedInjuries.join(', ')
+        : 'None';
+
+    // Construct UserProfile
+    final userProfile = UserProfile(
+      id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+      nickname: _nicknameController.text.isNotEmpty
+          ? _nicknameController.text
+          : 'Gemini User',
+      age: age + 2,
+      gender: _selectedGender,
+      height: _height,
+      weight: _weight,
+      profilePhotoPath: _profilePhoto?.path,
+      fitnessLevel: _experienceLevel,
+      targetExercise: _exerciseController.text.isNotEmpty
+          ? _exerciseController.text
+          : 'Full Body Workout',
+      healthConditions: injuriesString,
+      goal: goalsString,
+      userTier: 'free',
+      guardianPhone:
+          _completeGuardianPhone, // Ensure this variable exists or remove if unused
       fallDetectionEnabled: _fallDetectionEnabled,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
 
-    // Save profile to local storage using UseCase
     try {
       final updateUserProfile = getIt<UpdateUserProfileUseCase>();
-      debugPrint('Onboarding: Saving profile for ${profile.nickname}...');
-      final result = await updateUserProfile.execute(profile);
+      debugPrint('Onboarding: Saving profile for ${userProfile.nickname}...');
+      final result = await updateUserProfile.execute(userProfile);
 
       result.fold(
         (failure) => debugPrint(
@@ -555,7 +629,9 @@ class _OnboardingViewState extends State<OnboardingView> {
       debugPrint('Onboarding: Error saving profile: $e');
     }
 
-    debugPrint('Onboarding complete - Profile created: ${profile.nickname}');
+    debugPrint(
+      'Onboarding complete - Profile created: ${userProfile.nickname}',
+    );
 
     if (!mounted) return;
 
@@ -564,13 +640,14 @@ class _OnboardingViewState extends State<OnboardingView> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => AIInterviewView(userProfile: profile),
+          builder: (_) => AIInterviewView(userProfile: userProfile),
         ),
       );
     } else {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const home.HomeView()),
-        (route) => false,
+      // Go to Home
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const home.HomeView()),
       );
     }
   }

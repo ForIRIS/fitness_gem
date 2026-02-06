@@ -56,7 +56,7 @@ AI-powered home fitness coaching app that combines real-time device-side pose an
      ```bash
      GEMINI_API_KEY=your_key_here
      ```
-   - (For reviewers) You can also enter your key directly in the app's **Settings > Hackathon Edition** menu.
+   - (For reviewers) If you are testing on a simulator/emulator, ensure you have internet access.
 
 3. **Backend Setup (Optional)**
    ```bash

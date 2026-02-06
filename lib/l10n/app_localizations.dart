@@ -1711,6 +1711,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Location: {url}'**
   String emergencyLocationLink(String url);
+
+  /// No description provided for @privacyPolicyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicyTitle;
+
+  /// No description provided for @privacyPolicyIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Your privacy is our priority. Here is how we handle your data:'**
+  String get privacyPolicyIntro;
+
+  /// No description provided for @privacyLocalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Storage'**
+  String get privacyLocalTitle;
+
+  /// No description provided for @privacyLocalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric data (Height/Weight/Gender) stays on your phone.'**
+  String get privacyLocalDesc;
+
+  /// No description provided for @privacyGeminiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini Analysis'**
+  String get privacyGeminiTitle;
+
+  /// No description provided for @privacyGeminiDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Data is used for real-time analysis only. NOT used for training.'**
+  String get privacyGeminiDesc;
+
+  /// No description provided for @privacyMinimalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal Data'**
+  String get privacyMinimalTitle;
+
+  /// No description provided for @privacyMinimalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Email is strictly for Guardian push notifications. Deleted on account removal.'**
+  String get privacyMinimalDesc;
+
+  /// No description provided for @privacyAgreement.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agree to the Privacy Policy.'**
+  String get privacyAgreement;
+
+  /// No description provided for @genderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you identify?'**
+  String get genderTitle;
+
+  /// No description provided for @genderMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get genderMale;
+
+  /// No description provided for @genderFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get genderFemale;
+
+  /// No description provided for @genderNonBinary.
+  ///
+  /// In en, this message translates to:
+  /// **'Non-binary'**
+  String get genderNonBinary;
+
+  /// No description provided for @genderPreferNotToSay.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer not to say'**
+  String get genderPreferNotToSay;
+
+  /// No description provided for @profilePhotoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a Profile Photo'**
+  String get profilePhotoTitle;
+
+  /// No description provided for @profilePhotoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This helps personalize your experience. It remains on your device.'**
+  String get profilePhotoDesc;
+
+  /// No description provided for @photoPrivacyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: Your photo is stored locally and not shared with servers.'**
+  String get photoPrivacyNote;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Photo'**
+  String get removePhoto;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get takePhoto;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from Gallery'**
+  String get chooseFromGallery;
+
+  /// No description provided for @bodyStatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Measurements'**
+  String get bodyStatsTitle;
+
+  /// No description provided for @bodyStatsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Helps us calculate calories and track progress.'**
+  String get bodyStatsDesc;
+
+  /// No description provided for @heightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Height (cm)'**
+  String get heightLabel;
+
+  /// No description provided for @height.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get height;
+
+  /// No description provided for @weightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight (kg)'**
+  String get weightLabel;
+
+  /// No description provided for @weight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get weight;
+
+  /// No description provided for @metricUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric'**
+  String get metricUnit;
+
+  /// No description provided for @imperialUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Imperial'**
+  String get imperialUnit;
+
+  /// No description provided for @fitnessGoalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Fitness Goals'**
+  String get fitnessGoalsTitle;
+
+  /// No description provided for @fitnessGoalsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Select what you want to achieve.'**
+  String get fitnessGoalsDesc;
+
+  /// No description provided for @fitnessGoalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Select what you want to achieve.'**
+  String get fitnessGoalDesc;
+
+  /// No description provided for @goalLoseWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Lose Weight'**
+  String get goalLoseWeight;
+
+  /// No description provided for @goalBuildMuscle.
+  ///
+  /// In en, this message translates to:
+  /// **'Build Muscle'**
+  String get goalBuildMuscle;
+
+  /// No description provided for @goalImproveEndurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Improve Endurance'**
+  String get goalImproveEndurance;
+
+  /// No description provided for @goalFlexibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Flexibility'**
+  String get goalFlexibility;
 }
 
 class _AppLocalizationsDelegate

@@ -892,4 +892,115 @@ class AppLocalizationsEn extends AppLocalizations {
   String emergencyLocationLink(String url) {
     return 'Location: $url';
   }
+
+  @override
+  String get privacyPolicyTitle => 'Privacy Policy';
+
+  @override
+  String get privacyPolicyIntro =>
+      'Your privacy is our priority. Here is how we handle your data:';
+
+  @override
+  String get privacyLocalTitle => 'Local Storage';
+
+  @override
+  String get privacyLocalDesc =>
+      'Biometric data (Height/Weight/Gender) stays on your phone.';
+
+  @override
+  String get privacyGeminiTitle => 'Gemini Analysis';
+
+  @override
+  String get privacyGeminiDesc =>
+      'Data is used for real-time analysis only. NOT used for training.';
+
+  @override
+  String get privacyMinimalTitle => 'Minimal Data';
+
+  @override
+  String get privacyMinimalDesc =>
+      'Email is strictly for Guardian push notifications. Deleted on account removal.';
+
+  @override
+  String get privacyAgreement => 'I have read and agree to the Privacy Policy.';
+
+  @override
+  String get genderTitle => 'How do you identify?';
+
+  @override
+  String get genderMale => 'Male';
+
+  @override
+  String get genderFemale => 'Female';
+
+  @override
+  String get genderNonBinary => 'Non-binary';
+
+  @override
+  String get genderPreferNotToSay => 'Prefer not to say';
+
+  @override
+  String get profilePhotoTitle => 'Add a Profile Photo';
+
+  @override
+  String get profilePhotoDesc =>
+      'This helps personalize your experience. It remains on your device.';
+
+  @override
+  String get photoPrivacyNote =>
+      'Note: Your photo is stored locally and not shared with servers.';
+
+  @override
+  String get removePhoto => 'Remove Photo';
+
+  @override
+  String get takePhoto => 'Take Photo';
+
+  @override
+  String get chooseFromGallery => 'Choose from Gallery';
+
+  @override
+  String get bodyStatsTitle => 'Body Measurements';
+
+  @override
+  String get bodyStatsDesc => 'Helps us calculate calories and track progress.';
+
+  @override
+  String get heightLabel => 'Height (cm)';
+
+  @override
+  String get height => 'Height';
+
+  @override
+  String get weightLabel => 'Weight (kg)';
+
+  @override
+  String get weight => 'Weight';
+
+  @override
+  String get metricUnit => 'Metric';
+
+  @override
+  String get imperialUnit => 'Imperial';
+
+  @override
+  String get fitnessGoalsTitle => 'Your Fitness Goals';
+
+  @override
+  String get fitnessGoalsDesc => 'Select what you want to achieve.';
+
+  @override
+  String get fitnessGoalDesc => 'Select what you want to achieve.';
+
+  @override
+  String get goalLoseWeight => 'Lose Weight';
+
+  @override
+  String get goalBuildMuscle => 'Build Muscle';
+
+  @override
+  String get goalImproveEndurance => 'Improve Endurance';
+
+  @override
+  String get goalFlexibility => 'Flexibility';
 }

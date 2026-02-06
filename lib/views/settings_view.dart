@@ -17,6 +17,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'widgets/login_dialog.dart';
 import 'onboarding_view.dart'; // For navigation after delete
+import 'widgets/login_dialog.dart';
+import 'widgets/delete_confirmation_dialog.dart';
+import 'onboarding_view.dart'; // For navigation after delete
+import '../../domain/usecases/user/delete_user_profile.dart';
 
 /// SettingsView - Settings Screen
 class SettingsView extends ConsumerStatefulWidget {
@@ -162,44 +166,69 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   }
 
   Future<void> _deleteAccount() async {
-    final confirmed = await showDialog<bool>(
+    showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.deleteAccount),
-        content: Text(AppLocalizations.of(context)!.deleteAccountConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(AppLocalizations.of(context)!.deleteAccount),
-          ),
-        ],
+      builder: (context) => DeleteConfirmationDialog(
+        title: AppLocalizations.of(context)!.confirmDeleteTitle,
+        message: AppLocalizations.of(
+          context,
+        )!.confirmDeleteMessage(AppLocalizations.of(context)!.agreeKeyword),
+        confirmKeyword: AppLocalizations.of(context)!.agreeKeyword,
+        onConfirm: () async {
+          // Actual deletion logic
+          _performAccountDeletion();
+        },
       ),
     );
+  }
 
-    if (confirmed == true) {
-      try {
-        await FirebaseAuth.instance.currentUser?.delete();
-        if (mounted) {
-          // Navigate to Onboarding or restart app
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const OnboardingView()),
-            (route) => false,
+  Future<void> _performAccountDeletion() async {
+    if (!mounted) return;
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // 1. Delete Auth User (Triggers Cloud Function for data cleanup)
+        await user.delete();
+      }
+
+      // 3. Delete Local User Profile & Data
+      final deleteProfile = getIt<DeleteUserProfileUseCase>();
+      await deleteProfile.execute();
+
+      // 4. Clear ViewModel State
+      ref
+          .read(homeViewModelProvider)
+          .updateUserProfile(
+            UserProfile.empty(), // Passing empty to trigger updates if active
           );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Failed to delete account: $e"),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+
+      if (mounted) {
+        // Pop loading dialog
+        Navigator.of(context).pop();
+
+        // Navigate to Onboarding
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const OnboardingView()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Pop loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to delete account: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -1213,7 +1242,22 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () async {
-                    await _guardianService.revokeConnection(doc.id);
+                    showDialog(
+                      context: context,
+                      builder: (context) => DeleteConfirmationDialog(
+                        title: AppLocalizations.of(context)!.confirmDeleteTitle,
+                        message: AppLocalizations.of(context)!
+                            .confirmDeleteMessage(
+                              AppLocalizations.of(context)!.agreeKeyword,
+                            ),
+                        confirmKeyword: AppLocalizations.of(
+                          context,
+                        )!.agreeKeyword,
+                        onConfirm: () async {
+                          await _guardianService.revokeConnection(doc.id);
+                        },
+                      ),
+                    );
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,

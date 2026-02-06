@@ -17,6 +17,7 @@ class UserProfileModel {
   final String userTier;
   final String? guardianPhone;
   final String? guardianEmail;
+  final String? profilePhotoPath;
   final String? emergencyMethod;
   final bool fallDetectionEnabled;
   final String? interviewSummary;
@@ -42,6 +43,7 @@ class UserProfileModel {
     this.userTier = 'free',
     this.guardianPhone,
     this.guardianEmail,
+    this.profilePhotoPath,
     this.emergencyMethod,
     this.fallDetectionEnabled = false,
     this.interviewSummary,
@@ -70,6 +72,7 @@ class UserProfileModel {
       userTier: userTier,
       guardianPhone: guardianPhone,
       guardianEmail: guardianEmail,
+      profilePhotoPath: profilePhotoPath,
       emergencyMethod: emergencyMethod,
       fallDetectionEnabled: fallDetectionEnabled,
       interviewSummary: interviewSummary,
@@ -99,6 +102,7 @@ class UserProfileModel {
       userTier: entity.userTier,
       guardianPhone: entity.guardianPhone,
       guardianEmail: entity.guardianEmail,
+      profilePhotoPath: entity.profilePhotoPath,
       emergencyMethod: entity.emergencyMethod,
       fallDetectionEnabled: entity.fallDetectionEnabled,
       interviewSummary: entity.interviewSummary,
@@ -128,6 +132,7 @@ class UserProfileModel {
       userTier: map['userTier'] ?? 'free',
       guardianPhone: map['guardianPhone'],
       guardianEmail: map['guardianEmail'],
+      profilePhotoPath: map['profilePhotoPath'],
       emergencyMethod: map['emergencyMethod'],
       fallDetectionEnabled: map['fallDetectionEnabled'] ?? false,
       interviewSummary: map['interviewSummary'],
@@ -165,6 +170,7 @@ class UserProfileModel {
       'userTier': userTier,
       'guardianPhone': guardianPhone,
       'guardianEmail': guardianEmail,
+      'profilePhotoPath': profilePhotoPath,
       'emergencyMethod': emergencyMethod,
       'fallDetectionEnabled': fallDetectionEnabled,
       'interviewSummary': interviewSummary,

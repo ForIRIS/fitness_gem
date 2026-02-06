@@ -9,6 +9,7 @@ class UserProfile extends Equatable {
   final String gender;
   final double height;
   final double weight;
+  final String? profilePhotoPath; // Local path to profile photo
   final String fitnessLevel; // Also used as experienceLevel
   final String targetExercise;
   final String healthConditions; // Also used as injuryHistory
@@ -34,6 +35,7 @@ class UserProfile extends Equatable {
     required this.gender,
     required this.height,
     required this.weight,
+    this.profilePhotoPath,
     required this.fitnessLevel,
     required this.targetExercise,
     required this.healthConditions,
@@ -52,6 +54,23 @@ class UserProfile extends Equatable {
     required this.createdAt,
     required this.updatedAt,
   });
+
+  factory UserProfile.empty() {
+    return UserProfile(
+      id: '',
+      nickname: '',
+      age: 0,
+      gender: '',
+      height: 0,
+      weight: 0,
+      fitnessLevel: '',
+      targetExercise: '',
+      healthConditions: '',
+      goal: '',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
 
   // Convenience getters for compatibility with old model
   String get injuryHistory => healthConditions;
@@ -118,6 +137,7 @@ class UserProfile extends Equatable {
       'gender': gender,
       'height': height,
       'weight': weight,
+      'profilePhotoPath': profilePhotoPath,
       'fitnessLevel': fitnessLevel,
       'targetExercise': targetExercise,
       'healthConditions': healthConditions,
@@ -149,6 +169,7 @@ class UserProfile extends Equatable {
     String? gender,
     double? height,
     double? weight,
+    String? profilePhotoPath,
     String? fitnessLevel,
     String? targetExercise,
     String? healthConditions,
@@ -174,6 +195,7 @@ class UserProfile extends Equatable {
       gender: gender ?? this.gender,
       height: height ?? this.height,
       weight: weight ?? this.weight,
+      profilePhotoPath: profilePhotoPath ?? this.profilePhotoPath,
       fitnessLevel: fitnessLevel ?? this.fitnessLevel,
       targetExercise: targetExercise ?? this.targetExercise,
       healthConditions: healthConditions ?? this.healthConditions,
@@ -202,12 +224,15 @@ class UserProfile extends Equatable {
     gender,
     height,
     weight,
+    profilePhotoPath,
     fitnessLevel,
     targetExercise,
     healthConditions,
     goal,
     userTier,
     guardianPhone,
+    guardianEmail,
+    emergencyMethod,
     fallDetectionEnabled,
     interviewSummary,
     extractedDetails,
