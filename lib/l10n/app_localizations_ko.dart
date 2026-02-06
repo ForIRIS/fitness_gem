@@ -877,11 +877,33 @@ class AppLocalizationsKo extends AppLocalizations {
   String get privacyGeminiDesc => '데이터는 실시간 분석에만 사용되며, 학습용으로 사용되지 않습니다.';
 
   @override
+  String get guardianPushPurpose => '낙상 감지 알림 전송에만 사용됩니다.';
+
+  @override
   String get privacyMinimalTitle => '최소한의 데이터';
 
   @override
   String get privacyMinimalDesc =>
-      '이메일은 낙상 감지 시 보호자 알림 전송용으로만 사용되며, 탈퇴 시 즉시 삭제됩니다.';
+      '개인 정보는 제3자와 공유되지 않습니다. 이메일은 보호자 알림용으로만 사용되며, 탈퇴 시 즉시 삭제됩니다.';
+
+  @override
+  String get confirmDeleteTitle => '정말 진행하시겠습니까?';
+
+  @override
+  String confirmDeleteMessage(Object keyword) {
+    return '이 작업은 되돌릴 수 없습니다. 확인하려면 아래에 \"$keyword\"를 입력하세요.';
+  }
+
+  @override
+  String typeToConfirm(Object keyword) {
+    return '\"$keyword\" 입력';
+  }
+
+  @override
+  String get agreeKeyword => '동의';
+
+  @override
+  String get delete => '삭제';
 
   @override
   String get privacyAgreement => '개인정보 처리방침을 확인하였으며 동의합니다.';

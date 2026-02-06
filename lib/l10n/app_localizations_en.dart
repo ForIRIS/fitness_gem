@@ -915,11 +915,33 @@ class AppLocalizationsEn extends AppLocalizations {
       'Data is used for real-time analysis only. NOT used for training.';
 
   @override
+  String get guardianPushPurpose => 'Used ONLY for fall detection alerts.';
+
+  @override
   String get privacyMinimalTitle => 'Minimal Data';
 
   @override
   String get privacyMinimalDesc =>
-      'Email is strictly for Guardian push notifications. Deleted on account removal.';
+      'We prioritize your privacy. No personal data is shared with third parties. Your email is used SOLELY for Guardian notifications and is deleted immediately upon account withdrawal.';
+
+  @override
+  String get confirmDeleteTitle => 'Are you sure?';
+
+  @override
+  String confirmDeleteMessage(Object keyword) {
+    return 'This action cannot be undone. To confirm, please type \"$keyword\" below.';
+  }
+
+  @override
+  String typeToConfirm(Object keyword) {
+    return 'Type \"$keyword\"';
+  }
+
+  @override
+  String get agreeKeyword => 'agree';
+
+  @override
+  String get delete => 'Delete';
 
   @override
   String get privacyAgreement => 'I have read and agree to the Privacy Policy.';

@@ -1748,6 +1748,12 @@ abstract class AppLocalizations {
   /// **'Data is used for real-time analysis only. NOT used for training.'**
   String get privacyGeminiDesc;
 
+  /// No description provided for @guardianPushPurpose.
+  ///
+  /// In en, this message translates to:
+  /// **'Used ONLY for fall detection alerts.'**
+  String get guardianPushPurpose;
+
   /// No description provided for @privacyMinimalTitle.
   ///
   /// In en, this message translates to:
@@ -1757,8 +1763,38 @@ abstract class AppLocalizations {
   /// No description provided for @privacyMinimalDesc.
   ///
   /// In en, this message translates to:
-  /// **'Email is strictly for Guardian push notifications. Deleted on account removal.'**
+  /// **'We prioritize your privacy. No personal data is shared with third parties. Your email is used SOLELY for Guardian notifications and is deleted immediately upon account withdrawal.'**
   String get privacyMinimalDesc;
+
+  /// No description provided for @confirmDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure?'**
+  String get confirmDeleteTitle;
+
+  /// No description provided for @confirmDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone. To confirm, please type \"{keyword}\" below.'**
+  String confirmDeleteMessage(Object keyword);
+
+  /// No description provided for @typeToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Type \"{keyword}\"'**
+  String typeToConfirm(Object keyword);
+
+  /// No description provided for @agreeKeyword.
+  ///
+  /// In en, this message translates to:
+  /// **'agree'**
+  String get agreeKeyword;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
 
   /// No description provided for @privacyAgreement.
   ///

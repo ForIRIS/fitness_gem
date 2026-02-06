@@ -1,0 +1,99 @@
+name: Deploy Fitness Gem
+
+on:
+  workflow_dispatch:
+    # Manual trigger only - go to Actions tab and click "Run workflow"
+
+env:
+  FLUTTER_VERSION: '3.27.0'
+
+jobs:
+  # ===== Web Build & Firebase Deploy =====
+  deploy-web:
+    name: Deploy Web to Firebase
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build Web
+        run: flutter build web --release
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_FITNESS_GEM }}'
+          channelId: live
+          projectId: fitness-gem
+
+  # ===== Android APK Build =====
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build APK (Debug - No Signing)
+        run: flutter build apk --debug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fitness-gem-android
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+
+  # ===== macOS App Build =====
+  build-macos:
+    name: Build macOS App
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build macOS App
+        run: flutter build macos --release
+
+      - name: Zip macOS App
+        run: |
+          cd build/macos/Build/Products/Release
+          zip -r fitness-gem-macos.zip fitness_gem.app
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fitness-gem-macos
+          path: build/macos/Build/Products/Release/fitness-gem-macos.zip
+          retention-days: 7
