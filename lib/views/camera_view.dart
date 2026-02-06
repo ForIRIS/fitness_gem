@@ -21,6 +21,7 @@ import '../services/fall_detection_service.dart';
 import '../services/emergency_flow_manager.dart';
 import 'widgets/emergency_flow_overlay.dart';
 import '../widgets/glass_dialog.dart';
+import 'result_dashboard_view.dart';
 
 class CameraView extends StatefulWidget {
   final WorkoutCurriculum? curriculum;
@@ -615,16 +616,52 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   }
 
   Widget _buildCompletionDialog() {
+    // Aggregate session data for Storyteller
+    final state = _controller.state;
+    final exerciseName = state.currentTask?.title ?? 'Workout';
+    final totalReps = state.currentRep; // Total reps completed
+
+    // Calculate session stability (average form score as percentage)
+    // Using a default of 75 if no analysis available
+    final sessionStability = 75; // TODO: Get from actual session analysis
+
     return Container(
       color: Colors.black54,
       child: GlassDialog(
         title: 'Workout Complete! 🎉',
-        content: 'Great job!',
-        icon: const Icon(Icons.emoji_events, color: Colors.amber, size: 48),
+        content: 'View your performance insights',
+        icon: Hero(
+          tag: 'workout_complete',
+          child: const Icon(Icons.emoji_events, color: Colors.amber, size: 48),
+        ),
         actions: [
           GlassButton(
-            text: 'Home',
+            text: 'View Results',
             isPrimary: true,
+            onPressed: () {
+              // Navigate to ResultDashboardView with session data
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      ResultDashboardView(
+                        userProfile: widget.userProfile,
+                        exerciseName: exerciseName,
+                        sessionStability: sessionStability,
+                        totalReps: totalReps,
+                        primaryFault: null, // TODO: Get from session analysis
+                      ),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                  transitionDuration: const Duration(milliseconds: 400),
+                ),
+              );
+            },
+          ),
+          GlassButton(
+            text: 'Home',
+            isPrimary: false,
             onPressed: () {
               Navigator.pop(context);
               Navigator.pop(context);

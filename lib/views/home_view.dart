@@ -164,6 +164,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header - Skeleton/Content handled in HomeHeader if needed,
+                // or we can wrap it here. For now assuming HomeHeader handles null profile gracefully
+                // or we can add a ShimmerHeader wrapper later.
+                // But user asked for Profile First -> so we just show it.
                 HomeHeader(
                   userProfile: viewModel.userProfile,
                   isCompleted: viewModel.isTodayCompleted,
@@ -184,22 +188,28 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   },
                 ),
                 const SizedBox(height: 16),
-                DailyStatsCard(
-                  curriculum: viewModel.todayCurriculum,
-                  isCompleted: viewModel.isTodayCompleted,
-                  onViewDetail: () {
-                    if (viewModel.todayCurriculum != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => WorkoutDetailView(
-                            curriculum: viewModel.todayCurriculum!,
+
+                // Today's Workout Card - Granular Loading
+                if (viewModel.isCurriculumLoading)
+                  const ShimmerDailyStats()
+                else
+                  DailyStatsCard(
+                    curriculum: viewModel.todayCurriculum,
+                    isCompleted: viewModel.isTodayCompleted,
+                    onViewDetail: () {
+                      if (viewModel.todayCurriculum != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WorkoutDetailView(
+                              curriculum: viewModel.todayCurriculum!,
+                            ),
                           ),
-                        ),
-                      );
-                    }
-                  },
-                ),
+                        );
+                      }
+                    },
+                  ),
+
                 if (viewModel.isTodayCompleted) ...[
                   const SizedBox(height: 24),
                   TomorrowWorkoutCard(curriculum: viewModel.tomorrowCurriculum),
@@ -225,11 +235,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     child: Column(
                       children: [
                         const SizedBox(height: 16),
-                        viewModel.isLoading || viewModel.isHotCategoriesLoading
+                        // Hot Categories - Granular Loading
+                        viewModel.isHotCategoriesLoading
                             ? const ShimmerCategoryChips()
                             : CategoryChips(
                                 categories: viewModel.hotCategories,
-                                isLoading: viewModel.isHotCategoriesLoading,
+                                isLoading: false,
                                 selectedCategory: viewModel.selectedCategory,
                                 onCategorySelected: (category) {
                                   viewModel.selectCategory(category);
@@ -239,7 +250,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 0),
                           child:
-                              viewModel.isLoading || viewModel.isFeaturedLoading
+                              // Featured Program - Granular Loading
+                              viewModel.isFeaturedLoading
                               ? const ShimmerFeaturedProgram()
                               : FeaturedProgramCard(
                                   program: viewModel.featuredProgram,
@@ -284,6 +296,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
   }
 
   Widget _buildFloatingBottomNav() {
+    final viewModel = ref.watch(homeViewModelProvider);
+    // Disable buttons if curriculum is loading or null (except profile loading shouldn't block, theoretically)
+    // But "Today's Workout" data is needed for start workout.
+    final isDisabled =
+        viewModel.isCurriculumLoading || viewModel.todayCurriculum == null;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -302,71 +320,78 @@ class _HomeViewState extends ConsumerState<HomeView> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-            child: _buildNavPill(
-              AppLocalizations.of(context)!.startWorkout,
-              onTap: _startWorkout,
-            ),
-          ),
-          const SizedBox(width: 8),
-          _buildNavIcon(
-            Icons.auto_awesome,
-            AppLocalizations.of(context)!.aiChat,
-            false,
-            onTap: _openAIChat,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavPill(String text, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-          ),
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.fitness_center, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              text,
-              style: GoogleFonts.outfit(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            child: GestureDetector(
+              onTap: isDisabled ? null : _startWorkout,
+              child: Opacity(
+                opacity: isDisabled ? 0.5 : 1.0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                    ),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (isDisabled && viewModel.isCurriculumLoading)
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      else
+                        const Icon(
+                          Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isDisabled
+                            ? (viewModel.isCurriculumLoading
+                                  ? 'Loading...'
+                                  : 'Unavailable')
+                            : AppLocalizations.of(context)!.startWorkout,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavIcon(
-    IconData icon,
-    String label,
-    bool isActive, {
-    VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: isActive
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: isDisabled ? null : _openAIChat,
+            child: Opacity(
+              opacity: isDisabled ? 0.5 : 1.0,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.brightMarigold,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

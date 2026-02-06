@@ -6,9 +6,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'squat_01',
     title: 'Box Squat',
-    description: 'Box squat is improving form, depth control, and safety',
+    description:
+        'A fundamental strength movement that utilizes a box to ensure consistent depth and improve posterior chain activation.',
     advice:
-        'Drive up by pushing your heels into the ground and pushing your hips forward, keeping your core engaged.',
+        'Sit back onto the box while maintaining a neutral spine. Drive through your mid-foot to return to a standing position, squeezing your glutes at the top.',
     thumbnail: 'assets/images/workouts/squat_01.png',
     readyPoseImageUrl: 'assets/images/workouts/squat_ready.png',
     reps: 15,
@@ -20,8 +21,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'squat_02',
     title: 'Wide Stance Squat',
-    description: 'Squat with a wider stance',
-    advice: 'Focus on your inner thighs.',
+    description:
+        'A squat variation that emphasizes the adductors and glutes by widening the base of support. Increases hip mobility and lateral stability.',
+    advice:
+        'Keep your chest upright and knees tracking over your toes. Focus on pushing the floor away as you ascend to engage your inner thighs.',
     thumbnail: 'assets/images/workouts/squat_02.png',
     readyPoseImageUrl: 'assets/images/workouts/squat_ready.png',
     reps: 12,
@@ -33,8 +36,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'squat_03',
     title: 'Split Squat',
-    description: 'One-legged squat with balance maintenance',
-    advice: 'Hold one leg and maintain balance.',
+    description:
+        'A unilateral lower body exercise that targets the quadriceps and glutes while challenging balance and core stability.',
+    advice:
+        'Maintain an upright torso and ensure your front knee stays aligned with your ankle. Control the descent to maximize time under tension.',
     thumbnail: 'assets/images/workouts/squat_03.png',
     readyPoseImageUrl: 'assets/images/workouts/squat_ready.png',
     reps: 8,
@@ -46,8 +51,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'squat_04',
     title: 'Jump Squat',
-    description: 'Explosive squat movement for power.',
-    advice: 'Explode upwards and land softly.',
+    description:
+        'A high-intensity plyometric movement designed to develop explosive power in the lower body and enhance reactive strength.',
+    advice:
+        'Explode upwards and land softly by rolling from toe to heel, immediately absorbing the impact through your hips and knees.',
     thumbnail: 'assets/images/workouts/squat_04.png',
     readyPoseImageUrl: 'assets/images/workouts/squat_ready.png',
     reps: 8,
@@ -61,8 +68,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'push_01',
     title: 'Wall Push-up',
-    description: 'Push-up against a wall',
-    advice: 'Keep your body in a straight line.',
+    description:
+        'A beginner-friendly upper body exercise focusing on the pectorals, deltoids, and triceps with reduced gravitational load.',
+    advice:
+        'Keep your elbows at a 45-degree angle from your body and maintain a rigid core to protect your lumbar spine.',
     thumbnail: 'assets/images/workouts/push_01.png',
     readyPoseImageUrl: 'assets/images/workouts/pushup_ready.png',
     reps: 15,
@@ -74,8 +83,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'push_02',
     title: 'Knee Push-up',
-    description: 'Push-up from your knees',
-    advice: 'Keep your core engaged.',
+    description:
+        'A progression toward the standard push-up that builds horizontal pressing strength while reducing the load on the lower body.',
+    advice:
+        'Maintain a straight line from your head to your knees. Engage your core and focus on pushing the floor away with your palms.',
     thumbnail: 'assets/images/workouts/push_02.png',
     readyPoseImageUrl: 'assets/images/workouts/pushup_ready.png',
     reps: 12,
@@ -87,8 +98,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'push_03',
     title: 'Standard Push-up',
-    description: 'Basic push-up',
-    advice: 'Maintain a straight line from head to heels.',
+    description:
+        'The gold standard for upper body pressing strength. Targets the chest, shoulders, and triceps while demanding significant core stability.',
+    advice:
+        'Engage your glutes and quads to keep your body perfectly linear. Lower yourself until your chest nearly touches the floor for full range of motion.',
     thumbnail: 'assets/images/workouts/push_03.png',
     readyPoseImageUrl: 'assets/images/workouts/pushup_ready.png',
     reps: 10,
@@ -102,8 +115,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'core_01',
     title: 'Elbow Plank',
-    description: 'Plank on your elbows',
-    advice: 'Keep your back flat.',
+    description:
+        'An isometric core exercise that builds endurance in the abdominals and obliques. Essential for spinal health and functional stability.',
+    advice:
+        'Draw your navel toward your spine and tuck your pelvis slightly. Avoid letting your hips sag or hike up.',
     thumbnail: 'assets/images/workouts/core_01.png',
     readyPoseImageUrl: 'assets/images/workouts/plank_ready.png',
     reps: 0,
@@ -117,11 +132,12 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'core_02',
     title: 'High Plank',
-    description: 'Plank on your hands',
-    advice: 'Keep your body in a straight line.',
+    description:
+        'An isometric hold that integrates upper body stability with core endurance. A fundamental position for advanced gymnastic movements.',
+    advice:
+        'Stack your shoulders directly over your wrists and protract your shoulder blades slightly. Squeeze your glutes for maximum tension.',
     thumbnail: 'assets/images/workouts/core_02.png',
-    readyPoseImageUrl:
-        'assets/images/workouts/pushup_ready.png', // High plank is same as pushup ready
+    readyPoseImageUrl: 'assets/images/workouts/pushup_ready.png',
     reps: 0,
     sets: 3,
     timeoutSec: 30,
@@ -133,8 +149,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'core_bird_dog',
     title: 'Bird-Dog',
-    description: 'Core stability and balance.',
-    advice: 'Keep your hips level and core tight.',
+    description:
+        'A dynamic stability exercise that enhances crossbody coordination and strengthens the erector spinae.',
+    advice:
+        'Keep your hips and shoulders parallel to the floor. Focus on length rather than height when extending your limbs.',
     thumbnail: 'assets/images/workouts/core_03.png',
     readyPoseImageUrl: 'assets/images/workouts/birddog_ready.png',
     reps: 10,
@@ -146,8 +164,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'core_glute_bridge',
     title: 'Glute Bridge',
-    description: 'Strengthen your glutes and hamstrings.',
-    advice: 'Squeeze your glutes at the top.',
+    description:
+        'An isolation movement targeting the gluteus maximus and hamstrings. Critical for hip extension strength.',
+    advice:
+        'Drive through your heels and pause at the top of the movement. Avoid over-arching your lower back.',
     thumbnail: 'assets/images/workouts/core_04.png',
     readyPoseImageUrl: 'assets/images/workouts/glutebridge_ready.png',
     reps: 15,
@@ -161,8 +181,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'lunge_01',
     title: 'Static Lunge',
-    description: 'Stationary lunge',
-    advice: 'Keep your front knee aligned over your ankle.',
+    description:
+        'A unilateral movement that focuses on the quadriceps and glutes. Improves stability and prepares for dynamic lunging patterns.',
+    advice:
+        'Drop your back knee straight down toward the floor. Both knees should form approximately 90-degree angles at the bottom.',
     thumbnail: 'assets/images/workouts/lunge_01.png',
     readyPoseImageUrl: 'assets/images/workouts/lunge_ready.png',
     reps: 12,
@@ -174,8 +196,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'lunge_02',
     title: 'Forward Lunge',
-    description: 'Stepping forward lunge',
-    advice: 'Step forward and lower your hips.',
+    description:
+        'A dynamic exercise that challenges deceleration and balance. Enhances functional movement patterns used in daily activities.',
+    advice:
+        'Step forward decisively and maintain a vertical shin. Push back explosively to the starting position.',
     thumbnail: 'assets/images/workouts/lunge_02.png',
     readyPoseImageUrl: 'assets/images/workouts/lunge_ready.png',
     reps: 12,
@@ -187,8 +211,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'lunge_03',
     title: 'Walking Lunge',
-    description: 'Lunge while walking',
-    advice: 'Maintain balance as you move forward.',
+    description:
+        'An advanced progression that combines lower body strength with continuous balance and coordination.',
+    advice:
+        'Keep your core engaged to prevent torso sway. Focus on a controlled, rhythmic pace as you move forward.',
     thumbnail: 'assets/images/workouts/lunge_03.png',
     readyPoseImageUrl: 'assets/images/workouts/lunge_ready.png',
     reps: 10,
@@ -202,8 +228,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'burpee_01',
     title: 'Classic Burpee',
-    description: 'Full body explosive movement.',
-    advice: 'Keep a steady rhythm and land softly.',
+    description:
+        'A full-body metabolic exercise that combines strength, power, and cardiovascular endurance.',
+    advice:
+        'Maintain a tight core during the plank phase to protect your back. Explode into the jump and reach for the ceiling.',
     thumbnail: 'assets/images/workouts/squat_04.png',
     readyPoseImageUrl: 'assets/images/workouts/burpee_ready.png',
     reps: 10,
@@ -217,8 +245,10 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   WorkoutTaskModel(
     id: 'shoulder_01',
     title: 'Lateral Raise',
-    description: 'Sculpt your shoulders with side raises.',
-    advice: 'Control the weight on the way down.',
+    description:
+        'An isolation exercise specifically targeting the medial deltoids to build shoulder width and definition.',
+    advice:
+        'Lift with your elbows, not your hands. Keep a slight bend in your arms and control the eccentric (downward) phase.',
     thumbnail: 'assets/images/workouts/push_01.png',
     readyPoseImageUrl: 'assets/images/workouts/lateral_ready.png',
     reps: 12,

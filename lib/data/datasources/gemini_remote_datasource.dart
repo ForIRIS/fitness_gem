@@ -46,4 +46,17 @@ abstract class GeminiRemoteDataSource {
     required ChatSession chatSession,
     required String message,
   });
+
+  /// Generate post-workout summary using the Storyteller agent
+  Future<Map<String, dynamic>?> generatePostWorkoutSummary({
+    required String apiKey,
+    required String systemInstruction,
+    required String userLanguage,
+    required String exerciseName,
+    required int initialStability,
+    required int initialMobility,
+    required int sessionStability,
+    required int totalReps,
+    String? primaryFaultDetected,
+  });
 }

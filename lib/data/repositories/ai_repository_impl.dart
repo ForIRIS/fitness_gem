@@ -34,6 +34,7 @@ class AIRepositoryImpl implements AIRepository {
   String _interviewSystemInstruction = '';
   String _curriculumSystemInstruction = '';
   String _baselineSystemInstruction = '';
+  String _storytellerSystemInstruction = '';
   bool _instructionsLoaded = false;
 
   AIRepositoryImpl({
@@ -83,6 +84,9 @@ class AIRepositoryImpl implements AIRepository {
       );
       _baselineSystemInstruction = await rootBundle.loadString(
         'assets/prompts/baseline_analyst_system_instruction.md',
+      );
+      _storytellerSystemInstruction = await rootBundle.loadString(
+        'assets/prompts/analysis_visualization_system_instruction.md',
       );
       _instructionsLoaded = true;
     } catch (e) {
@@ -580,6 +584,38 @@ Please start the interview in English.
         );
       }
       return Left(ServerFailure('Interview Error: $e'));
+    }
+  }
+
+  // ============ Post-Workout Summary (Storyteller) ============
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>?>> generatePostWorkoutSummary({
+    required String userLanguage,
+    required String exerciseName,
+    required int initialStability,
+    required int initialMobility,
+    required int sessionStability,
+    required int totalReps,
+    String? primaryFaultDetected,
+  }) async {
+    await _ensureInitialized();
+    try {
+      final result = await remoteDataSource.generatePostWorkoutSummary(
+        apiKey: _apiKey,
+        systemInstruction: _storytellerSystemInstruction,
+        userLanguage: userLanguage,
+        exerciseName: exerciseName,
+        initialStability: initialStability,
+        initialMobility: initialMobility,
+        sessionStability: sessionStability,
+        totalReps: totalReps,
+        primaryFaultDetected: primaryFaultDetected,
+      );
+
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure('Post-Workout Summary Failed: $e'));
     }
   }
 

@@ -47,6 +47,7 @@ import '../../domain/usecases/ai/analyze_video_session_usecase.dart';
 import '../../domain/usecases/ai/get_api_key_usecase.dart';
 import '../../domain/usecases/ai/set_api_key_usecase.dart';
 import '../../domain/usecases/ai/analyze_baseline_video_usecase.dart';
+import '../../domain/usecases/ai/generate_post_workout_summary_usecase.dart';
 
 import '../../domain/repositories/ai_repository.dart';
 import '../../data/repositories/ai_repository_impl.dart';
@@ -180,6 +181,7 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton(() => GetApiKeyUseCase(getIt()));
   getIt.registerLazySingleton(() => SetApiKeyUseCase(getIt()));
   getIt.registerLazySingleton(() => AnalyzeBaselineVideoUseCase(getIt()));
+  getIt.registerLazySingleton(() => GeneratePostWorkoutSummaryUseCase(getIt()));
 
   // ============ Use Cases - Session ============
 

@@ -6,9 +6,11 @@ import '../domain/entities/workout_session.dart';
 import '../domain/usecases/session/get_weekly_sessions_usecase.dart';
 import '../domain/usecases/session/get_monthly_sessions_usecase.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_theme.dart';
 import 'widgets/shareable_card_widget.dart';
 
 /// Statistics View - Shows workout progress visualizations
+/// Polished to match HomeView style (Light theme, shadows, Outfit font)
 class StatisticsView extends StatefulWidget {
   const StatisticsView({super.key});
 
@@ -65,27 +67,60 @@ class _StatisticsViewState extends State<StatisticsView>
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
+        toolbarHeight: 84.0, // Increased by 1.5x
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          color: AppTheme.textPrimary,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(
           l10n.progress,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 24),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            color: AppTheme.textPrimary,
+          ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.greenAccent,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.grey,
-          tabs: const [
-            Tab(text: 'Weekly'),
-            Tab(text: 'Monthly'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                color: AppTheme.primary,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              labelColor: Colors.white,
+              unselectedLabelColor: AppTheme.textSecondary,
+              labelStyle: GoogleFonts.outfit(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              dividerColor: Colors.transparent,
+              tabs: const [
+                Tab(text: 'Weekly'),
+                Tab(text: 'Monthly'),
+              ],
+            ),
+          ),
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.primary),
+            )
           : TabBarView(
               controller: _tabController,
               children: [_buildWeeklyView(), _buildMonthlyView()],
@@ -95,7 +130,7 @@ class _StatisticsViewState extends State<StatisticsView>
 
   Widget _buildWeeklyView() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -111,7 +146,7 @@ class _StatisticsViewState extends State<StatisticsView>
               style: GoogleFonts.outfit(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: AppTheme.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
@@ -127,7 +162,7 @@ class _StatisticsViewState extends State<StatisticsView>
 
   Widget _buildMonthlyView() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -138,6 +173,21 @@ class _StatisticsViewState extends State<StatisticsView>
           _buildSessionsList(_monthlySessions),
         ],
       ),
+    );
+  }
+
+  // Helper method for consistent container style
+  BoxDecoration _getContainerDecoration() {
+    return BoxDecoration(
+      color: AppTheme.surface,
+      borderRadius: BorderRadius.circular(24),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
     );
   }
 
@@ -157,30 +207,44 @@ class _StatisticsViewState extends State<StatisticsView>
         : 0.0;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        color: AppTheme.primary, // Using primary color for weekly summary
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primary.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        gradient: const LinearGradient(
           colors: [
-            Colors.greenAccent.withValues(alpha: 0.2),
-            Colors.blueAccent.withValues(alpha: 0.2),
-          ],
+            AppTheme.primary,
+            Color(0xFF7F00FF),
+          ], // Matching brand gradient
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.local_fire_department,
-                color: Colors.orange,
-                size: 28,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.local_fire_department_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text(
                 'This Week',
                 style: GoogleFonts.outfit(
@@ -191,24 +255,27 @@ class _StatisticsViewState extends State<StatisticsView>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildStatItem(
                 'Workouts',
                 totalWorkouts.toString(),
-                Icons.fitness_center,
+                Icons.fitness_center_rounded,
+                isWhite: true,
               ),
               _buildStatItem(
                 'Duration',
                 '${(totalDuration / 60).ceil()} min',
-                Icons.timer,
+                Icons.timer_rounded,
+                isWhite: true,
               ),
               _buildStatItem(
                 'Avg Form',
                 '${(avgFormScore * 100).toStringAsFixed(0)}%',
-                Icons.analytics,
+                Icons.analytics_rounded,
+                isWhite: true,
               ),
             ],
           ),
@@ -229,30 +296,41 @@ class _StatisticsViewState extends State<StatisticsView>
     final totalWorkouts = _monthlySessions.length;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
+        color: AppTheme.accent,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.accent.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
         gradient: LinearGradient(
-          colors: [
-            Colors.purpleAccent.withValues(alpha: 0.2),
-            Colors.blueAccent.withValues(alpha: 0.2),
-          ],
+          colors: [AppTheme.accent, Colors.blue.shade600],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.calendar_month,
-                color: Colors.purpleAccent,
-                size: 28,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.calendar_month_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text(
                 'This Month',
                 style: GoogleFonts.outfit(
@@ -263,19 +341,21 @@ class _StatisticsViewState extends State<StatisticsView>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildStatItem(
                 'Total Workouts',
                 totalWorkouts.toString(),
-                Icons.fitness_center,
+                Icons.fitness_center_rounded,
+                isWhite: true,
               ),
               _buildStatItem(
                 'Total Time',
                 '${(totalDuration / 60).ceil()} min',
-                Icons.timer,
+                Icons.timer_rounded,
+                isWhite: true,
               ),
             ],
           ),
@@ -286,24 +366,32 @@ class _StatisticsViewState extends State<StatisticsView>
 
   Widget _buildEmptyInsightCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
-      ),
+      padding: const EdgeInsets.all(24),
+      decoration: _getContainerDecoration(),
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.info_outline, color: Colors.grey[600], size: 48),
+            Icon(
+              Icons.info_outline_rounded,
+              color: AppTheme.textSecondary,
+              size: 40,
+            ),
             const SizedBox(height: 12),
             Text(
               'No workouts recorded yet',
-              style: GoogleFonts.outfit(fontSize: 16, color: Colors.grey[500]),
+              style: GoogleFonts.outfit(
+                fontSize: 16,
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               'Complete a workout to see your stats!',
-              style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey[600]),
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+              ),
             ),
           ],
         ),
@@ -311,33 +399,55 @@ class _StatisticsViewState extends State<StatisticsView>
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon) {
+  Widget _buildStatItem(
+    String label,
+    String value,
+    IconData icon, {
+    bool isWhite = false,
+  }) {
+    final textColor = isWhite ? Colors.white : AppTheme.textPrimary;
+    final iconColor = isWhite
+        ? Colors.white.withOpacity(0.8)
+        : AppTheme.primary;
+    final subTextColor = isWhite
+        ? Colors.white.withOpacity(0.7)
+        : AppTheme.textSecondary;
+
     return Column(
       children: [
-        Icon(icon, color: Colors.greenAccent, size: 24),
+        Icon(icon, color: iconColor, size: 24),
         const SizedBox(height: 8),
         Text(
           value,
           style: GoogleFonts.outfit(
-            fontSize: 20,
+            fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: textColor,
           ),
         ),
         Text(
           label,
-          style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey[400]),
+          style: GoogleFonts.outfit(fontSize: 12, color: subTextColor),
         ),
       ],
     );
   }
 
   Widget _buildWeeklyChart() {
-    // Group sessions by day of week
+    // Group sessions by day of week - Calendar Week (Mon -> Sun)
     final now = DateTime.now();
+
+    // Calculate start of this week (Monday)
+    // weekday: Mon=1 ... Sun=7
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+
+    // Generate dates for Mon-Sun of THIS week
     final daysOfWeek = List.generate(7, (i) {
-      return now.subtract(Duration(days: 6 - i));
+      return startOfWeek.add(Duration(days: i));
     });
+
+    // Today's index (0=Mon, 6=Sun)
+    final todayIndex = now.weekday - 1;
 
     final dataByDay = <int, int>{};
     for (final session in _weeklySessions) {
@@ -354,20 +464,33 @@ class _StatisticsViewState extends State<StatisticsView>
     }
 
     return Container(
-      height: 200,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
-      ),
+      height: 240, // Slightly taller for breathing room
+      padding: const EdgeInsets.all(24),
+      decoration: _getContainerDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Duration (minutes)',
-            style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey[400]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Weekly Activity',
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              Text(
+                'Minutes',
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Expanded(
             child: BarChart(
               BarChartData(
@@ -377,16 +500,35 @@ class _StatisticsViewState extends State<StatisticsView>
                     : (dataByDay.values.reduce((a, b) => a > b ? a : b) * 1.2)
                           .toDouble(),
                 barGroups: List.generate(7, (i) {
-                  final isToday = i == 6;
+                  final isToday = i == todayIndex;
+                  final isFutureDay = i > todayIndex;
+                  final isPastDay = i < todayIndex;
+                  final showBar = !isFutureDay;
+
                   return BarChartGroupData(
                     x: i,
                     barRods: [
                       BarChartRodData(
-                        toY: (dataByDay[i] ?? 0).toDouble(),
-                        color: isToday ? Colors.greenAccent : Colors.blueAccent,
-                        width: 16,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(4),
+                        toY: showBar ? (dataByDay[i] ?? 0).toDouble() : 0,
+                        gradient: isToday
+                            ? AppTheme.primaryGradient
+                            : (isPastDay
+                                  ? LinearGradient(
+                                      colors: [
+                                        AppTheme.accent.withOpacity(0.7),
+                                        AppTheme.accent,
+                                      ],
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                    )
+                                  : null),
+                        color: isToday || isPastDay ? null : Colors.transparent,
+                        width: 12, // Sleeker bars
+                        borderRadius: BorderRadius.circular(6),
+                        backDrawRodData: BackgroundBarChartRodData(
+                          show: showBar && (dataByDay[i] ?? 0) == 0,
+                          toY: 6, // Subtle "empty" indicator
+                          color: Colors.grey.withOpacity(0.1),
                         ),
                       ),
                     ],
@@ -398,15 +540,28 @@ class _StatisticsViewState extends State<StatisticsView>
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-                        final dayIndex = daysOfWeek[value.toInt()].weekday - 1;
+                        final days = [
+                          'Mon',
+                          'Tue',
+                          'Wed',
+                          'Thu',
+                          'Fri',
+                          'Sat',
+                          'Sun',
+                        ];
+                        final isToday = value.toInt() == todayIndex;
                         return Padding(
-                          padding: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.only(top: 10),
                           child: Text(
-                            days[dayIndex],
+                            days[value.toInt()],
                             style: GoogleFonts.outfit(
-                              color: Colors.grey[500],
-                              fontSize: 12,
+                              color: isToday
+                                  ? AppTheme.primary
+                                  : AppTheme.textSecondary,
+                              fontSize: 10,
+                              fontWeight: isToday
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
                             ),
                           ),
                         );
@@ -423,7 +578,14 @@ class _StatisticsViewState extends State<StatisticsView>
                     sideTitles: SideTitles(showTitles: false),
                   ),
                 ),
-                gridData: const FlGridData(show: false),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: Colors.grey.withOpacity(0.05),
+                    strokeWidth: 1,
+                  ),
+                ),
                 borderData: FlBorderData(show: false),
               ),
             ),
@@ -449,39 +611,49 @@ class _StatisticsViewState extends State<StatisticsView>
     });
 
     return Container(
-      height: 200,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
-      ),
+      height: 240,
+      padding: const EdgeInsets.all(24),
+      decoration: _getContainerDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Workout Frequency (per week)',
-            style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey[400]),
+            'Weekly Frequency',
+            style: GoogleFonts.outfit(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Expanded(
             child: LineChart(
               LineChartData(
-                gridData: const FlGridData(show: false),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: Colors.grey.withOpacity(0.05),
+                    strokeWidth: 1,
+                  ),
+                ),
                 titlesData: FlTitlesData(
                   show: true,
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
+                      interval: 1,
                       getTitlesWidget: (value, meta) {
-                        final weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                        final weeks = ['W1', 'W2', 'W3', 'W4'];
                         if (value.toInt() >= 0 && value.toInt() < 4) {
                           return Padding(
-                            padding: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.only(top: 10),
                             child: Text(
                               weeks[value.toInt()],
                               style: GoogleFonts.outfit(
-                                color: Colors.grey[500],
+                                color: AppTheme.textSecondary,
                                 fontSize: 10,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           );
@@ -505,12 +677,30 @@ class _StatisticsViewState extends State<StatisticsView>
                   LineChartBarData(
                     spots: spots,
                     isCurved: true,
-                    color: Colors.purpleAccent,
-                    barWidth: 3,
-                    dotData: const FlDotData(show: true),
+                    curveSmoothness: 0.4,
+                    color: AppTheme.primary,
+                    barWidth: 4,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) =>
+                          FlDotCirclePainter(
+                            radius: 5,
+                            color: Colors.white,
+                            strokeWidth: 3,
+                            strokeColor: AppTheme.primary,
+                          ),
+                    ),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: Colors.purpleAccent.withValues(alpha: 0.2),
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.primary.withOpacity(0.2),
+                          AppTheme.primary.withOpacity(0.0),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
                     ),
                   ),
                 ],
@@ -531,11 +721,11 @@ class _StatisticsViewState extends State<StatisticsView>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Recent Sessions',
+          'History',
           style: GoogleFonts.outfit(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: AppTheme.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -548,22 +738,19 @@ class _StatisticsViewState extends State<StatisticsView>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: _getContainerDecoration(),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.greenAccent.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+              color: AppTheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
-              Icons.fitness_center,
-              color: Colors.greenAccent,
-              size: 24,
+              Icons.fitness_center_rounded,
+              color: AppTheme.primary,
+              size: 20,
             ),
           ),
           const SizedBox(width: 16),
@@ -576,7 +763,7 @@ class _StatisticsViewState extends State<StatisticsView>
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: AppTheme.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -585,8 +772,8 @@ class _StatisticsViewState extends State<StatisticsView>
                 Text(
                   '${session.durationMinutes} min • ${session.totalReps} reps',
                   style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    color: Colors.grey[400],
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
                   ),
                 ),
               ],
@@ -599,10 +786,11 @@ class _StatisticsViewState extends State<StatisticsView>
                 _formatDate(session.date),
                 style: GoogleFonts.outfit(
                   fontSize: 12,
-                  color: Colors.grey[500],
+                  color: AppTheme.textSecondary,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               if (session.avgFormScore > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -612,14 +800,14 @@ class _StatisticsViewState extends State<StatisticsView>
                   decoration: BoxDecoration(
                     color: _getFormScoreColor(
                       session.avgFormScore,
-                    ).withValues(alpha: 0.2),
+                    ).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     '${(session.avgFormScore * 100).toStringAsFixed(0)}%',
                     style: GoogleFonts.outfit(
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                       color: _getFormScoreColor(session.avgFormScore),
                     ),
                   ),
@@ -641,8 +829,8 @@ class _StatisticsViewState extends State<StatisticsView>
   }
 
   Color _getFormScoreColor(double score) {
-    if (score >= 0.8) return Colors.greenAccent;
-    if (score >= 0.6) return Colors.yellowAccent;
-    return Colors.orangeAccent;
+    if (score >= 0.8) return AppTheme.success;
+    if (score >= 0.6) return AppTheme.brightMarigold;
+    return AppTheme.error;
   }
 }

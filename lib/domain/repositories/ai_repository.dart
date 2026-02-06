@@ -60,6 +60,17 @@ abstract class AIRepository {
     String userMessage,
   );
 
+  /// Generate post-workout summary using Storyteller agent
+  Future<Either<Failure, Map<String, dynamic>?>> generatePostWorkoutSummary({
+    required String userLanguage,
+    required String exerciseName,
+    required int initialStability,
+    required int initialMobility,
+    required int sessionStability,
+    required int totalReps,
+    String? primaryFaultDetected,
+  });
+
   /// Management methods
   Future<void> setApiKey(String apiKey);
   Future<String> getApiKey();

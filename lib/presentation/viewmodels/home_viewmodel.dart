@@ -49,10 +49,14 @@ class HomeViewModel extends ChangeNotifier {
   UserProfile? _userProfile;
   List<String> _hotCategories = [];
   FeaturedProgram? _featuredProgram;
-  bool _isLoading = false;
+
+  // Granular Loading States
+  bool _isProfileLoading = true;
+  bool _isCurriculumLoading = true;
+  bool _isHotCategoriesLoading = true;
+  bool _isFeaturedLoading = true;
+
   bool _isGenerating = false;
-  bool _isHotCategoriesLoading = false;
-  bool _isFeaturedLoading = false;
   String? _errorMessage;
   WorkoutCurriculum? _tomorrowCurriculum;
 
@@ -65,10 +69,18 @@ class HomeViewModel extends ChangeNotifier {
   UserProfile? get userProfile => _userProfile;
   List<String> get hotCategories => _hotCategories;
   FeaturedProgram? get featuredProgram => _featuredProgram;
-  bool get isLoading => _isLoading;
-  bool get isGenerating => _isGenerating;
+
+  // Expose granular states
+  bool get isProfileLoading => _isProfileLoading;
+  bool get isCurriculumLoading => _isCurriculumLoading;
   bool get isHotCategoriesLoading => _isHotCategoriesLoading;
   bool get isFeaturedLoading => _isFeaturedLoading;
+
+  // Composite loading state for backward compatibility if needed,
+  // but UI should use granular getters.
+  bool get isLoading => _isProfileLoading && _isCurriculumLoading;
+
+  bool get isGenerating => _isGenerating;
   String? get errorMessage => _errorMessage;
   String get selectedCategory => _selectedCategory;
   WorkoutCurriculum? get tomorrowCurriculum => _tomorrowCurriculum;
@@ -103,16 +115,35 @@ class HomeViewModel extends ChangeNotifier {
     await _loadFeaturedProgram();
   }
 
-  /// Load all data for home screen
+  /// Load all data for home screen with granular updates
   Future<void> loadData() async {
-    _isLoading = true;
+    _isProfileLoading = true;
+    _isCurriculumLoading = true;
+    _isHotCategoriesLoading = true;
+    _isFeaturedLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     debugPrint('HomeViewModel: Loading dashboard data...');
 
+    // 1. Load User Profile First (Critical for Header)
+    await _loadUserProfile();
+
+    // 2. Load Curriculum (Critical for Daily Stats & FAB)
+    // We start this immediately after profile to ensure fastest TTI for main action
+    await _loadTodayCurriculum();
+
+    // 3. Load Secondary Content Concurrently
+    // These can load in parallel as they are lower on the page
+    Future.wait([
+      _loadHotCategories(),
+      _loadFeaturedProgram(),
+      _loadTomorrowCurriculum(),
+    ]);
+  }
+
+  Future<void> _loadUserProfile() async {
     try {
-      // Load user profile
       final profileResult = await getUserProfile.execute();
       profileResult.fold(
         (failure) {
@@ -122,111 +153,99 @@ class HomeViewModel extends ChangeNotifier {
           _errorMessage = failure.message;
         },
         (profile) {
-          if (profile != null) {
-            debugPrint('HomeViewModel: Loaded profile for ${profile.nickname}');
-            _userProfile = profile;
-          } else {
-            debugPrint('HomeViewModel: Loaded profile is null.');
-            _userProfile = null;
-          }
+          _userProfile = profile;
+          debugPrint('HomeViewModel: Loaded profile for ${profile?.nickname}');
         },
       );
+    } finally {
+      _isProfileLoading = false;
+      notifyListeners(); // Update UI immediately
+    }
+  }
 
-      // Load today's curriculum
+  Future<void> _loadTodayCurriculum() async {
+    try {
       final curriculumResult = await getTodayCurriculum.execute();
-      curriculumResult.fold(
-        (failure) {
+
+      await curriculumResult.fold(
+        (failure) async {
           debugPrint(
             'HomeViewModel: Failed to load curriculum: ${failure.message}',
           );
         },
-        (curriculum) {
-          if (curriculum != null) {
-            debugPrint(
-              'HomeViewModel: Loaded existing curriculum: ${curriculum.title}',
-            );
-          } else {
-            debugPrint('HomeViewModel: No existing curriculum found.');
-          }
+        (curriculum) async {
           _todayCurriculum = curriculum;
+
+          // If no curriculum exists and we have a profile, generate one
+          if (_todayCurriculum == null && _userProfile != null) {
+            debugPrint('HomeViewModel: No curriculum found. Generating new...');
+            await generateNewCurriculum();
+          } else {
+            debugPrint(
+              'HomeViewModel: Loaded curriculum: ${curriculum?.title}',
+            );
+          }
         },
       );
-
-      // Load hot categories
-      await _loadHotCategories();
-
-      // Load featured program
-      await _loadFeaturedProgram();
-
-      // If no curriculum exists and we have a profile, generate one
-      if (_todayCurriculum == null && _userProfile != null) {
-        debugPrint('HomeViewModel: Generating new curriculum...');
-        await generateNewCurriculum();
-      }
-
-      // Load tomorrow's curriculum (mock for now or based on some schedule)
-      await _loadTomorrowCurriculum();
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!_isGenerating) {
+        _isCurriculumLoading = false;
+        notifyListeners(); // Update UI immediately
+      }
     }
   }
 
   /// Load hot categories
   Future<void> _loadHotCategories() async {
-    _isHotCategoriesLoading = true;
-    notifyListeners();
-
-    final result = await getDailyHotCategories.execute();
-    result.fold(
-      (failure) {
-        debugPrint(
-          'HomeViewModel: Failed to load hot categories: ${failure.message}',
-        );
-        _isHotCategoriesLoading = false;
-      },
-      (categories) {
-        _hotCategories = categories;
-
-        // Ensure selected category is valid if categories loaded
-        if (categories.isNotEmpty && !categories.contains(_selectedCategory)) {
-          _selectedCategory = categories.first;
-        }
-
-        _isHotCategoriesLoading = false;
-      },
-    );
-    notifyListeners();
+    try {
+      final result = await getDailyHotCategories.execute();
+      result.fold(
+        (failure) {
+          debugPrint(
+            'HomeViewModel: Failed to hot categories: ${failure.message}',
+          );
+        },
+        (categories) {
+          _hotCategories = categories;
+          if (categories.isNotEmpty &&
+              !categories.contains(_selectedCategory)) {
+            _selectedCategory = categories.first;
+          }
+        },
+      );
+    } finally {
+      _isHotCategoriesLoading = false;
+      notifyListeners();
+    }
   }
 
   /// Load featured program
   Future<void> _loadFeaturedProgram() async {
-    debugPrint(
-      'HomeViewModel: Loading featured program for category: $_selectedCategory',
-    );
+    // Only set loading if not already loading (to avoid flicker on initial load)
+    if (!_isFeaturedLoading) {
+      _isFeaturedLoading = true;
+      notifyListeners();
+    }
 
-    _isFeaturedLoading = true;
-    notifyListeners();
+    debugPrint('HomeViewModel: Loading featured: $_selectedCategory');
 
-    // Pass the selected category to the use case
     final result = await getFeaturedProgram.execute(_selectedCategory);
     result.fold(
       (failure) {
         debugPrint(
-          'HomeViewModel: Failed to load featured program, using mock: ${failure.message}',
+          'HomeViewModel: Failed to featured program: ${failure.message}',
         );
-        _setMockFeaturedProgram(); // Fallback
+        _setMockFeaturedProgram();
       },
       (program) {
         if (program != null) {
-          debugPrint('HomeViewModel: Loaded program: ${program.title}');
           _featuredProgram = program;
         } else {
-          debugPrint('HomeViewModel: Loaded program is NULL');
           _setMockFeaturedProgram();
         }
       },
     );
+
     _isFeaturedLoading = false;
     notifyListeners();
   }
@@ -288,8 +307,12 @@ class HomeViewModel extends ChangeNotifier {
           );
         },
       );
+    } catch (e) {
+      debugPrint('HomeViewModel: Error generating curriculum: $e');
+      _errorMessage = e.toString();
     } finally {
       _isGenerating = false;
+      _isCurriculumLoading = false; // Ensure this is cleared
       notifyListeners();
     }
   }

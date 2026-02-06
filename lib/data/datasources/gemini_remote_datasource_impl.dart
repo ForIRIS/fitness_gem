@@ -232,4 +232,49 @@ class GeminiRemoteDataSourceImpl implements GeminiRemoteDataSource {
       );
     }
   }
+
+  @override
+  Future<Map<String, dynamic>?> generatePostWorkoutSummary({
+    required String apiKey,
+    required String systemInstruction,
+    required String userLanguage,
+    required String exerciseName,
+    required int initialStability,
+    required int initialMobility,
+    required int sessionStability,
+    required int totalReps,
+    String? primaryFaultDetected,
+  }) async {
+    try {
+      // Build the input context as specified in the prompt
+      final inputContext = {
+        'user_language': userLanguage,
+        'exercise_name': exerciseName,
+        'baseline_metrics': {
+          'initial_stability': initialStability,
+          'initial_mobility': initialMobility,
+        },
+        'current_session_metrics': {
+          'session_stability': sessionStability,
+          'total_reps': totalReps,
+          if (primaryFaultDetected != null)
+            'primary_fault_detected': primaryFaultDetected,
+        },
+      };
+
+      final contentParts = [
+        {'text': json.encode(inputContext)},
+      ];
+
+      return await _postMultimodal(
+        apiKey: apiKey,
+        systemInstruction: systemInstruction,
+        contentParts: contentParts,
+        temperature: 0.4, // Slightly higher for more creative narrative
+      );
+    } catch (e) {
+      debugPrint('Storyteller Error: $e');
+      rethrow;
+    }
+  }
 }
