@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import '../../models/workout_task_model.dart';
 import '../../../core/constants/mock_data.dart';
+import '../../../services/connectivity_service.dart';
 
 /// Remote data source for Firebase operations
 abstract class FirebaseDataSource {
@@ -15,12 +16,20 @@ abstract class FirebaseDataSource {
 class FirebaseDataSourceImpl implements FirebaseDataSource {
   final FirebaseFirestore _firestore;
   final FirebaseFunctions _functions;
+  final ConnectivityService _connectivityService;
 
   FirebaseDataSourceImpl({
     FirebaseFirestore? firestore,
     FirebaseFunctions? functions,
+    ConnectivityService? connectivityService,
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _functions = functions ?? FirebaseFunctions.instance;
+       _functions = functions ?? FirebaseFunctions.instance,
+       _connectivityService = connectivityService ?? ConnectivityService();
+
+  void _markUsingMockData(String reason) {
+    debugPrint('FirebaseDataSource: $reason, using mock data');
+    _connectivityService.setUsingMockData(true);
+  }
 
   @override
   Future<List<WorkoutTaskModel>> fetchWorkoutTasks(String category) async {
@@ -31,7 +40,7 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        debugPrint('Firestore workouts empty for $category, using mock data');
+        _markUsingMockData('Firestore workouts empty for $category');
         return mockWorkoutTasks
             .where((t) => t.category.toLowerCase() == category.toLowerCase())
             .toList();
@@ -41,7 +50,7 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
           .map((doc) => WorkoutTaskModel.fromMap(doc.data()))
           .toList();
     } catch (e) {
-      debugPrint('Error fetching workout tasks: $e, using mock data');
+      _markUsingMockData('Error fetching workout tasks: $e');
       return mockWorkoutTasks
           .where((t) => t.category.toLowerCase() == category.toLowerCase())
           .toList();
@@ -59,12 +68,14 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
         .where((t) => ids.contains(t.id))
         .toList();
     if (localMatches.length == ids.length) {
+      // All found in mock - this is intentional for speed, not a fallback
       return localMatches;
     }
 
     try {
       // Firestore whereIn limit is 10
       if (ids.length > 10) {
+        _markUsingMockData('ID list > 10, Firestore limit');
         return localMatches;
       }
 
@@ -84,12 +95,15 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
         final mockTasks = mockWorkoutTasks
             .where((t) => missingIds.contains(t.id))
             .toList();
+        if (mockTasks.isNotEmpty) {
+          _markUsingMockData('Partial data from Firestore, filling gaps');
+        }
         tasks.addAll(mockTasks);
       }
 
       return tasks;
     } catch (e) {
-      debugPrint('Error fetching workout tasks by IDs: $e, using mock data');
+      _markUsingMockData('Error fetching workout tasks by IDs: $e');
       return mockWorkoutTasks.where((t) => ids.contains(t.id)).toList();
     }
   }
@@ -103,7 +117,7 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
       final List<dynamic> categories = result.data['categories'];
       return categories.map((e) => e.toString()).toList();
     } catch (e) {
-      debugPrint('Error fetching daily hot categories: $e, using mock data');
+      _markUsingMockData('Error fetching daily hot categories: $e');
       return mockDailyHotCategories;
     }
   }
@@ -118,7 +132,7 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
           .call();
       return Map<String, dynamic>.from(result.data);
     } catch (e) {
-      debugPrint('Error fetching featured program: $e, using mock data');
+      _markUsingMockData('Error fetching featured program: $e');
       final targetCategory =
           (category != null && mockFeaturedPrograms.containsKey(category))
           ? category

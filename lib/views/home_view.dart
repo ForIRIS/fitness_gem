@@ -20,6 +20,8 @@ import 'widgets/home/category_chips.dart';
 import 'widgets/home/featured_program_card.dart';
 import 'widgets/home/home_shimmer_widgets.dart';
 import 'widgets/home/tomorrow_workout_card.dart';
+import '../services/connectivity_service.dart';
+import '../core/di/injection.dart';
 
 /// HomeView - Dashboard Screen (Refactored with Riverpod)
 class HomeView extends ConsumerStatefulWidget {
@@ -164,6 +166,45 @@ class _HomeViewState extends ConsumerState<HomeView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Mock Data Banner
+                StreamBuilder<bool>(
+                  stream: getIt<ConnectivityService>().mockDataStream,
+                  initialData: getIt<ConnectivityService>().isUsingMockData,
+                  builder: (context, snapshot) {
+                    if (snapshot.data == true) {
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 16,
+                        ),
+                        margin: const EdgeInsets.only(bottom: 8),
+                        color: Colors.orange.shade700,
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.cloud_off,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Using offline data. Some content may be outdated.',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
                 // Header - Skeleton/Content handled in HomeHeader if needed,
                 // or we can wrap it here. For now assuming HomeHeader handles null profile gracefully
                 // or we can add a ShimmerHeader wrapper later.

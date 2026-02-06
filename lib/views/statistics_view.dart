@@ -183,7 +183,7 @@ class _StatisticsViewState extends State<StatisticsView>
       borderRadius: BorderRadius.circular(24),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),
@@ -213,7 +213,7 @@ class _StatisticsViewState extends State<StatisticsView>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primary.withOpacity(0.3),
+            color: AppTheme.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -235,7 +235,7 @@ class _StatisticsViewState extends State<StatisticsView>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -302,7 +302,7 @@ class _StatisticsViewState extends State<StatisticsView>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.accent.withOpacity(0.3),
+            color: AppTheme.accent.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -321,7 +321,7 @@ class _StatisticsViewState extends State<StatisticsView>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -407,10 +407,10 @@ class _StatisticsViewState extends State<StatisticsView>
   }) {
     final textColor = isWhite ? Colors.white : AppTheme.textPrimary;
     final iconColor = isWhite
-        ? Colors.white.withOpacity(0.8)
+        ? Colors.white.withValues(alpha: 0.8)
         : AppTheme.primary;
     final subTextColor = isWhite
-        ? Colors.white.withOpacity(0.7)
+        ? Colors.white.withValues(alpha: 0.7)
         : AppTheme.textSecondary;
 
     return Column(
@@ -515,7 +515,7 @@ class _StatisticsViewState extends State<StatisticsView>
                             : (isPastDay
                                   ? LinearGradient(
                                       colors: [
-                                        AppTheme.accent.withOpacity(0.7),
+                                        AppTheme.accent.withValues(alpha: 0.7),
                                         AppTheme.accent,
                                       ],
                                       begin: Alignment.bottomCenter,
@@ -528,7 +528,7 @@ class _StatisticsViewState extends State<StatisticsView>
                         backDrawRodData: BackgroundBarChartRodData(
                           show: showBar && (dataByDay[i] ?? 0) == 0,
                           toY: 6, // Subtle "empty" indicator
-                          color: Colors.grey.withOpacity(0.1),
+                          color: Colors.grey.withValues(alpha: 0.1),
                         ),
                       ),
                     ],
@@ -582,7 +582,7 @@ class _StatisticsViewState extends State<StatisticsView>
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.withOpacity(0.05),
+                    color: Colors.grey.withValues(alpha: 0.05),
                     strokeWidth: 1,
                   ),
                 ),
@@ -633,7 +633,7 @@ class _StatisticsViewState extends State<StatisticsView>
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.withOpacity(0.05),
+                    color: Colors.grey.withValues(alpha: 0.05),
                     strokeWidth: 1,
                   ),
                 ),
@@ -695,8 +695,8 @@ class _StatisticsViewState extends State<StatisticsView>
                       show: true,
                       gradient: LinearGradient(
                         colors: [
-                          AppTheme.primary.withOpacity(0.2),
-                          AppTheme.primary.withOpacity(0.0),
+                          AppTheme.primary.withValues(alpha: 0.2),
+                          AppTheme.primary.withValues(alpha: 0.0),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -744,7 +744,7 @@ class _StatisticsViewState extends State<StatisticsView>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
+              color: AppTheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -800,7 +800,7 @@ class _StatisticsViewState extends State<StatisticsView>
                   decoration: BoxDecoration(
                     color: _getFormScoreColor(
                       session.avgFormScore,
-                    ).withOpacity(0.1),
+                    ).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

@@ -60,6 +60,7 @@ import '../../data/datasources/exercise_remote_datasource_impl.dart';
 import '../../data/datasources/tts_feedback_output.dart';
 import '../../services/cache_service.dart';
 import '../../services/firebase_service.dart';
+import '../../services/connectivity_service.dart';
 import '../../services/tts_service.dart';
 import '../../domain/services/coaching_manager.dart';
 import '../../domain/interfaces/feedback_output.dart';
@@ -78,6 +79,11 @@ Future<void> setupDependencyInjection() async {
   // ============ External Dependencies ============
   final sharedPreferences = await SharedPreferences.getInstance();
   getIt.registerLazySingleton(() => sharedPreferences);
+
+  // Connectivity Service (Singleton)
+  final connectivityService = ConnectivityService();
+  await connectivityService.initialize();
+  getIt.registerLazySingleton(() => connectivityService);
 
   // ============ Data Sources ============
 
