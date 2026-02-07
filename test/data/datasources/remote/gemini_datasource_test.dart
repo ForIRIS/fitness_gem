@@ -1,14 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
+
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:fitness_gem/data/datasources/remote/gemini_datasource.dart';
 import 'package:fitness_gem/data/models/user_profile_model.dart';
 import 'package:fitness_gem/data/models/workout_task_model.dart';
 import 'package:fitness_gem/core/wrappers/gemini_wrapper.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
-import 'package:flutter/services.dart';
 
 // Mock GeminiWrapper (Interface)
 class MockGeminiWrapper extends Mock implements GeminiWrapper {

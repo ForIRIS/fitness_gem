@@ -748,22 +748,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get onboardingStep1 => 'Step 1: Profile & Safety';
-
-  @override
-  String get onboardingStep2 => 'Step 2: AI Consultation';
-
-  @override
-  String get onboardingStep3 => 'Step 3: Physical Alignment';
-
-  @override
   String onboardingStepPreview(int current, String stepName) {
-    return 'Step $current of 3: $stepName';
-  }
-
-  @override
-  String onboardingNextStep(String stepName) {
-    return 'Coming Up: $stepName';
+    return 'Step $current of 6: $stepName';
   }
 
   @override
@@ -928,12 +914,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmDeleteTitle => 'Are you sure?';
 
   @override
-  String confirmDeleteMessage(Object keyword) {
+  String confirmDeleteMessage(String keyword) {
     return 'This action cannot be undone. To confirm, please type \"$keyword\" below.';
   }
 
   @override
-  String typeToConfirm(Object keyword) {
+  String typeToConfirm(String keyword) {
     return 'Type \"$keyword\"';
   }
 
@@ -1004,6 +990,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get imperialUnit => 'Imperial';
+
+  @override
+  String get justStart => 'Just Start';
+
+  @override
+  String get defaultNickname => 'Gemini User';
+
+  @override
+  String get defaultExercise => 'Full Body Workout';
+
+  @override
+  String get unitCm => 'cm';
+
+  @override
+  String get unitKg => 'kg';
 
   @override
   String get fitnessGoalsTitle => 'Your Fitness Goals';

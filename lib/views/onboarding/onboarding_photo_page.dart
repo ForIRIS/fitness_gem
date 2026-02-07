@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../l10n/app_localizations.dart';
+import '../../theme/app_theme.dart';
 
 class OnboardingPhotoPage extends StatefulWidget {
   final File? selectedImage;
@@ -47,20 +48,22 @@ class _OnboardingPhotoPageState extends State<OnboardingPhotoPage> {
       child: Column(
         children: [
           Text(
-            l10n.profilePhotoTitle ?? 'Profile Photo',
+            l10n.profilePhotoTitle,
             textAlign: TextAlign.center,
-            style: GoogleFonts.barlowCondensed(
-              color: const Color(0xFF1A237E),
+            style: GoogleFonts.outfit(
+              color: AppTheme.indigoInk,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.profilePhotoDesc ??
-                'Add a photo to personalize your experience.',
+            l10n.profilePhotoDesc,
             textAlign: TextAlign.center,
-            style: GoogleFonts.barlow(color: Colors.black54, fontSize: 16),
+            style: GoogleFonts.outfit(
+              color: AppTheme.textSecondary,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 48),
 
@@ -76,7 +79,7 @@ class _OnboardingPhotoPageState extends State<OnboardingPhotoPage> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -103,7 +106,7 @@ class _OnboardingPhotoPageState extends State<OnboardingPhotoPage> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF5E35B1),
+                        color: AppTheme.primary,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                       ),
@@ -125,19 +128,18 @@ class _OnboardingPhotoPageState extends State<OnboardingPhotoPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8EAF6),
+              color: AppTheme.indigoInk.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, color: Color(0xFF3F51B5)),
+                const Icon(Icons.info_outline, color: AppTheme.indigoInk),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    l10n.photoPrivacyNote ??
-                        'This photo is saved locally and shown only to you.',
-                    style: GoogleFonts.barlow(
-                      color: const Color(0xFF3F51B5),
+                    l10n.photoPrivacyNote,
+                    style: GoogleFonts.outfit(
+                      color: AppTheme.indigoInk,
                       fontSize: 14,
                     ),
                   ),
@@ -163,7 +165,7 @@ class _OnboardingPhotoPageState extends State<OnboardingPhotoPage> {
             children: [
               ListTile(
                 leading: const Icon(Icons.photo_camera),
-                title: Text(l10n.takePhoto ?? 'Take Photo'),
+                title: Text(l10n.takePhoto),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.camera);
@@ -171,7 +173,7 @@ class _OnboardingPhotoPageState extends State<OnboardingPhotoPage> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
-                title: Text(l10n.chooseFromGallery ?? 'Choose from Gallery'),
+                title: Text(l10n.chooseFromGallery),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.gallery);
@@ -181,7 +183,7 @@ class _OnboardingPhotoPageState extends State<OnboardingPhotoPage> {
                 ListTile(
                   leading: const Icon(Icons.delete, color: Colors.red),
                   title: Text(
-                    l10n.removePhoto ?? 'Remove Photo',
+                    l10n.removePhoto,
                     style: const TextStyle(color: Colors.red),
                   ),
                   onTap: () {

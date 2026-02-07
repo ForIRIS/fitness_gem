@@ -57,11 +57,7 @@ class FormRuleChecker {
     final violations = <FormViolation>[];
 
     // Calculate knee angle
-    final leftKneeAngle = _calculateAngle(
-      pose.landmarks[PoseLandmarkType.leftHip],
-      pose.landmarks[PoseLandmarkType.leftKnee],
-      pose.landmarks[PoseLandmarkType.leftAnkle],
-    );
+    // This variable was unused and has been removed.
 
     // Back angle (Shoulder-Hip-Knee)
     final backAngle = _calculateAngle(
@@ -123,11 +119,7 @@ class FormRuleChecker {
     final violations = <FormViolation>[];
 
     // Elbow angle
-    final elbowAngle = _calculateAngle(
-      pose.landmarks[PoseLandmarkType.leftShoulder],
-      pose.landmarks[PoseLandmarkType.leftElbow],
-      pose.landmarks[PoseLandmarkType.leftWrist],
-    );
+    // This variable was unused and has been removed.
 
     // Detect hip sag/pike (Shoulder-Hip-Ankle alignment)
     final bodyLineAngle = _calculateAngle(

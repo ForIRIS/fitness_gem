@@ -75,8 +75,10 @@ class EmergencyNotificationService {
         if (permission == LocationPermission.deniedForever) return null;
 
         return await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 5),
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 5),
+          ),
         );
       } catch (e) {
         debugPrint("Error getting location: $e");

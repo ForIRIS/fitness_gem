@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../l10n/app_localizations.dart';
+import '../../theme/app_theme.dart';
 
 class OnboardingBodyStatsPage extends StatefulWidget {
   final double height;
@@ -67,25 +68,27 @@ class _OnboardingBodyStatsPageState extends State<OnboardingBodyStatsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.bodyStatsTitle ?? 'Body Stats',
-            style: GoogleFonts.barlowCondensed(
-              color: const Color(0xFF1A237E),
+            l10n.bodyStatsTitle,
+            style: GoogleFonts.outfit(
+              color: AppTheme.indigoInk,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.bodyStatsDesc ??
-                'This helps Gemini calibrate your workout intensity.',
-            style: GoogleFonts.barlow(color: Colors.black54, fontSize: 16),
+            l10n.bodyStatsDesc,
+            style: GoogleFonts.outfit(
+              color: AppTheme.textSecondary,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 48),
 
           // Height Section
           _buildStatSection(
-            label: l10n.height ?? 'Height',
-            unit: 'cm',
+            label: l10n.height,
+            unit: l10n.unitCm,
             value: widget.height,
             sliderValue: sliderHeight,
             min: 100,
@@ -100,8 +103,8 @@ class _OnboardingBodyStatsPageState extends State<OnboardingBodyStatsPage> {
 
           // Weight Section
           _buildStatSection(
-            label: l10n.weight ?? 'Weight',
-            unit: 'kg',
+            label: l10n.weight,
+            unit: l10n.unitKg,
             value: widget.weight,
             sliderValue: sliderWeight,
             min: 30,
@@ -135,7 +138,7 @@ class _OnboardingBodyStatsPageState extends State<OnboardingBodyStatsPage> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -148,14 +151,14 @@ class _OnboardingBodyStatsPageState extends State<OnboardingBodyStatsPage> {
             children: [
               Row(
                 children: [
-                  Icon(icon, color: const Color(0xFF5E35B1)),
+                  Icon(icon, color: AppTheme.primary),
                   const SizedBox(width: 8),
                   Text(
                     label,
-                    style: GoogleFonts.barlow(
+                    style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                 ],
@@ -170,10 +173,10 @@ class _OnboardingBodyStatsPageState extends State<OnboardingBodyStatsPage> {
                       controller: controller,
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.end,
-                      style: GoogleFonts.barlowCondensed(
+                      style: GoogleFonts.outfit(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF5E35B1),
+                        color: AppTheme.primary,
                       ),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
@@ -190,9 +193,9 @@ class _OnboardingBodyStatsPageState extends State<OnboardingBodyStatsPage> {
                   ),
                   Text(
                     unit,
-                    style: GoogleFonts.barlow(
+                    style: GoogleFonts.outfit(
                       fontSize: 16,
-                      color: Colors.black54,
+                      color: AppTheme.textSecondary,
                     ),
                   ),
                 ],
@@ -202,10 +205,10 @@ class _OnboardingBodyStatsPageState extends State<OnboardingBodyStatsPage> {
           const SizedBox(height: 16),
           SliderTheme(
             data: SliderThemeData(
-              activeTrackColor: const Color(0xFF5E35B1),
-              inactiveTrackColor: const Color(0xFFE1BEE7),
-              thumbColor: const Color(0xFF5E35B1),
-              overlayColor: const Color(0xFF5E35B1).withOpacity(0.2),
+              activeTrackColor: AppTheme.primary,
+              inactiveTrackColor: AppTheme.primary.withValues(alpha: 0.2),
+              thumbColor: AppTheme.primary,
+              overlayColor: AppTheme.primary.withValues(alpha: 0.2),
               trackHeight: 6,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12),
             ),

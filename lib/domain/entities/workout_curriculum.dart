@@ -36,9 +36,9 @@ class WorkoutCurriculum extends Equatable {
       double taskSeconds = 0;
 
       if (task.isCountable) {
-        // Dynamic exercise: Estimate 4s per rep
+        // Dynamic exercise: Estimate 3s per rep
         // (eccentric + concentric + pause)
-        taskSeconds += task.adjustedReps * 4 * task.adjustedSets;
+        taskSeconds += task.adjustedReps * 3 * task.adjustedSets;
       } else {
         // Static exercise: Use duration
         // If adjustedDurationSec is set, use it, otherwise use default durationSec or fallback to 30s
@@ -53,9 +53,9 @@ class WorkoutCurriculum extends Equatable {
 
       totalSeconds += taskSeconds;
 
-      // Add transition time between tasks (e.g., 60 seconds)
+      // Add transition time between tasks (e.g., 15 seconds)
       if (i < workoutTasks.length - 1) {
-        totalSeconds += 60;
+        totalSeconds += 15;
       }
     }
 

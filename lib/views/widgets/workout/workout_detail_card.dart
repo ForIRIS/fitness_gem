@@ -83,25 +83,9 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
         (widget.task.reps <= 1 && !widget.task.isCountable) ||
         widget.task.category.toLowerCase() == 'stretch';
 
-    // Format Subtitle
-    String subtitleText;
     final int validTime =
         widget.task.durationSec ??
         widget.task.timeoutSec; // Prefer duration, fallback to timeout
-    final int displayTime = validTime > 0
-        ? validTime
-        : 60; // Default to 60 if both 0
-
-    if (isMaintenance) {
-      subtitleText = 'Relax & Stretch';
-    } else if (widget.task.reps == 0) {
-      // Duration only task
-      subtitleText = '$displayTime Sec per set';
-    } else {
-      // Reps + Duration task
-      subtitleText =
-          '${widget.task.adjustedReps} Reps / $displayTime Sec per set';
-    }
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -189,32 +173,48 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
                           const SizedBox(height: 16),
 
                           // Title
-                          SizedBox(
-                            width: 180,
-                            child: Text(
-                              widget.task.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 28,
-                                fontWeight: FontWeight.w700,
-                                height: 1.1,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          // Subtext / Reps
                           Text(
-                            subtitleText,
+                            widget.task.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.outfit(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 15,
-                              fontWeight: FontWeight.w400,
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              height: 1.1,
                             ),
                           ),
+
+                          const Spacer(),
+
+                          // 2. Metric Chips Row
+                          Row(
+                            children: [
+                              // Reps Chip (only if countable/reps > 0)
+                              if (!isMaintenance &&
+                                  (widget.task.reps > 0 &&
+                                      widget.task.isCountable)) ...[
+                                _buildMetricChip(
+                                  context,
+                                  icon: Icons.refresh_rounded,
+                                  label: '${widget.task.adjustedReps} Reps',
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+
+                              // Time/Duration Chip
+                              _buildMetricChip(
+                                context,
+                                icon: isMaintenance
+                                    ? Icons.spa_outlined
+                                    : Icons.timer_outlined,
+                                label: isMaintenance
+                                    ? 'Relax'
+                                    : '${validTime > 0 ? validTime : 60} Sec',
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
                         ],
                       ),
                     ),
@@ -360,6 +360,39 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
           Icons.fitness_center,
           color: Colors.white.withValues(alpha: 0.3),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMetricChip(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 14),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

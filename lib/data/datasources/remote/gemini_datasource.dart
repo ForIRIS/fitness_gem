@@ -32,7 +32,7 @@ class GeminiDataSourceImpl implements GeminiDataSource {
       // 1. Initialize Wrapper
       GeminiWrapper wrapper;
       if (_injectedWrapper != null) {
-        wrapper = _injectedWrapper!;
+        wrapper = _injectedWrapper;
       } else {
         final apiKey = dotenv.env['GEMINI_API_KEY'];
         if (apiKey == null || apiKey.isEmpty) {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fitness_gem/l10n/app_localizations.dart';
+import '../../theme/app_theme.dart';
 import 'guardian_strategy.dart';
 
 class OnboardingGuardianPage extends StatefulWidget {
@@ -63,21 +65,50 @@ class _OnboardingGuardianPageState extends State<OnboardingGuardianPage> {
           ),
           const SizedBox(height: 32),
           Text(
-            _strategy!.getTitle(context),
+            AppLocalizations.of(context)!.welcomeReady, // "준비가 되었습니다!" (Ready!)
             textAlign: TextAlign.center,
-            style: GoogleFonts.barlowCondensed(
-              color: const Color(0xFF1A237E),
+            style: GoogleFonts.outfit(
+              color: AppTheme.indigoInk,
               fontSize: 32,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              AppLocalizations.of(context)!.onboardingWelcomeSubtitle,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                color: AppTheme.textSecondary,
+                fontSize: 16,
+                height: 1.4,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // Feature Spotlight: Safety Guardian
+          Text(
+            _strategy!.getTitle(context),
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              color: _strategy!.getThemeColor(),
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 12),
           Text(
             _strategy!.getDescription(context),
-            textAlign: TextAlign.center,
-            style: GoogleFonts.barlow(color: Colors.black54, fontSize: 16),
+            textAlign: TextAlign.start,
+            style: GoogleFonts.outfit(
+              color: AppTheme.textSecondary,
+              fontSize: 14,
+              height: 1.4,
+            ),
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 24),
 
           // Strategy Content
           _strategy!.buildContent(

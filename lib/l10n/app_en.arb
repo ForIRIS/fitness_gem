@@ -324,10 +324,7 @@
       }
     }
   },
-  "onboardingStep1": "Step 1: Profile & Safety",
-  "onboardingStep2": "Step 2: AI Consultation",
-  "onboardingStep3": "Step 3: Physical Alignment",
-  "onboardingStepPreview": "Step {current} of 3: {stepName}",
+  "onboardingStepPreview": "Step {current} of 6: {stepName}",
   "@onboardingStepPreview": {
     "placeholders": {
       "current": {
@@ -338,50 +335,137 @@
       }
     }
   },
-  "onboardingNextStep": "Coming Up: {stepName}",
-  "@onboardingNextStep": {
-    "placeholders": {
-      "stepName": {
-        "type": "String"
-      }
-    }
-  },
   "aiInviteMessageComplete": "I've analyzed your goals! To customize your form correction, I recommend a quick 30-second mobility check.",
   "aiInviteAssessmentButton": "START ALIGNMENT CHECK",
   "aiInviteAssessmentSkip": "Skip for now",
-  "@_NEW_ONBOARDING_STRINGS": {},
   "onboardingWelcomeTitle": "Welcome to Fitness Gem",
+  "@onboardingWelcomeTitle": {
+    "description": "Title text for the onboarding welcome screen"
+  },
   "onboardingWelcomeSubtitle": "Your AI Fitness Journey starts here.",
+  "@onboardingWelcomeSubtitle": {
+    "description": "Subtitle text for the onboarding welcome screen"
+  },
   "onboardingStep1Description": "Tell us about yourself to tailor your experience.",
+  "@onboardingStep1Description": {
+    "description": "Description for the first step of onboarding"
+  },
   "onboardingStep2Description": "Consult with Gemini via voice to build your plan.",
+  "@onboardingStep2Description": {
+    "description": "Description for the second step of onboarding"
+  },
   "onboardingStep3Description": "A 30-second camera check to perfect your form.",
+  "@onboardingStep3Description": {
+    "description": "Description for the third step of onboarding"
+  },
   "getStarted": "Get Started",
+  "@getStarted": {
+    "description": "Label for the start button in onboarding"
+  },
   "micPermissionReason": "Microphone access is needed for AI voice chat and emergency detection.",
+  "@micPermissionReason": {
+    "description": "Reason for requesting microphone access"
+  },
   "cameraPermissionReason": "Camera access is needed for AI physical alignment and pose analysis.",
+  "@cameraPermissionReason": {
+    "description": "Reason for requesting camera access"
+  },
   "listening": "Listening...",
+  "@listening": {
+    "description": "Text showing when AI is listening to voice input"
+  },
   "typeMessageHint": "Type a message...",
+  "@typeMessageHint": {
+    "description": "Placeholder text for the chat input field"
+  },
   "assessmentRecommended": "Physical Assessment Recommended",
+  "@assessmentRecommended": {
+    "description": "Title for the physical assessment recommendation"
+  },
   "assessmentRecommendedDesc": "Let's check your form level.",
+  "@assessmentRecommendedDesc": {
+    "description": "Description for the physical assessment recommendation"
+  },
   "interviewComplete": "Interview Complete",
+  "@interviewComplete": {
+    "description": "Header title when the AI interview process is done"
+  },
   "safetyGuardianTitle": "Safety Guardian",
+  "@safetyGuardianTitle": {
+    "description": "Title for the safety guardian feature"
+  },
   "safetyGuardianDescription": "Protect yourself with real-time AI safety monitoring.",
+  "@safetyGuardianDescription": {
+    "description": "Description of the safety guardian feature"
+  },
   "benefitFallDetectionTitle": "Fall Detection Available",
+  "@benefitFallDetectionTitle": {
+    "description": "Title for fall detection benefit"
+  },
   "benefitFallDetectionDesc": "AI detects sudden drops during workouts.",
+  "@benefitFallDetectionDesc": {
+    "description": "Description for fall detection benefit"
+  },
   "benefitGuardianEmailTitle": "Guardian Connection",
+  "@benefitGuardianEmailTitle": {
+    "description": "Title for guardian email connection"
+  },
   "benefitGuardianEmailDesc": "Link via Guardian's email in Settings.",
+  "@benefitGuardianEmailDesc": {
+    "description": "Description for guardian email connection"
+  },
   "benefitEmergencyPushTitle": "Emergency Protection",
+  "@benefitEmergencyPushTitle": {
+    "description": "Title for emergency push notification benefit"
+  },
   "benefitEmergencyPushDesc": "Push notifications sent to guardian if no response.",
+  "@benefitEmergencyPushDesc": {
+    "description": "Description for emergency push notification benefit"
+  },
   "guardianEmailNotice": "Your Guardian must also be a registered user. You can link them by entering their email address in Settings > Account.",
+  "@guardianEmailNotice": {
+    "description": "Notice for linking a guardian via email"
+  },
   "emergencyFallSuspected": "Fall Suspected?",
+  "@emergencyFallSuspected": {
+    "description": "Question asked when a fall is suspected"
+  },
   "emergencyAreYouOkay": "Are you okay?",
+  "@emergencyAreYouOkay": {
+    "description": "Question asked during emergency check"
+  },
   "emergencyCheckingStatus": "Checking your status...",
+  "@emergencyCheckingStatus": {
+    "description": "Informing the user that status is being checked"
+  },
   "emergencyPleaseRest": "Please rest for a moment.",
+  "@emergencyPleaseRest": {
+    "description": "Instruction for the user to rest after a fall"
+  },
   "emergencyImOk": "I'M OK",
+  "@emergencyImOk": {
+    "description": "Button text to dismiss emergency"
+  },
   "emergencyTitle": "EMERGENCY",
+  "@emergencyTitle": {
+    "description": "Header for emergency screen"
+  },
   "emergencySubtitle": "Fall detected. Help is on the way.",
+  "@emergencySubtitle": {
+    "description": "Subtitle for emergency screen"
+  },
   "emergencySlideToCall": "Slide to Call SOS",
+  "@emergencySlideToCall": {
+    "description": "Label for the slide button to call SOS"
+  },
   "emergencyHoldToCancel": "Hold to Cancel",
+  "@emergencyHoldToCancel": {
+    "description": "Label for the hold button to cancel SOS"
+  },
   "emergencyTtsWarning": "Emergency Detected. Help is on the way.",
+  "@emergencyTtsWarning": {
+    "description": "TTS warning during emergency"
+  },
   "emergencySmsBody": "🚨 EMERGENCY: {name} may have fallen during a workout. Please check on them immediately.",
   "@emergencySmsBody": {
     "placeholders": {
@@ -399,44 +483,195 @@
     }
   },
   "privacyPolicyTitle": "Privacy Policy",
+  "@privacyPolicyTitle": {
+    "description": "Title for the privacy policy"
+  },
   "privacyPolicyIntro": "Your privacy is our priority. Here is how we handle your data:",
+  "@privacyPolicyIntro": {
+    "description": "Intro for the privacy policy"
+  },
   "privacyLocalTitle": "Local Storage",
+  "@privacyLocalTitle": {
+    "description": "Title for local storage section in privacy policy"
+  },
   "privacyLocalDesc": "Biometric data (Height/Weight/Gender) stays on your phone.",
+  "@privacyLocalDesc": {
+    "description": "Description for local storage in privacy policy"
+  },
   "privacyGeminiTitle": "Gemini Analysis",
+  "@privacyGeminiTitle": {
+    "description": "Title for Gemini analysis in privacy policy"
+  },
   "privacyGeminiDesc": "Data is used for real-time analysis only. NOT used for training.",
+  "@privacyGeminiDesc": {
+    "description": "Description for Gemini analysis in privacy policy"
+  },
   "guardianPushPurpose": "Used ONLY for fall detection alerts.",
+  "@guardianPushPurpose": {
+    "description": "Description for the purpose of guardian push notifications"
+  },
   "privacyMinimalTitle": "Minimal Data",
+  "@privacyMinimalTitle": {
+    "description": "Title for minimal data collection section"
+  },
   "privacyMinimalDesc": "We prioritize your privacy. No personal data is shared with third parties. Your email is used SOLELY for Guardian notifications and is deleted immediately upon account withdrawal.",
+  "@privacyMinimalDesc": {
+    "description": "Description for minimal data collection"
+  },
   "confirmDeleteTitle": "Are you sure?",
+  "@confirmDeleteTitle": {
+    "description": "Confirmation title for account deletion"
+  },
   "confirmDeleteMessage": "This action cannot be undone. To confirm, please type \"{keyword}\" below.",
+  "@confirmDeleteMessage": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
   "typeToConfirm": "Type \"{keyword}\"",
+  "@typeToConfirm": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
   "agreeKeyword": "agree",
+  "@agreeKeyword": {
+    "description": "Keyword to agree with"
+  },
   "delete": "Delete",
+  "@delete": {
+    "description": "Label for delete button"
+  },
   "privacyAgreement": "I have read and agree to the Privacy Policy.",
+  "@privacyAgreement": {
+    "description": "Checkbox text for privacy agreement"
+  },
   "genderTitle": "How do you identify?",
+  "@genderTitle": {
+    "description": "Question about gender identification"
+  },
   "genderMale": "Male",
+  "@genderMale": {
+    "description": "Option for male gender identification"
+  },
   "genderFemale": "Female",
+  "@genderFemale": {
+    "description": "Option for female gender identification"
+  },
   "genderNonBinary": "Non-binary",
+  "@genderNonBinary": {
+    "description": "Option for non-binary gender identification"
+  },
   "genderPreferNotToSay": "Prefer not to say",
+  "@genderPreferNotToSay": {
+    "description": "Option to not disclose gender"
+  },
   "profilePhotoTitle": "Add a Profile Photo",
+  "@profilePhotoTitle": {
+    "description": "Title for profile photo step"
+  },
   "profilePhotoDesc": "This helps personalize your experience. It remains on your device.",
+  "@profilePhotoDesc": {
+    "description": "Description for profile photo step"
+  },
   "photoPrivacyNote": "Note: Your photo is stored locally and not shared with servers.",
+  "@photoPrivacyNote": {
+    "description": "Privacy note about profile photo storage"
+  },
   "removePhoto": "Remove Photo",
+  "@removePhoto": {
+    "description": "Label for removing profile photo"
+  },
   "takePhoto": "Take Photo",
+  "@takePhoto": {
+    "description": "Label for taking a profile photo"
+  },
   "chooseFromGallery": "Choose from Gallery",
+  "@chooseFromGallery": {
+    "description": "Label for choosing a profile photo from gallery"
+  },
   "bodyStatsTitle": "Body Measurements",
+  "@bodyStatsTitle": {
+    "description": "Title for body measurements section"
+  },
   "bodyStatsDesc": "Helps us calculate calories and track progress.",
+  "@bodyStatsDesc": {
+    "description": "Description for body measurements section"
+  },
   "heightLabel": "Height (cm)",
+  "@heightLabel": {
+    "description": "Label for height input in centimeters"
+  },
   "height": "Height",
+  "@height": {
+    "description": "Label for height input"
+  },
   "weightLabel": "Weight (kg)",
+  "@weightLabel": {
+    "description": "Label for weight input in kilograms"
+  },
   "weight": "Weight",
+  "@weight": {
+    "description": "Label for weight input"
+  },
   "metricUnit": "Metric",
+  "@metricUnit": {
+    "description": "Label for metric unit selection"
+  },
   "imperialUnit": "Imperial",
+  "@imperialUnit": {
+    "description": "Label for imperial unit selection"
+  },
+  "justStart": "Just Start",
+  "@justStart": {
+    "description": "Label for starting without AI consultation"
+  },
+  "defaultNickname": "Gemini User",
+  "@defaultNickname": {
+    "description": "Default nickname for new users"
+  },
+  "defaultExercise": "Full Body Workout",
+  "@defaultExercise": {
+    "description": "Default target exercise"
+  },
+  "unitCm": "cm",
+  "@unitCm": {
+    "description": "Unit for centimeters"
+  },
+  "unitKg": "kg",
+  "@unitKg": {
+    "description": "Unit for kilograms"
+  },
   "fitnessGoalsTitle": "Your Fitness Goals",
+  "@fitnessGoalsTitle": {
+    "description": "Title for fitness goals section"
+  },
   "fitnessGoalsDesc": "Select what you want to achieve.",
+  "@fitnessGoalsDesc": {
+    "description": "Description for fitness goals section"
+  },
   "fitnessGoalDesc": "Select what you want to achieve.",
+  "@fitnessGoalDesc": {
+    "description": "Description for fitness goal selection"
+  },
   "goalLoseWeight": "Lose Weight",
+  "@goalLoseWeight": {
+    "description": "Option for losing weight"
+  },
   "goalBuildMuscle": "Build Muscle",
+  "@goalBuildMuscle": {
+    "description": "Option for building muscle"
+  },
   "goalImproveEndurance": "Improve Endurance",
-  "goalFlexibility": "Flexibility"
+  "@goalImproveEndurance": {
+    "description": "Option for improving endurance"
+  },
+  "goalFlexibility": "Flexibility",
+  "@goalFlexibility": {
+    "description": "Option for flexibility"
+  }
 }

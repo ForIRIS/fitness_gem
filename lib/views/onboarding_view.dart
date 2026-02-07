@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
+import '../theme/app_theme.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../domain/entities/user_profile.dart';
 import '../core/di/injection.dart';
@@ -15,6 +16,8 @@ import 'onboarding/onboarding_fitness_goals_page.dart';
 import 'onboarding/onboarding_exercise_page.dart';
 import 'onboarding/onboarding_guardian_page.dart';
 import 'onboarding/onboarding_privacy_page.dart';
+
+import '../widgets/ai_consultant_button.dart';
 import 'dart:io';
 
 import 'ai_interview_view.dart';
@@ -78,18 +81,18 @@ class _OnboardingViewState extends State<OnboardingView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3E5F5), // Light purple/pink background
+      backgroundColor: AppTheme.background,
       body: Stack(
         children: [
-          // 1. Background Gradient
+          // 1. Background Gradient (Subtle)
           Positioned.fill(
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFFE1BEE7), // Lighter Purple
-                    Color(0xFFF3E5F5), // Base
-                    Color(0xFFE3F2FD), // Light Blue tint
+                    AppTheme.background,
+                    AppTheme.primary.withValues(alpha: 0.05),
+                    AppTheme.accent.withValues(alpha: 0.05),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -272,22 +275,22 @@ class _OnboardingViewState extends State<OnboardingView> {
 
     switch (_currentPage) {
       case 2:
-        stepTitle = l10n.profileInfo ?? 'Basic Info';
+        stepTitle = l10n.profileInfo;
         break;
       case 3:
-        stepTitle = l10n.profilePhotoTitle ?? 'Photo';
+        stepTitle = l10n.profilePhotoTitle;
         break;
       case 4:
-        stepTitle = l10n.bodyStatsTitle ?? 'Body Stats';
+        stepTitle = l10n.bodyStatsTitle;
         break;
       case 5:
-        stepTitle = l10n.fitnessGoal ?? 'Goals';
+        stepTitle = l10n.fitnessGoal;
         break;
       case 6: // Exercise
-        stepTitle = 'Target Exercise'; // Need l10n?
+        stepTitle = l10n.targetExercise;
         break;
       case 7: // Guardian
-        stepTitle = 'Guardian'; // Need l10n?
+        stepTitle = l10n.safetyGuardianTitle;
         break;
     }
 
@@ -301,14 +304,17 @@ class _OnboardingViewState extends State<OnboardingView> {
             children: [
               Text(
                 l10n.onboardingStepPreview(currentStepIndex, stepTitle),
-                style: GoogleFonts.barlow(
+                style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1A237E),
+                  color: AppTheme.indigoInk,
                 ),
               ),
               Text(
                 "$currentStepIndex/$totalSteps",
-                style: GoogleFonts.barlow(color: Colors.black45, fontSize: 12),
+                style: GoogleFonts.outfit(
+                  color: AppTheme.textSecondary,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -321,8 +327,9 @@ class _OnboardingViewState extends State<OnboardingView> {
                   height: 6,
                   decoration: BoxDecoration(
                     color: index < currentStepIndex
-                        ? const Color(0xFF5E35B1) // Deep Purple
-                        : Colors.black12,
+                        ? AppTheme
+                              .primary // Iris Orchid
+                        : AppTheme.textSecondary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -335,6 +342,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   Widget _buildBottomControls() {
+    final l10n = AppLocalizations.of(context)!;
     // 1. Privacy Page Controls (Index 0)
     if (_currentPage == 0) {
       return Padding(
@@ -365,26 +373,33 @@ class _OnboardingViewState extends State<OnboardingView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // AI Consultant Button handled in Guardian Page specific UI if needed,
-            // but here we provide the main flow button
+            // AI Consultant Button is the "Next" action here
+            // We use the same specific button structure for "Start"
             SizedBox(
               width: double.infinity,
-              child: _buildPrimaryButton(
-                onPressed: _completeOnboardingAndNavigate,
-                label:
-                    AppLocalizations.of(context)!.getStarted ?? 'Start Journey',
+              child: AIConsultantButton(
+                onPressed: () => _finishOnboarding(startAI: true),
               ),
             ),
             const SizedBox(height: 16),
-            TextButton(
-              onPressed: _previousPage,
-              child: Text(
-                AppLocalizations.of(context)!.previous ?? 'Back',
-                style: GoogleFonts.barlow(
-                  color: Colors.black54,
-                  fontWeight: FontWeight.w600,
+            // Standard "Back | Next" style row for simpler options
+            Row(
+              children: [
+                SizedBox(
+                  width: 110,
+                  child: _buildSecondaryButton(
+                    onPressed: _previousPage,
+                    label: AppLocalizations.of(context)!.previous,
+                  ),
                 ),
-              ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: _buildPrimaryButton(
+                    onPressed: () => _finishOnboarding(startAI: false),
+                    label: l10n.justStart,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -392,27 +407,23 @@ class _OnboardingViewState extends State<OnboardingView> {
     }
 
     // 4. Standard Controls (Basic Info, Photo, Body, Goals, Exercise - Index 2-6)
+    // Refactored to | Back (150) | 20px Gap | Next (Expanded) | Layout
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
           SizedBox(
-            width: double.infinity,
-            child: _buildPrimaryButton(
-              onPressed: _onNextPressed,
-              label: AppLocalizations.of(context)!.next ?? 'Next',
+            width: 110,
+            child: _buildSecondaryButton(
+              onPressed: _previousPage,
+              label: AppLocalizations.of(context)!.previous,
             ),
           ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: _previousPage,
-            child: Text(
-              AppLocalizations.of(context)!.previous ?? 'Back',
-              style: GoogleFonts.barlow(
-                color: Colors.black54,
-                fontWeight: FontWeight.w600,
-              ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: _buildPrimaryButton(
+              onPressed: _onNextPressed,
+              label: AppLocalizations.of(context)!.next,
             ),
           ),
         ],
@@ -435,25 +446,54 @@ class _OnboardingViewState extends State<OnboardingView> {
           ),
         ],
         gradient: const LinearGradient(
-          colors: [Color(0xFF5E35B1), Color(0xFF9575CD)],
+          colors: [AppTheme.primary, Color(0xFF9F5FD8)], // Iris Orchid Gradient
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
-      child: ElevatedButton(
+      child: SizedBox(
+        height: 48,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            padding: EdgeInsets.zero, // Remove padding as we have fixed height
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+          child: Text(
+            label.toUpperCase(),
+            style: GoogleFonts.outfit(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.0,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecondaryButton({
+    required VoidCallback onPressed,
+    required String label,
+  }) {
+    return SizedBox(
+      height: 48, // Compact height
+      child: OutlinedButton(
         onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: AppTheme.primary, width: 1.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
+          foregroundColor: AppTheme.primary,
         ),
         child: Text(
           label.toUpperCase(),
-          style: GoogleFonts.barlow(
-            color: Colors.white,
+          style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
             letterSpacing: 1.0,
           ),
@@ -519,8 +559,8 @@ class _OnboardingViewState extends State<OnboardingView> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3E5F5),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.background,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -532,8 +572,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                 const SizedBox(height: 24),
                 Text(
                   AppLocalizations.of(context)!.disclaimerTitle,
-                  style: GoogleFonts.barlow(
-                    color: const Color(0xFF1A237E),
+                  style: GoogleFonts.outfit(
+                    color: AppTheme.indigoInk,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
@@ -541,8 +581,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                 const SizedBox(height: 16),
                 Text(
                   AppLocalizations.of(context)!.disclaimerMessage,
-                  style: GoogleFonts.barlow(
-                    color: Colors.black54,
+                  style: GoogleFonts.outfit(
+                    color: AppTheme.textPrimary,
                     fontSize: 16,
                     height: 1.5,
                   ),
@@ -568,6 +608,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   Future<void> _completeOnboardingAndNavigate() async {
+    final l10n = AppLocalizations.of(context)!;
     // Parse Age
     int age = 30; // Default
     try {
@@ -592,7 +633,7 @@ class _OnboardingViewState extends State<OnboardingView> {
       id: 'user_${DateTime.now().millisecondsSinceEpoch}',
       nickname: _nicknameController.text.isNotEmpty
           ? _nicknameController.text
-          : 'Gemini User',
+          : l10n.defaultNickname,
       age: age + 2,
       gender: _selectedGender,
       height: _height,
@@ -601,7 +642,7 @@ class _OnboardingViewState extends State<OnboardingView> {
       fitnessLevel: _experienceLevel,
       targetExercise: _exerciseController.text.isNotEmpty
           ? _exerciseController.text
-          : 'Full Body Workout',
+          : l10n.defaultExercise,
       healthConditions: injuriesString,
       goal: goalsString,
       userTier: 'free',
@@ -679,8 +720,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                     children: [
                       Text(
                         AppLocalizations.of(context)!.selectAgeRange,
-                        style: GoogleFonts.barlow(
-                          color: const Color(0xFF1A237E),
+                        style: GoogleFonts.outfit(
+                          color: AppTheme.indigoInk,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -692,7 +733,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                         },
                         icon: const Icon(
                           Icons.check,
-                          color: Color(0xFF5E35B1),
+                          color: AppTheme.primary,
                           size: 28,
                         ),
                       ),
@@ -720,10 +761,12 @@ class _OnboardingViewState extends State<OnboardingView> {
                           return Center(
                             child: Text(
                               _ageRanges[index],
-                              style: GoogleFonts.barlow(
+                              style: GoogleFonts.outfit(
                                 color: isSelected
-                                    ? const Color(0xFF5E35B1)
-                                    : Colors.black26,
+                                    ? AppTheme.primary
+                                    : AppTheme.textSecondary.withValues(
+                                        alpha: 0.3,
+                                      ),
                                 fontSize: isSelected ? 24 : 18,
                                 fontWeight: isSelected
                                     ? FontWeight.bold
@@ -746,6 +789,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   // --- API Key Dialog ---
   Future<void> _showApiKeyDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final getApiKeyUseCase = getIt<GetApiKeyUseCase>();
     final setApiKeyUseCase = getIt<SetApiKeyUseCase>();
 
@@ -762,23 +806,23 @@ class _OnboardingViewState extends State<OnboardingView> {
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
-          "Gemini API Key",
-          style: GoogleFonts.barlow(
+          l10n.geminiApiKeyTitle,
+          style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF1A237E),
+            color: AppTheme.indigoInk,
           ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Enter your Gemini API Key to enable AI features.",
-              style: GoogleFonts.barlow(color: Colors.black54),
+              l10n.apiKeyDialogDescription,
+              style: GoogleFonts.outfit(color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              style: GoogleFonts.barlow(color: Colors.black87),
+              style: GoogleFonts.outfit(color: AppTheme.textPrimary),
               decoration: InputDecoration(
                 labelText: "API Key",
                 labelStyle: TextStyle(color: Colors.black45),

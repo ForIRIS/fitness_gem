@@ -324,10 +324,7 @@
       }
     }
   },
-  "onboardingStep1": "1단계: 프로필 및 안전 설정",
-  "onboardingStep2": "2단계: AI 상담",
-  "onboardingStep3": "3단계: 신체 균형 측정",
-  "onboardingStepPreview": "총 3단계 중 {current}단계: {stepName}",
+  "onboardingStepPreview": "총 6단계 중 {current}단계: {stepName}",
   "@onboardingStepPreview": {
     "placeholders": {
       "current": {
@@ -338,18 +335,9 @@
       }
     }
   },
-  "onboardingNextStep": "다음 단계: {stepName}",
-  "@onboardingNextStep": {
-    "placeholders": {
-      "stepName": {
-        "type": "String"
-      }
-    }
-  },
   "aiInviteMessageComplete": "목표 분석이 완료되었습니다! 더 정확한 자세 교정을 위해 30초 움직임 측정을 추천합니다.",
   "aiInviteAssessmentButton": "자세 측정 시작하기",
   "aiInviteAssessmentSkip": "나중에 하기",
-  "@_NEW_ONBOARDING_STRINGS": {},
   "onboardingWelcomeTitle": "Fitness Gem에 오신 것을 환영합니다",
   "onboardingWelcomeSubtitle": "AI와 함께하는 맞춤형 피트니스 여정",
   "onboardingStep1Description": "더 나은 경험을 위해 프로필을 설정해주세요.",
@@ -432,6 +420,11 @@
   "weight": "몸무게",
   "metricUnit": "미터법",
   "imperialUnit": "야드파운드법",
+  "justStart": "그냥 시작하기",
+  "defaultNickname": "Gemini 사용자",
+  "defaultExercise": "전신 운동",
+  "unitCm": "cm",
+  "unitKg": "kg",
   "fitnessGoalsTitle": "운동 목표",
   "fitnessGoalsDesc": "달성하고자 하는 목표를 선택하세요.",
   "fitnessGoalDesc": "달성하고자 하는 목표를 선택하세요.",

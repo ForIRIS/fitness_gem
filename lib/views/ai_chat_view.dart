@@ -193,7 +193,7 @@ class _AIChatViewState extends State<AIChatView> {
         );
 
         result.fold(
-          (failure) => _handleError(failure.message ?? 'Unknown error'),
+          (failure) => _handleError(failure.message),
           (response) => _handleSuccess(response.message),
         );
       } else {

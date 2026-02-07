@@ -249,8 +249,6 @@ class FeaturedProgramDetailView extends ConsumerWidget {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final task = curriculum.workoutTasks[index];
-                      final isLast =
-                          index == curriculum.workoutTasks.length - 1;
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
@@ -442,8 +440,8 @@ class FeaturedProgramDetailView extends ConsumerWidget {
       return 'Relax & Stretch';
     }
     final int validTime = task.durationSec ?? task.timeoutSec ?? 60;
-    if (task.reps == 0) {
-      return '$validTime Sec';
+    if (task.reps == 0 || !task.isCountable) {
+      return '$validTime Sec × ${task.adjustedSets} Sets';
     }
     return '${task.adjustedReps} Reps × ${task.adjustedSets} Sets';
   }

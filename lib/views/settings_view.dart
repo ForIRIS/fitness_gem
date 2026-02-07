@@ -16,8 +16,6 @@ import 'widgets/guardian_request_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'widgets/login_dialog.dart';
-import 'onboarding_view.dart'; // For navigation after delete
-import 'widgets/login_dialog.dart';
 import 'widgets/delete_confirmation_dialog.dart';
 import 'onboarding_view.dart'; // For navigation after delete
 import '../../domain/usecases/user/delete_user_profile.dart';
@@ -524,28 +522,34 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                           children: [
                             Expanded(
                               child: RadioListTile<String>(
+                                // ignore: deprecated_member_use
                                 title: Text(
                                   "SMS",
                                   style: GoogleFonts.barlow(fontSize: 14),
                                 ),
                                 value: 'sms',
+                                // ignore: deprecated_member_use
                                 groupValue: _emergencyMethod,
                                 activeColor: const Color(0xFF5E35B1),
                                 contentPadding: EdgeInsets.zero,
+                                // ignore: deprecated_member_use
                                 onChanged: (val) =>
                                     setState(() => _emergencyMethod = val!),
                               ),
                             ),
                             Expanded(
                               child: RadioListTile<String>(
+                                // ignore: deprecated_member_use
                                 title: Text(
                                   "Push",
                                   style: GoogleFonts.barlow(fontSize: 14),
                                 ),
                                 value: 'push',
+                                // ignore: deprecated_member_use
                                 groupValue: _emergencyMethod,
                                 activeColor: const Color(0xFF5E35B1),
                                 contentPadding: EdgeInsets.zero,
+                                // ignore: deprecated_member_use
                                 onChanged: (val) {
                                   final user =
                                       FirebaseAuth.instance.currentUser;
@@ -1139,7 +1143,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                       await _guardianService.sendGuardianRequest(
                         _guardianEmailController.text.trim(),
                       );
-                      if (mounted) {
+                      if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text("Guardian Request Sent!"),
@@ -1153,7 +1157,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                         }
                       }
                     } catch (e) {
-                      if (mounted) {
+                      if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text("Failed: $e"),

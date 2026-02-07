@@ -1460,35 +1460,11 @@ abstract class AppLocalizations {
   /// **'Analysis failed: {message}'**
   String errorAnalysisFailed(String message);
 
-  /// No description provided for @onboardingStep1.
-  ///
-  /// In en, this message translates to:
-  /// **'Step 1: Profile & Safety'**
-  String get onboardingStep1;
-
-  /// No description provided for @onboardingStep2.
-  ///
-  /// In en, this message translates to:
-  /// **'Step 2: AI Consultation'**
-  String get onboardingStep2;
-
-  /// No description provided for @onboardingStep3.
-  ///
-  /// In en, this message translates to:
-  /// **'Step 3: Physical Alignment'**
-  String get onboardingStep3;
-
   /// No description provided for @onboardingStepPreview.
   ///
   /// In en, this message translates to:
-  /// **'Step {current} of 3: {stepName}'**
+  /// **'Step {current} of 6: {stepName}'**
   String onboardingStepPreview(int current, String stepName);
-
-  /// No description provided for @onboardingNextStep.
-  ///
-  /// In en, this message translates to:
-  /// **'Coming Up: {stepName}'**
-  String onboardingNextStep(String stepName);
 
   /// No description provided for @aiInviteMessageComplete.
   ///
@@ -1508,193 +1484,193 @@ abstract class AppLocalizations {
   /// **'Skip for now'**
   String get aiInviteAssessmentSkip;
 
-  /// No description provided for @onboardingWelcomeTitle.
+  /// Title text for the onboarding welcome screen
   ///
   /// In en, this message translates to:
   /// **'Welcome to Fitness Gem'**
   String get onboardingWelcomeTitle;
 
-  /// No description provided for @onboardingWelcomeSubtitle.
+  /// Subtitle text for the onboarding welcome screen
   ///
   /// In en, this message translates to:
   /// **'Your AI Fitness Journey starts here.'**
   String get onboardingWelcomeSubtitle;
 
-  /// No description provided for @onboardingStep1Description.
+  /// Description for the first step of onboarding
   ///
   /// In en, this message translates to:
   /// **'Tell us about yourself to tailor your experience.'**
   String get onboardingStep1Description;
 
-  /// No description provided for @onboardingStep2Description.
+  /// Description for the second step of onboarding
   ///
   /// In en, this message translates to:
   /// **'Consult with Gemini via voice to build your plan.'**
   String get onboardingStep2Description;
 
-  /// No description provided for @onboardingStep3Description.
+  /// Description for the third step of onboarding
   ///
   /// In en, this message translates to:
   /// **'A 30-second camera check to perfect your form.'**
   String get onboardingStep3Description;
 
-  /// No description provided for @getStarted.
+  /// Label for the start button in onboarding
   ///
   /// In en, this message translates to:
   /// **'Get Started'**
   String get getStarted;
 
-  /// No description provided for @micPermissionReason.
+  /// Reason for requesting microphone access
   ///
   /// In en, this message translates to:
   /// **'Microphone access is needed for AI voice chat and emergency detection.'**
   String get micPermissionReason;
 
-  /// No description provided for @cameraPermissionReason.
+  /// Reason for requesting camera access
   ///
   /// In en, this message translates to:
   /// **'Camera access is needed for AI physical alignment and pose analysis.'**
   String get cameraPermissionReason;
 
-  /// No description provided for @listening.
+  /// Text showing when AI is listening to voice input
   ///
   /// In en, this message translates to:
   /// **'Listening...'**
   String get listening;
 
-  /// No description provided for @typeMessageHint.
+  /// Placeholder text for the chat input field
   ///
   /// In en, this message translates to:
   /// **'Type a message...'**
   String get typeMessageHint;
 
-  /// No description provided for @assessmentRecommended.
+  /// Title for the physical assessment recommendation
   ///
   /// In en, this message translates to:
   /// **'Physical Assessment Recommended'**
   String get assessmentRecommended;
 
-  /// No description provided for @assessmentRecommendedDesc.
+  /// Description for the physical assessment recommendation
   ///
   /// In en, this message translates to:
   /// **'Let\'s check your form level.'**
   String get assessmentRecommendedDesc;
 
-  /// No description provided for @interviewComplete.
+  /// Header title when the AI interview process is done
   ///
   /// In en, this message translates to:
   /// **'Interview Complete'**
   String get interviewComplete;
 
-  /// No description provided for @safetyGuardianTitle.
+  /// Title for the safety guardian feature
   ///
   /// In en, this message translates to:
   /// **'Safety Guardian'**
   String get safetyGuardianTitle;
 
-  /// No description provided for @safetyGuardianDescription.
+  /// Description of the safety guardian feature
   ///
   /// In en, this message translates to:
   /// **'Protect yourself with real-time AI safety monitoring.'**
   String get safetyGuardianDescription;
 
-  /// No description provided for @benefitFallDetectionTitle.
+  /// Title for fall detection benefit
   ///
   /// In en, this message translates to:
   /// **'Fall Detection Available'**
   String get benefitFallDetectionTitle;
 
-  /// No description provided for @benefitFallDetectionDesc.
+  /// Description for fall detection benefit
   ///
   /// In en, this message translates to:
   /// **'AI detects sudden drops during workouts.'**
   String get benefitFallDetectionDesc;
 
-  /// No description provided for @benefitGuardianEmailTitle.
+  /// Title for guardian email connection
   ///
   /// In en, this message translates to:
   /// **'Guardian Connection'**
   String get benefitGuardianEmailTitle;
 
-  /// No description provided for @benefitGuardianEmailDesc.
+  /// Description for guardian email connection
   ///
   /// In en, this message translates to:
   /// **'Link via Guardian\'s email in Settings.'**
   String get benefitGuardianEmailDesc;
 
-  /// No description provided for @benefitEmergencyPushTitle.
+  /// Title for emergency push notification benefit
   ///
   /// In en, this message translates to:
   /// **'Emergency Protection'**
   String get benefitEmergencyPushTitle;
 
-  /// No description provided for @benefitEmergencyPushDesc.
+  /// Description for emergency push notification benefit
   ///
   /// In en, this message translates to:
   /// **'Push notifications sent to guardian if no response.'**
   String get benefitEmergencyPushDesc;
 
-  /// No description provided for @guardianEmailNotice.
+  /// Notice for linking a guardian via email
   ///
   /// In en, this message translates to:
   /// **'Your Guardian must also be a registered user. You can link them by entering their email address in Settings > Account.'**
   String get guardianEmailNotice;
 
-  /// No description provided for @emergencyFallSuspected.
+  /// Question asked when a fall is suspected
   ///
   /// In en, this message translates to:
   /// **'Fall Suspected?'**
   String get emergencyFallSuspected;
 
-  /// No description provided for @emergencyAreYouOkay.
+  /// Question asked during emergency check
   ///
   /// In en, this message translates to:
   /// **'Are you okay?'**
   String get emergencyAreYouOkay;
 
-  /// No description provided for @emergencyCheckingStatus.
+  /// Informing the user that status is being checked
   ///
   /// In en, this message translates to:
   /// **'Checking your status...'**
   String get emergencyCheckingStatus;
 
-  /// No description provided for @emergencyPleaseRest.
+  /// Instruction for the user to rest after a fall
   ///
   /// In en, this message translates to:
   /// **'Please rest for a moment.'**
   String get emergencyPleaseRest;
 
-  /// No description provided for @emergencyImOk.
+  /// Button text to dismiss emergency
   ///
   /// In en, this message translates to:
   /// **'I\'M OK'**
   String get emergencyImOk;
 
-  /// No description provided for @emergencyTitle.
+  /// Header for emergency screen
   ///
   /// In en, this message translates to:
   /// **'EMERGENCY'**
   String get emergencyTitle;
 
-  /// No description provided for @emergencySubtitle.
+  /// Subtitle for emergency screen
   ///
   /// In en, this message translates to:
   /// **'Fall detected. Help is on the way.'**
   String get emergencySubtitle;
 
-  /// No description provided for @emergencySlideToCall.
+  /// Label for the slide button to call SOS
   ///
   /// In en, this message translates to:
   /// **'Slide to Call SOS'**
   String get emergencySlideToCall;
 
-  /// No description provided for @emergencyHoldToCancel.
+  /// Label for the hold button to cancel SOS
   ///
   /// In en, this message translates to:
   /// **'Hold to Cancel'**
   String get emergencyHoldToCancel;
 
-  /// No description provided for @emergencyTtsWarning.
+  /// TTS warning during emergency
   ///
   /// In en, this message translates to:
   /// **'Emergency Detected. Help is on the way.'**
@@ -1712,61 +1688,61 @@ abstract class AppLocalizations {
   /// **'Location: {url}'**
   String emergencyLocationLink(String url);
 
-  /// No description provided for @privacyPolicyTitle.
+  /// Title for the privacy policy
   ///
   /// In en, this message translates to:
   /// **'Privacy Policy'**
   String get privacyPolicyTitle;
 
-  /// No description provided for @privacyPolicyIntro.
+  /// Intro for the privacy policy
   ///
   /// In en, this message translates to:
   /// **'Your privacy is our priority. Here is how we handle your data:'**
   String get privacyPolicyIntro;
 
-  /// No description provided for @privacyLocalTitle.
+  /// Title for local storage section in privacy policy
   ///
   /// In en, this message translates to:
   /// **'Local Storage'**
   String get privacyLocalTitle;
 
-  /// No description provided for @privacyLocalDesc.
+  /// Description for local storage in privacy policy
   ///
   /// In en, this message translates to:
   /// **'Biometric data (Height/Weight/Gender) stays on your phone.'**
   String get privacyLocalDesc;
 
-  /// No description provided for @privacyGeminiTitle.
+  /// Title for Gemini analysis in privacy policy
   ///
   /// In en, this message translates to:
   /// **'Gemini Analysis'**
   String get privacyGeminiTitle;
 
-  /// No description provided for @privacyGeminiDesc.
+  /// Description for Gemini analysis in privacy policy
   ///
   /// In en, this message translates to:
   /// **'Data is used for real-time analysis only. NOT used for training.'**
   String get privacyGeminiDesc;
 
-  /// No description provided for @guardianPushPurpose.
+  /// Description for the purpose of guardian push notifications
   ///
   /// In en, this message translates to:
   /// **'Used ONLY for fall detection alerts.'**
   String get guardianPushPurpose;
 
-  /// No description provided for @privacyMinimalTitle.
+  /// Title for minimal data collection section
   ///
   /// In en, this message translates to:
   /// **'Minimal Data'**
   String get privacyMinimalTitle;
 
-  /// No description provided for @privacyMinimalDesc.
+  /// Description for minimal data collection
   ///
   /// In en, this message translates to:
   /// **'We prioritize your privacy. No personal data is shared with third parties. Your email is used SOLELY for Guardian notifications and is deleted immediately upon account withdrawal.'**
   String get privacyMinimalDesc;
 
-  /// No description provided for @confirmDeleteTitle.
+  /// Confirmation title for account deletion
   ///
   /// In en, this message translates to:
   /// **'Are you sure?'**
@@ -1776,183 +1752,213 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'This action cannot be undone. To confirm, please type \"{keyword}\" below.'**
-  String confirmDeleteMessage(Object keyword);
+  String confirmDeleteMessage(String keyword);
 
   /// No description provided for @typeToConfirm.
   ///
   /// In en, this message translates to:
   /// **'Type \"{keyword}\"'**
-  String typeToConfirm(Object keyword);
+  String typeToConfirm(String keyword);
 
-  /// No description provided for @agreeKeyword.
+  /// Keyword to agree with
   ///
   /// In en, this message translates to:
   /// **'agree'**
   String get agreeKeyword;
 
-  /// No description provided for @delete.
+  /// Label for delete button
   ///
   /// In en, this message translates to:
   /// **'Delete'**
   String get delete;
 
-  /// No description provided for @privacyAgreement.
+  /// Checkbox text for privacy agreement
   ///
   /// In en, this message translates to:
   /// **'I have read and agree to the Privacy Policy.'**
   String get privacyAgreement;
 
-  /// No description provided for @genderTitle.
+  /// Question about gender identification
   ///
   /// In en, this message translates to:
   /// **'How do you identify?'**
   String get genderTitle;
 
-  /// No description provided for @genderMale.
+  /// Option for male gender identification
   ///
   /// In en, this message translates to:
   /// **'Male'**
   String get genderMale;
 
-  /// No description provided for @genderFemale.
+  /// Option for female gender identification
   ///
   /// In en, this message translates to:
   /// **'Female'**
   String get genderFemale;
 
-  /// No description provided for @genderNonBinary.
+  /// Option for non-binary gender identification
   ///
   /// In en, this message translates to:
   /// **'Non-binary'**
   String get genderNonBinary;
 
-  /// No description provided for @genderPreferNotToSay.
+  /// Option to not disclose gender
   ///
   /// In en, this message translates to:
   /// **'Prefer not to say'**
   String get genderPreferNotToSay;
 
-  /// No description provided for @profilePhotoTitle.
+  /// Title for profile photo step
   ///
   /// In en, this message translates to:
   /// **'Add a Profile Photo'**
   String get profilePhotoTitle;
 
-  /// No description provided for @profilePhotoDesc.
+  /// Description for profile photo step
   ///
   /// In en, this message translates to:
   /// **'This helps personalize your experience. It remains on your device.'**
   String get profilePhotoDesc;
 
-  /// No description provided for @photoPrivacyNote.
+  /// Privacy note about profile photo storage
   ///
   /// In en, this message translates to:
   /// **'Note: Your photo is stored locally and not shared with servers.'**
   String get photoPrivacyNote;
 
-  /// No description provided for @removePhoto.
+  /// Label for removing profile photo
   ///
   /// In en, this message translates to:
   /// **'Remove Photo'**
   String get removePhoto;
 
-  /// No description provided for @takePhoto.
+  /// Label for taking a profile photo
   ///
   /// In en, this message translates to:
   /// **'Take Photo'**
   String get takePhoto;
 
-  /// No description provided for @chooseFromGallery.
+  /// Label for choosing a profile photo from gallery
   ///
   /// In en, this message translates to:
   /// **'Choose from Gallery'**
   String get chooseFromGallery;
 
-  /// No description provided for @bodyStatsTitle.
+  /// Title for body measurements section
   ///
   /// In en, this message translates to:
   /// **'Body Measurements'**
   String get bodyStatsTitle;
 
-  /// No description provided for @bodyStatsDesc.
+  /// Description for body measurements section
   ///
   /// In en, this message translates to:
   /// **'Helps us calculate calories and track progress.'**
   String get bodyStatsDesc;
 
-  /// No description provided for @heightLabel.
+  /// Label for height input in centimeters
   ///
   /// In en, this message translates to:
   /// **'Height (cm)'**
   String get heightLabel;
 
-  /// No description provided for @height.
+  /// Label for height input
   ///
   /// In en, this message translates to:
   /// **'Height'**
   String get height;
 
-  /// No description provided for @weightLabel.
+  /// Label for weight input in kilograms
   ///
   /// In en, this message translates to:
   /// **'Weight (kg)'**
   String get weightLabel;
 
-  /// No description provided for @weight.
+  /// Label for weight input
   ///
   /// In en, this message translates to:
   /// **'Weight'**
   String get weight;
 
-  /// No description provided for @metricUnit.
+  /// Label for metric unit selection
   ///
   /// In en, this message translates to:
   /// **'Metric'**
   String get metricUnit;
 
-  /// No description provided for @imperialUnit.
+  /// Label for imperial unit selection
   ///
   /// In en, this message translates to:
   /// **'Imperial'**
   String get imperialUnit;
 
-  /// No description provided for @fitnessGoalsTitle.
+  /// Label for starting without AI consultation
+  ///
+  /// In en, this message translates to:
+  /// **'Just Start'**
+  String get justStart;
+
+  /// Default nickname for new users
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini User'**
+  String get defaultNickname;
+
+  /// Default target exercise
+  ///
+  /// In en, this message translates to:
+  /// **'Full Body Workout'**
+  String get defaultExercise;
+
+  /// Unit for centimeters
+  ///
+  /// In en, this message translates to:
+  /// **'cm'**
+  String get unitCm;
+
+  /// Unit for kilograms
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get unitKg;
+
+  /// Title for fitness goals section
   ///
   /// In en, this message translates to:
   /// **'Your Fitness Goals'**
   String get fitnessGoalsTitle;
 
-  /// No description provided for @fitnessGoalsDesc.
+  /// Description for fitness goals section
   ///
   /// In en, this message translates to:
   /// **'Select what you want to achieve.'**
   String get fitnessGoalsDesc;
 
-  /// No description provided for @fitnessGoalDesc.
+  /// Description for fitness goal selection
   ///
   /// In en, this message translates to:
   /// **'Select what you want to achieve.'**
   String get fitnessGoalDesc;
 
-  /// No description provided for @goalLoseWeight.
+  /// Option for losing weight
   ///
   /// In en, this message translates to:
   /// **'Lose Weight'**
   String get goalLoseWeight;
 
-  /// No description provided for @goalBuildMuscle.
+  /// Option for building muscle
   ///
   /// In en, this message translates to:
   /// **'Build Muscle'**
   String get goalBuildMuscle;
 
-  /// No description provided for @goalImproveEndurance.
+  /// Option for improving endurance
   ///
   /// In en, this message translates to:
   /// **'Improve Endurance'**
   String get goalImproveEndurance;
 
-  /// No description provided for @goalFlexibility.
+  /// Option for flexibility
   ///
   /// In en, this message translates to:
   /// **'Flexibility'**

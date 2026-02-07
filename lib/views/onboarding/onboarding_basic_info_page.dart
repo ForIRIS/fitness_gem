@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../l10n/app_localizations.dart';
+import '../../theme/app_theme.dart';
 
 class OnboardingBasicInfoPage extends StatelessWidget {
   final TextEditingController nicknameController;
@@ -28,17 +29,20 @@ class OnboardingBasicInfoPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.profileInfo ?? 'Basic Info',
-            style: GoogleFonts.barlowCondensed(
-              color: const Color(0xFF1A237E),
+            l10n.profileInfo,
+            style: GoogleFonts.outfit(
+              color: AppTheme.indigoInk,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.profileDescription ?? 'Tell us a bit about yourself.',
-            style: GoogleFonts.barlow(color: Colors.black54, fontSize: 16),
+            l10n.profileDescription,
+            style: GoogleFonts.outfit(
+              color: AppTheme.textSecondary,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 32),
 
@@ -47,7 +51,7 @@ class OnboardingBasicInfoPage extends StatelessWidget {
           const SizedBox(height: 12),
           TextField(
             controller: nicknameController,
-            style: GoogleFonts.barlow(color: Colors.black87),
+            style: GoogleFonts.outfit(color: AppTheme.textPrimary),
             decoration: _buildInputDecoration(l10n.enterNickname),
           ),
           const SizedBox(height: 32),
@@ -65,7 +69,7 @@ class OnboardingBasicInfoPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -76,8 +80,8 @@ class OnboardingBasicInfoPage extends StatelessWidget {
                 children: [
                   Text(
                     selectedAgeRange,
-                    style: GoogleFonts.barlow(
-                      color: Colors.black87,
+                    style: GoogleFonts.outfit(
+                      color: AppTheme.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
@@ -91,7 +95,7 @@ class OnboardingBasicInfoPage extends StatelessWidget {
           const SizedBox(height: 32),
 
           // Gender Selection (Inclusive)
-          _buildInputLabel(l10n.genderTitle ?? 'Gender'),
+          _buildInputLabel(l10n.genderTitle),
           const SizedBox(height: 12),
           Wrap(
             spacing: 12,
@@ -99,25 +103,25 @@ class OnboardingBasicInfoPage extends StatelessWidget {
             children: [
               _buildGenderChip(
                 context,
-                label: l10n.genderMale ?? 'Male',
+                label: l10n.genderMale,
                 value: 'male',
                 icon: Icons.male,
               ),
               _buildGenderChip(
                 context,
-                label: l10n.genderFemale ?? 'Female',
+                label: l10n.genderFemale,
                 value: 'female',
                 icon: Icons.female,
               ),
               _buildGenderChip(
                 context,
-                label: l10n.genderNonBinary ?? 'Non-binary',
+                label: l10n.genderNonBinary,
                 value: 'non_binary',
                 icon: Icons.transgender,
               ),
               _buildGenderChip(
                 context,
-                label: l10n.genderPreferNotToSay ?? 'Prefer not to say',
+                label: l10n.genderPreferNotToSay,
                 value: 'prefer_not_to_say',
                 icon: Icons.do_not_disturb,
               ),
@@ -142,7 +146,7 @@ class OnboardingBasicInfoPage extends StatelessWidget {
           Icon(
             icon,
             size: 18,
-            color: isSelected ? Colors.white : const Color(0xFF5E35B1),
+            color: isSelected ? Colors.white : AppTheme.primary,
           ),
           const SizedBox(width: 8),
           Text(label),
@@ -152,10 +156,10 @@ class OnboardingBasicInfoPage extends StatelessWidget {
       onSelected: (selected) {
         if (selected) onGenderSelected(value);
       },
-      selectedColor: const Color(0xFF5E35B1),
+      selectedColor: AppTheme.primary,
       backgroundColor: Colors.white,
-      labelStyle: GoogleFonts.barlow(
-        color: isSelected ? Colors.white : const Color(0xFF5E35B1),
+      labelStyle: GoogleFonts.outfit(
+        color: isSelected ? Colors.white : AppTheme.primary,
         fontWeight: FontWeight.w600,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -164,7 +168,7 @@ class OnboardingBasicInfoPage extends StatelessWidget {
         side: BorderSide(
           color: isSelected
               ? Colors.transparent
-              : const Color(0xFF5E35B1).withOpacity(0.3),
+              : AppTheme.primary.withValues(alpha: 0.3),
         ),
       ),
     );
@@ -173,8 +177,8 @@ class OnboardingBasicInfoPage extends StatelessWidget {
   Widget _buildInputLabel(String text) {
     return Text(
       text,
-      style: GoogleFonts.barlow(
-        color: Colors.black54,
+      style: GoogleFonts.outfit(
+        color: AppTheme.textSecondary,
         fontSize: 14,
         fontWeight: FontWeight.w500,
       ),
@@ -184,7 +188,9 @@ class OnboardingBasicInfoPage extends StatelessWidget {
   InputDecoration _buildInputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.barlow(color: Colors.black38),
+      hintStyle: GoogleFonts.outfit(
+        color: AppTheme.textSecondary.withValues(alpha: 0.5),
+      ),
       filled: true,
       fillColor: Colors.white,
       enabledBorder: OutlineInputBorder(
@@ -192,7 +198,7 @@ class OnboardingBasicInfoPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Color(0xFF5E35B1), width: 1.5),
+        borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
         borderRadius: BorderRadius.circular(16),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),

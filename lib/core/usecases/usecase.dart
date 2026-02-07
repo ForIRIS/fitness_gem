@@ -5,11 +5,11 @@ import '../error/failures.dart';
 ///
 /// Type: Return type of the use case
 /// Params: Parameters required by the use case
-abstract class UseCase<Type, Params> {
-  Future<Either<Failure, Type>> execute(Params params);
+abstract class UseCase<T, Params> {
+  Future<Either<Failure, T>> execute(Params params);
 }
 
 /// Use case with no parameters
-abstract class NoParamsUseCase<Type> {
-  Future<Either<Failure, Type>> execute();
+abstract class NoParamsUseCase<T> {
+  Future<Either<Failure, T>> execute();
 }

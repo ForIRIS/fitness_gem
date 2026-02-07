@@ -171,7 +171,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   stream: getIt<ConnectivityService>().mockDataStream,
                   initialData: getIt<ConnectivityService>().isUsingMockData,
                   builder: (context, snapshot) {
-                    if (snapshot.data == true) {
+                    final isMock = snapshot.data == true;
+                    final isConnected =
+                        getIt<ConnectivityService>().isConnected;
+
+                    if (isMock) {
                       return Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
@@ -179,18 +183,24 @@ class _HomeViewState extends ConsumerState<HomeView> {
                           horizontal: 16,
                         ),
                         margin: const EdgeInsets.only(bottom: 8),
-                        color: Colors.orange.shade700,
+                        color: isConnected
+                            ? Colors.blue.shade700
+                            : Colors.orange.shade700,
                         child: Row(
                           children: [
-                            const Icon(
-                              Icons.cloud_off,
+                            Icon(
+                              isConnected
+                                  ? Icons.info_outline
+                                  : Icons.cloud_off,
                               color: Colors.white,
                               size: 18,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Using offline data. Some content may be outdated.',
+                                isConnected
+                                    ? 'Using Demo data. Some content may be outdated.'
+                                    : 'Using offline data. Some content may be outdated.',
                                 style: GoogleFonts.outfit(
                                   color: Colors.white,
                                   fontSize: 12,

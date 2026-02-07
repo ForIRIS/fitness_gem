@@ -723,22 +723,8 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get onboardingStep1 => '1단계: 프로필 및 안전 설정';
-
-  @override
-  String get onboardingStep2 => '2단계: AI 상담';
-
-  @override
-  String get onboardingStep3 => '3단계: 신체 균형 측정';
-
-  @override
   String onboardingStepPreview(int current, String stepName) {
-    return '총 3단계 중 $current단계: $stepName';
-  }
-
-  @override
-  String onboardingNextStep(String stepName) {
-    return '다음 단계: $stepName';
+    return '총 6단계 중 $current단계: $stepName';
   }
 
   @override
@@ -890,12 +876,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get confirmDeleteTitle => '정말 진행하시겠습니까?';
 
   @override
-  String confirmDeleteMessage(Object keyword) {
+  String confirmDeleteMessage(String keyword) {
     return '이 작업은 되돌릴 수 없습니다. 확인하려면 아래에 \"$keyword\"를 입력하세요.';
   }
 
   @override
-  String typeToConfirm(Object keyword) {
+  String typeToConfirm(String keyword) {
     return '\"$keyword\" 입력';
   }
 
@@ -964,6 +950,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get imperialUnit => '야드파운드법';
+
+  @override
+  String get justStart => '그냥 시작하기';
+
+  @override
+  String get defaultNickname => 'Gemini 사용자';
+
+  @override
+  String get defaultExercise => '전신 운동';
+
+  @override
+  String get unitCm => 'cm';
+
+  @override
+  String get unitKg => 'kg';
 
   @override
   String get fitnessGoalsTitle => '운동 목표';

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../l10n/app_localizations.dart';
+import '../../theme/app_theme.dart';
 
 class OnboardingFitnessGoalsPage extends StatelessWidget {
   final Set<String> selectedInjuries;
-  final Function(String, bool) onInjurySelected;
+  final void Function(String, bool) onInjurySelected;
   final bool showCustomInjury;
   final TextEditingController customInjuryController;
   final Set<String> selectedGoals;
-  final Function(String, bool) onGoalSelected;
+  final void Function(String, bool) onGoalSelected;
   final bool showCustomGoal;
   final TextEditingController customGoalController;
   final String experienceLevel;
-  final Function(String) onExperienceLevelChanged;
+  final void Function(String) onExperienceLevelChanged;
 
   const OnboardingFitnessGoalsPage({
     super.key,
@@ -61,17 +62,20 @@ class OnboardingFitnessGoalsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.fitnessGoal ?? 'Fitness Goals',
-            style: GoogleFonts.barlowCondensed(
-              color: const Color(0xFF1A237E),
+            l10n.fitnessGoal,
+            style: GoogleFonts.outfit(
+              color: AppTheme.indigoInk,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.fitnessGoalDesc ?? 'Help us tailor your plan.',
-            style: GoogleFonts.barlow(color: Colors.black54, fontSize: 16),
+            l10n.fitnessGoalDesc,
+            style: GoogleFonts.outfit(
+              color: AppTheme.textSecondary,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 32),
 
@@ -86,11 +90,11 @@ class OnboardingFitnessGoalsPage extends StatelessWidget {
               return FilterChip(
                 label: Text(injury),
                 selected: isSelected,
-                selectedColor: const Color(0xFFE1BEE7),
+                selectedColor: AppTheme.primary.withValues(alpha: 0.2),
                 backgroundColor: Colors.white,
-                checkmarkColor: const Color(0xFF5E35B1),
-                labelStyle: GoogleFonts.barlow(
-                  color: isSelected ? const Color(0xFF5E35B1) : Colors.black54,
+                checkmarkColor: AppTheme.primary,
+                labelStyle: GoogleFonts.outfit(
+                  color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 ),
                 elevation: isSelected ? 2 : 0,
@@ -111,7 +115,7 @@ class OnboardingFitnessGoalsPage extends StatelessWidget {
             const SizedBox(height: 12),
             TextField(
               controller: customInjuryController,
-              style: GoogleFonts.barlow(color: Colors.black87),
+              style: GoogleFonts.outfit(color: AppTheme.textPrimary),
               decoration: _buildInputDecoration(l10n.enterInjuryDetails),
             ),
           ],
@@ -129,11 +133,11 @@ class OnboardingFitnessGoalsPage extends StatelessWidget {
               return FilterChip(
                 label: Text(goal),
                 selected: isSelected,
-                selectedColor: const Color(0xFFE1BEE7),
+                selectedColor: AppTheme.primary.withValues(alpha: 0.2),
                 backgroundColor: Colors.white,
-                checkmarkColor: const Color(0xFF5E35B1),
-                labelStyle: GoogleFonts.barlow(
-                  color: isSelected ? const Color(0xFF5E35B1) : Colors.black54,
+                checkmarkColor: AppTheme.primary,
+                labelStyle: GoogleFonts.outfit(
+                  color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 ),
                 elevation: isSelected ? 2 : 0,
@@ -154,7 +158,7 @@ class OnboardingFitnessGoalsPage extends StatelessWidget {
             const SizedBox(height: 12),
             TextField(
               controller: customGoalController,
-              style: GoogleFonts.barlow(color: Colors.black87),
+              style: GoogleFonts.outfit(color: AppTheme.textPrimary),
               decoration: _buildInputDecoration(l10n.enterGoalDetails),
             ),
           ],
@@ -171,7 +175,7 @@ class OnboardingFitnessGoalsPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -182,9 +186,12 @@ class OnboardingFitnessGoalsPage extends StatelessWidget {
                 value: experienceLevel,
                 isExpanded: true,
                 dropdownColor: Colors.white,
-                icon: const Icon(Icons.arrow_drop_down, color: Colors.black54),
-                style: GoogleFonts.barlow(
-                  color: Colors.black87,
+                icon: Icon(
+                  Icons.arrow_drop_down,
+                  color: AppTheme.textSecondary,
+                ),
+                style: GoogleFonts.outfit(
+                  color: AppTheme.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -217,8 +224,8 @@ class OnboardingFitnessGoalsPage extends StatelessWidget {
   Widget _buildInputLabel(String text) {
     return Text(
       text,
-      style: GoogleFonts.barlow(
-        color: Colors.black54,
+      style: GoogleFonts.outfit(
+        color: AppTheme.textSecondary,
         fontSize: 14,
         fontWeight: FontWeight.w500,
       ),
@@ -228,7 +235,9 @@ class OnboardingFitnessGoalsPage extends StatelessWidget {
   InputDecoration _buildInputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.barlow(color: Colors.black38),
+      hintStyle: GoogleFonts.outfit(
+        color: AppTheme.textSecondary.withValues(alpha: 0.5),
+      ),
       filled: true,
       fillColor: Colors.white,
       enabledBorder: OutlineInputBorder(
@@ -236,7 +245,7 @@ class OnboardingFitnessGoalsPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Color(0xFF5E35B1), width: 1.5),
+        borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
         borderRadius: BorderRadius.circular(16),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),

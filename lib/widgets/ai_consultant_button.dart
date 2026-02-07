@@ -1,7 +1,9 @@
 import 'dart:ui'; // Required for PathMetric
 
 import 'package:fitness_gem/l10n/app_localizations.dart';
+import 'package:fitness_gem/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
 
 class AIConsultantButton extends StatefulWidget {
@@ -41,26 +43,42 @@ class _AIConsultantButtonState extends State<AIConsultantButton>
           painter: _BorderPainter(animationValue: _controller.value),
           child: Container(
             width: double.infinity,
+            height: 48,
             padding: const EdgeInsets.all(2), // Padding for border width
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(36),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.brightMarigold.withValues(alpha: 0.1),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
             child: ElevatedButton.icon(
               onPressed: widget.onPressed,
               icon: const Icon(Icons.auto_awesome, size: 20),
               label: Shimmer.fromColors(
-                baseColor: Colors.black,
-                highlightColor: Colors.lightGreenAccent,
+                baseColor: AppTheme.cloudDancer,
+                highlightColor: AppTheme.blazingYellow,
                 period: const Duration(seconds: 6),
                 child: Text(
-                  AppLocalizations.of(context)!.startWithAiConsultant,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  AppLocalizations.of(
+                    context,
+                  )!.startWithAiConsultant.toUpperCase(),
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
+                  ),
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.black,
-                backgroundColor: Colors.amber,
+                foregroundColor: AppTheme.cloudDancer,
+                backgroundColor: AppTheme.brightMarigold,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(36),
                 ),
                 elevation: 0, // Remove elevation to blend with custom border
               ),
@@ -83,7 +101,7 @@ class _BorderPainter extends CustomPainter {
     // This aligns the border to occupy pixels 0..2
     final rect = Rect.fromLTWH(1, 1, size.width - 2, size.height - 2);
     // Radius should be 13 to match the center of the 2px gap (Outer 14, Inner 12)
-    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(30));
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(36));
     final path = Path()..addRRect(rrect);
 
     for (final metric in path.computeMetrics()) {

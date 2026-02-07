@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../l10n/app_localizations.dart';
+import '../../theme/app_theme.dart';
 
 class OnboardingPrivacyPage extends StatefulWidget {
   final bool isAgreed;
@@ -31,13 +32,13 @@ class _OnboardingPrivacyPageState extends State<OnboardingPrivacyPage> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFF5E35B1).withOpacity(0.1),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.privacy_tip_outlined,
                 size: 64,
-                color: Color(0xFF5E35B1),
+                color: AppTheme.primary,
               ),
             ),
           ),
@@ -45,18 +46,20 @@ class _OnboardingPrivacyPageState extends State<OnboardingPrivacyPage> {
 
           // Title
           Text(
-            l10n.privacyPolicyTitle ?? 'Privacy & Data Policy',
-            style: GoogleFonts.barlowCondensed(
-              color: const Color(0xFF1A237E),
+            l10n.privacyPolicyTitle,
+            style: GoogleFonts.outfit(
+              color: AppTheme.indigoInk,
               fontSize: 32,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 16),
           Text(
-            l10n.privacyPolicyIntro ??
-                'Your privacy is our top priority. Before we start, please review how we handle your data.',
-            style: GoogleFonts.barlow(color: Colors.black54, fontSize: 16),
+            l10n.privacyPolicyIntro,
+            style: GoogleFonts.outfit(
+              color: AppTheme.textSecondary,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 32),
 
@@ -64,28 +67,22 @@ class _OnboardingPrivacyPageState extends State<OnboardingPrivacyPage> {
           _buildPolicyPoint(
             context,
             icon: Icons.smartphone,
-            title: l10n.privacyLocalTitle ?? 'Local Storage First',
-            description:
-                l10n.privacyLocalDesc ??
-                'Biometric data (Height, Weight, Gender) is stored securely on your device.',
+            title: l10n.privacyLocalTitle,
+            description: l10n.privacyLocalDesc,
           ),
           const SizedBox(height: 24),
           _buildPolicyPoint(
             context,
             icon: Icons.cloud_off,
-            title: l10n.privacyGeminiTitle ?? 'Gemini AI Analysis',
-            description:
-                l10n.privacyGeminiDesc ??
-                'We send minimal data to Gemini for real-time coaching. Your data is NOT used to train Google\'s models.',
+            title: l10n.privacyGeminiTitle,
+            description: l10n.privacyGeminiDesc,
           ),
           const SizedBox(height: 24),
           _buildPolicyPoint(
             context,
             icon: Icons.verified_user,
-            title: l10n.privacyMinimalTitle ?? 'Minimal Collection',
-            description:
-                l10n.privacyMinimalDesc ??
-                'We only collect email for secure sign-in. No other personal identifiers are shared.',
+            title: l10n.privacyMinimalTitle,
+            description: l10n.privacyMinimalDesc,
           ),
 
           const SizedBox(height: 48),
@@ -99,7 +96,7 @@ class _OnboardingPrivacyPageState extends State<OnboardingPrivacyPage> {
               decoration: BoxDecoration(
                 border: Border.all(
                   color: widget.isAgreed
-                      ? const Color(0xFF5E35B1)
+                      ? AppTheme.primary
                       : Colors.transparent,
                   width: 2,
                 ),
@@ -109,17 +106,16 @@ class _OnboardingPrivacyPageState extends State<OnboardingPrivacyPage> {
                 children: [
                   Checkbox(
                     value: widget.isAgreed,
-                    activeColor: const Color(0xFF5E35B1),
+                    activeColor: AppTheme.primary,
                     onChanged: (val) {
                       widget.onAgreementChanged(val ?? false);
                     },
                   ),
                   Expanded(
                     child: Text(
-                      l10n.privacyAgreement ??
-                          'I have read and agree to the Privacy Policy.',
-                      style: GoogleFonts.barlow(
-                        color: Colors.black87,
+                      l10n.privacyAgreement,
+                      style: GoogleFonts.outfit(
+                        color: AppTheme.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -143,7 +139,7 @@ class _OnboardingPrivacyPageState extends State<OnboardingPrivacyPage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: const Color(0xFF5E35B1), size: 28),
+        Icon(icon, color: AppTheme.primary, size: 28),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
@@ -151,8 +147,8 @@ class _OnboardingPrivacyPageState extends State<OnboardingPrivacyPage> {
             children: [
               Text(
                 title,
-                style: GoogleFonts.barlow(
-                  color: Colors.black87,
+                style: GoogleFonts.outfit(
+                  color: AppTheme.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -160,8 +156,8 @@ class _OnboardingPrivacyPageState extends State<OnboardingPrivacyPage> {
               const SizedBox(height: 4),
               Text(
                 description,
-                style: GoogleFonts.barlow(
-                  color: Colors.black54,
+                style: GoogleFonts.outfit(
+                  color: AppTheme.textSecondary,
                   fontSize: 15,
                   height: 1.4,
                 ),

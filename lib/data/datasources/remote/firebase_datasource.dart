@@ -28,7 +28,10 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
 
   void _markUsingMockData(String reason) {
     debugPrint('FirebaseDataSource: $reason, using mock data');
-    _connectivityService.setUsingMockData(true);
+    // Only set global mock flag if we're actually disconnected
+    if (!_connectivityService.isConnected) {
+      _connectivityService.setUsingMockData(true);
+    }
   }
 
   @override
