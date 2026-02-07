@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/entities/user_profile.dart';
 import '../presentation/viewmodels/home_viewmodel.dart';
 import '../../core/di/injection.dart';
-import '../../domain/usecases/ai/get_api_key_usecase.dart';
+import '../../domain/usecases/ai/get_user_api_key_usecase.dart';
 import '../../domain/usecases/ai/set_api_key_usecase.dart';
 import 'camera_view.dart';
 import 'ai_interview_view.dart';
@@ -56,8 +56,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   }
 
   Future<void> _loadApiKey() async {
-    final getApiKey = getIt<GetApiKeyUseCase>();
-    final result = await getApiKey.execute();
+    // Use GetUserApiKeyUseCase to get only user-entered key, not fallback
+    final getUserApiKey = getIt<GetUserApiKeyUseCase>();
+    final result = await getUserApiKey.execute();
     result.fold(
       (failure) => debugPrint('Error loading API key: ${failure.message}'),
       (apiKey) {

@@ -116,6 +116,13 @@ class AIRepositoryImpl implements AIRepository {
     return _apiKey;
   }
 
+  @override
+  Future<String> getUserApiKey() async {
+    // Return only user-entered key (from secure storage), not fallback
+    final savedKey = await secureStorage.read(key: _apiKeyPrefKey);
+    return savedKey ?? '';
+  }
+
   // ============ Curriculum ============
 
   @override

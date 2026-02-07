@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../domain/entities/user_profile.dart';
 import '../core/di/injection.dart';
-import '../domain/usecases/ai/get_api_key_usecase.dart';
+import '../domain/usecases/ai/get_user_api_key_usecase.dart';
 import '../domain/usecases/ai/set_api_key_usecase.dart';
 import '../domain/usecases/user/update_user_profile.dart';
 import 'onboarding/onboarding_intro_page.dart';
@@ -790,10 +790,11 @@ class _OnboardingViewState extends State<OnboardingView> {
   // --- API Key Dialog ---
   Future<void> _showApiKeyDialog() async {
     final l10n = AppLocalizations.of(context)!;
-    final getApiKeyUseCase = getIt<GetApiKeyUseCase>();
+    // Use GetUserApiKeyUseCase to only show user-entered key, not fallback
+    final getUserApiKeyUseCase = getIt<GetUserApiKeyUseCase>();
     final setApiKeyUseCase = getIt<SetApiKeyUseCase>();
 
-    final result = await getApiKeyUseCase.execute();
+    final result = await getUserApiKeyUseCase.execute();
     String currentKey = '';
     result.fold((l) => null, (r) => currentKey = r);
     final controller = TextEditingController(text: currentKey);

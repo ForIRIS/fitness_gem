@@ -1,13 +1,21 @@
 import * as admin from "firebase-admin";
+import { getFirestore } from "firebase-admin/firestore";
+import * as dotenv from "dotenv";
+
+// Load environment variables from .env file
+dotenv.config();
+
+const projectId = process.env.FIREBASE_PROJECT_ID || "fitness-gem";
+const databaseId = process.env.FIRESTORE_DATABASE_ID || "(default)";
 
 // Initialize Admin (Assumes GOOGLE_APPLICATION_CREDENTIALS is set or running in emulator)
 if (!admin.apps.length) {
     admin.initializeApp({
-        projectId: "fitness-gem"
+        projectId: projectId
     });
 }
 
-const db = admin.firestore();
+const db = getFirestore(databaseId);
 
 const tasks = [
     // === SQUATS ===

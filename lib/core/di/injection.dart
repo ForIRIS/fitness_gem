@@ -46,6 +46,7 @@ import '../../domain/usecases/ai/chat_with_image_usecase.dart';
 import '../../domain/usecases/ai/analyze_fall_detection_usecase.dart';
 import '../../domain/usecases/ai/analyze_video_session_usecase.dart';
 import '../../domain/usecases/ai/get_api_key_usecase.dart';
+import '../../domain/usecases/ai/get_user_api_key_usecase.dart';
 import '../../domain/usecases/ai/set_api_key_usecase.dart';
 import '../../domain/usecases/ai/analyze_baseline_video_usecase.dart';
 import '../../domain/usecases/ai/generate_post_workout_summary_usecase.dart';
@@ -187,6 +188,7 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton(() => AnalyzeFallDetectionUseCase(getIt()));
   getIt.registerLazySingleton(() => AnalyzeVideoSessionUseCase(getIt()));
   getIt.registerLazySingleton(() => GetApiKeyUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetUserApiKeyUseCase(getIt()));
   getIt.registerLazySingleton(() => SetApiKeyUseCase(getIt()));
   getIt.registerLazySingleton(() => AnalyzeBaselineVideoUseCase(getIt()));
   getIt.registerLazySingleton(() => GeneratePostWorkoutSummaryUseCase(getIt()));

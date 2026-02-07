@@ -73,5 +73,11 @@ abstract class AIRepository {
 
   /// Management methods
   Future<void> setApiKey(String apiKey);
+
+  /// Returns the active API key (user-entered or fallback from .env)
   Future<String> getApiKey();
+
+  /// Returns only the user-entered API key (empty if not set)
+  /// Use this for UI display to avoid showing fallback key
+  Future<String> getUserApiKey();
 }

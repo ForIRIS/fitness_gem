@@ -3,7 +3,6 @@
 node_modules/
 .runtimeconfig.json
 .env
-.env.*
 *.local
 firebase-debug.log*
 firebase-debug.*.log
