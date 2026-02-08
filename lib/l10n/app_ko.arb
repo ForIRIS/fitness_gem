@@ -272,6 +272,8 @@
   "baselineContinue": "운동 하러 가기",
   "baselineErrorTitle": "문제가 발생했습니다",
   "baselineTryAgainLater": "나중에 다시 시도",
+  "baselineRetry": "다시 시도",
+  "baselineSkipAssessment": "건너뛰기",
   "ttsWorkoutStart": "{exerciseName} 운동을 시작합니다. 준비 자세를 취해주세요.",
   "@ttsWorkoutStart": {
     "placeholders": {
@@ -338,7 +340,7 @@
   "aiInviteMessageComplete": "목표 분석이 완료되었습니다! 더 정확한 자세 교정을 위해 30초 움직임 측정을 추천합니다.",
   "aiInviteAssessmentButton": "자세 측정 시작하기",
   "aiInviteAssessmentSkip": "나중에 하기",
-  "onboardingWelcomeTitle": "Fitness Gem에 오신 것을 환영합니다",
+  "onboardingWelcomeTitle": "Fitness Gem에\n오신 것을 환영합니다",
   "onboardingWelcomeSubtitle": "AI와 함께하는 맞춤형 피트니스 여정",
   "onboardingStep1Description": "더 나은 경험을 위해 프로필을 설정해주세요.",
   "onboardingStep2Description": "Gemini와 음성으로 상담하며 플랜을 만듭니다.",

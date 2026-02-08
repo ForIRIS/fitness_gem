@@ -64,6 +64,7 @@ import '../../services/cache_service.dart';
 import '../../services/firebase_service.dart';
 import '../../services/connectivity_service.dart';
 import '../../services/tts_service.dart';
+import '../../services/stt_service.dart';
 import '../../domain/services/coaching_manager.dart';
 import '../../domain/interfaces/feedback_output.dart';
 // ViewModels
@@ -123,6 +124,7 @@ Future<void> setupDependencyInjection() async {
   );
 
   getIt.registerLazySingleton(() => TTSService());
+  getIt.registerLazySingleton(() => STTService());
   getIt.registerLazySingleton<FeedbackOutput>(
     () => TTSFeedbackOutput(ttsService: getIt()),
   );

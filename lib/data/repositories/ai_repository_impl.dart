@@ -463,7 +463,16 @@ Please provide the Next Step advice in the User Language.
       }
 
       // Wait for processing
-      await Future.delayed(const Duration(seconds: 2));
+      final isActive = await remoteDataSource.waitForFileActive(
+        apiKey: _apiKey,
+        fileUri: videoUri,
+      );
+
+      if (!isActive) {
+        return const Left(
+          ServerFailure('Baseline video processing failed or timed out'),
+        );
+      }
 
       final prompt = '''
 TASK: BASELINE_ASSESSMENT

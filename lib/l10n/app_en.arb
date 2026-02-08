@@ -338,7 +338,7 @@
   "aiInviteMessageComplete": "I've analyzed your goals! To customize your form correction, I recommend a quick 30-second mobility check.",
   "aiInviteAssessmentButton": "START ALIGNMENT CHECK",
   "aiInviteAssessmentSkip": "Skip for now",
-  "onboardingWelcomeTitle": "Welcome to Fitness Gem",
+  "onboardingWelcomeTitle": "Welcome to\nFitness Gem",
   "@onboardingWelcomeTitle": {
     "description": "Title text for the onboarding welcome screen"
   },
@@ -673,5 +673,7 @@
   "goalFlexibility": "Flexibility",
   "@goalFlexibility": {
     "description": "Option for flexibility"
-  }
+  },
+  "baselineRetry": "RETRY",
+  "baselineSkipAssessment": "SKIP ASSESSMENT"
 }

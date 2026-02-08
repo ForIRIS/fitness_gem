@@ -20,11 +20,10 @@ class OnboardingIntroPage extends StatelessWidget {
         // 1. Scrollable Content
         SingleChildScrollView(
           padding: const EdgeInsets.only(
-            bottom: 140,
+            bottom: 200,
           ), // Space for floating bottom
           child: Column(
             children: [
-              const SizedBox(height: 48), // Top spacing
               // Welcome Illustration
               Container(
                 height: 200,
@@ -107,61 +106,68 @@ class OnboardingIntroPage extends StatelessWidget {
 
         // 2. Floating Bottom Controls
         Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: onNext,
-                    icon: const Icon(Icons.arrow_forward_rounded),
+          left: 24,
+          right: 24,
+          bottom: -24,
+          child: SafeArea(
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: onNext,
+                      icon: const Icon(Icons.arrow_forward_rounded),
+                      label: Text(
+                        AppLocalizations.of(context)!.getStarted,
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: onShowApiKeyDialog,
+                    icon: const Icon(
+                      Icons.key,
+                      size: 16,
+                      color: Colors.black26,
+                    ),
                     label: Text(
-                      AppLocalizations.of(context)!.getStarted,
+                      AppLocalizations.of(context)!.enterApiKeyHackathon,
                       style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        letterSpacing: 0.5,
+                        color: AppTheme.textSecondary.withValues(alpha: 0.5),
+                        fontSize: 12,
                       ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 4,
-                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextButton.icon(
-                  onPressed: onShowApiKeyDialog,
-                  icon: const Icon(Icons.key, size: 16, color: Colors.black26),
-                  label: Text(
-                    AppLocalizations.of(context)!.enterApiKeyHackathon,
-                    style: GoogleFonts.outfit(
-                      color: AppTheme.textSecondary.withValues(alpha: 0.5),
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

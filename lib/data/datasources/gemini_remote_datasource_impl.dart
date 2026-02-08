@@ -94,6 +94,43 @@ class GeminiRemoteDataSourceImpl implements GeminiRemoteDataSource {
   }
 
   @override
+  Future<bool> waitForFileActive({
+    required String apiKey,
+    required String fileUri,
+  }) async {
+    // Extract file name from URI
+    // URI format: https://generativelanguage.googleapis.com/v1beta/files/NAME
+    final fileName = fileUri.split('/files/').last;
+    final name = 'files/$fileName';
+
+    final uri = Uri.parse(
+      'https://generativelanguage.googleapis.com/v1beta/$name?key=$apiKey',
+    );
+
+    int attempts = 0;
+    while (attempts < 30) {
+      try {
+        final response = await http.get(uri);
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          final state = data['state'];
+          debugPrint('File $name state: $state');
+          if (state == 'ACTIVE') {
+            return true;
+          } else if (state == 'FAILED') {
+            return false;
+          }
+        }
+      } catch (e) {
+        debugPrint('Error checking file state: $e');
+      }
+      await Future.delayed(const Duration(seconds: 2));
+      attempts++;
+    }
+    return false;
+  }
+
+  @override
   Future<Map<String, dynamic>?> analyzeInterSet({
     required String apiKey,
     required String systemInstruction,
@@ -108,11 +145,9 @@ class GeminiRemoteDataSourceImpl implements GeminiRemoteDataSource {
         {'text': json.encode(inputContext)},
         {
           'file_data': {'mime_type': mimeType, 'file_uri': rgbUri},
-          'media_resolution': {'level': 'MEDIA_RESOLUTION_MEDIUM'},
         },
         {
           'file_data': {'mime_type': 'video/mp4', 'file_uri': controlNetUri},
-          'media_resolution': {'level': 'MEDIA_RESOLUTION_MEDIUM'},
         },
       ];
 
@@ -141,7 +176,6 @@ class GeminiRemoteDataSourceImpl implements GeminiRemoteDataSource {
         {'text': prompt},
         {
           'file_data': {'mime_type': 'video/mp4', 'file_uri': videoUri},
-          'media_resolution': {'level': 'MEDIA_RESOLUTION_MEDIUM'},
         },
       ];
 

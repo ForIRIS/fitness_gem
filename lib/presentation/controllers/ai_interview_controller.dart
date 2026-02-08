@@ -22,11 +22,15 @@ class ChatMessage {
   final bool isUser;
   final bool isCard;
   final Widget? cardWidget;
+  final bool isLoading;
+  final bool isAssessmentInvite;
 
   ChatMessage({
     required this.text,
     required this.isUser,
     this.isCard = false,
+    this.isLoading = false,
+    this.isAssessmentInvite = false,
     this.cardWidget,
   });
 }
@@ -62,6 +66,9 @@ class AIInterviewController extends ChangeNotifier {
 
   UserProfile? _userProfile;
   AppLocalizations? _l10n;
+  Map<String, String>? _lastInterviewDetails;
+
+  UserProfile? get userProfile => _userProfile;
 
   AIInterviewController({
     StartInterviewUseCase? startInterviewUseCase,
@@ -114,7 +121,6 @@ class AIInterviewController extends ChangeNotifier {
         },
         (response) {
           if (response != null) {
-            // response is String? from usecase
             _messages.add(ChatMessage(text: response, isUser: false));
             _isLoading = false;
             if (_isTtsEnabled) {
@@ -187,53 +193,61 @@ class AIInterviewController extends ChangeNotifier {
         notifyListeners();
 
         if (response.isComplete) {
-          await _processInterviewResult(
-            response.summaryText,
-            response.extractedDetails,
-          );
+          _lastInterviewDetails = response.extractedDetails;
+          _inviteToAssessment();
         }
       },
     );
   }
 
-  Future<void> _processInterviewResult(
-    String? summaryText,
-    Map<String, String>? extractedDetails,
-  ) async {
-    if (extractedDetails == null) return;
+  void _inviteToAssessment() {
+    _messages.add(
+      ChatMessage(
+        text: _l10n?.aiInviteAssessmentButton ?? "Start Alignment Check",
+        isUser: false,
+        isAssessmentInvite: true,
+      ),
+    );
+    notifyListeners();
+  }
+
+  Future<void> generateCurriculum() async {
+    if (_lastInterviewDetails == null) return;
 
     _isLoading = true;
+
+    // Add Loading Message (Shimmer)
+    final loadingMessageIndex = _messages.length;
     _messages.add(
       ChatMessage(
         text:
             _l10n?.generatingWorkout ??
             "Generating your personalized curriculum...",
         isUser: false,
+        isLoading: true, // Trigger Shimmer Card
       ),
     );
     notifyListeners();
 
     try {
-      final firebaseService =
-          FirebaseService(); // Ideally injected, but kept as per original logic for now
-      await firebaseService.initialize(); // Lightweight
+      final firebaseService = FirebaseService();
+      await firebaseService.initialize();
       final allWorkouts = await firebaseService.fetchWorkoutAllList();
 
       final result = await _generateCurriculumUseCase.execute(
         GenerateCurriculumFromInterviewParams(
           profile: _userProfile!,
           availableWorkouts: allWorkouts,
-          interviewDetails: extractedDetails,
+          interviewDetails: _lastInterviewDetails!,
         ),
       );
 
       result.fold(
         (failure) {
-          _messages.add(
-            ChatMessage(
-              text: _l10n?.generationFailed ?? "Failed to generate curriculum.",
-              isUser: false,
-            ),
+          // Update in-place to error
+          _messages[loadingMessageIndex] = ChatMessage(
+            text: _l10n?.generationFailed ?? "Failed to generate curriculum.",
+            isUser: false,
           );
           _hasError = true;
           _isLoading = false;
@@ -241,6 +255,22 @@ class AIInterviewController extends ChangeNotifier {
         (curriculum) async {
           if (curriculum != null) {
             await _saveCurriculumUseCase.execute(curriculum);
+
+            // Replace Shimmer with Result Card
+            _messages[loadingMessageIndex] = ChatMessage(
+              text: 'Curriculum Created', // Placeholder text, View renders card
+              isUser: false,
+              isCard: true,
+              // Ideally pass curriculum data here if View needs it,
+              // but current architecture might rely on Repository/State elsewhere.
+              // For now, let's assume View fetches latest or we re-trigger.
+              // Actually, looking at original code, it just added a card message.
+            );
+
+            // Add a text summary before or part of the card?
+            // Original code added two messages: text summary AND card.
+            // Requirement: "Refactor Shimmer Component: Ensure the Shimmer loader and the final Curriculum Card share the same state/ID."
+            // So we should replace the Shimmer with the Card.
 
             _messages.add(
               ChatMessage(
@@ -250,27 +280,12 @@ class AIInterviewController extends ChangeNotifier {
               ),
             );
 
-            // We need to signal the View to show the "Assessment Card"
-            // Since card creation involves UI widgets (Navigator, context),
-            // we might instead push a special "System Message" that the View renders as a card.
-            _messages.add(
-              ChatMessage(
-                text: '',
-                isUser: false,
-                isCard: true,
-                // Widget will be built in View based on isCard flag
-              ),
-            );
-
             _isInterviewComplete = true;
             _isLoading = false;
           } else {
-            _messages.add(
-              ChatMessage(
-                text:
-                    _l10n?.generationFailed ?? "Failed to generate curriculum.",
-                isUser: false,
-              ),
+            _messages[loadingMessageIndex] = ChatMessage(
+              text: _l10n?.generationFailed ?? "Failed to generate curriculum.",
+              isUser: false,
             );
             _hasError = true;
             _isLoading = false;
@@ -278,7 +293,10 @@ class AIInterviewController extends ChangeNotifier {
         },
       );
     } catch (e) {
-      _messages.add(ChatMessage(text: "An error occurred.", isUser: false));
+      _messages[loadingMessageIndex] = ChatMessage(
+        text: "An error occurred.",
+        isUser: false,
+      );
       _hasError = true;
       _isLoading = false;
     }

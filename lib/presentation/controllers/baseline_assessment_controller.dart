@@ -10,13 +10,13 @@ import '../../services/camera_manager.dart';
 import '../../services/video_recorder.dart';
 import '../../services/ready_pose_detector.dart';
 import '../../services/tts_service.dart';
+import '../../services/stt_service.dart';
 import '../../services/workout_timer_service.dart';
 import '../../l10n/app_localizations.dart';
 
 enum AssessmentPhase {
   instructions,
-  ready,
-  countdown,
+  ready, // Waiting for voice command
   recording,
   analyzing,
   completed,
@@ -34,9 +34,6 @@ class BaselineAssessmentController extends ChangeNotifier {
   int _holdSeconds = 0;
   int get holdSeconds => _holdSeconds;
 
-  int _countdownSeconds = 5;
-  int get countdownSeconds => _countdownSeconds;
-
   int _recordingSeconds = 0;
   int get recordingSeconds => _recordingSeconds;
 
@@ -52,6 +49,7 @@ class BaselineAssessmentController extends ChangeNotifier {
   final VideoRecorder _videoRecorder = VideoRecorder();
   final ReadyPoseDetector _readyPoseDetector = ReadyPoseDetector();
   final TTSService _ttsService = TTSService();
+  final STTService _sttService;
   final WorkoutTimerService _timerService = WorkoutTimerService();
 
   final AnalyzeBaselineVideoUseCase _analyzeBaselineVideo =
@@ -62,14 +60,8 @@ class BaselineAssessmentController extends ChangeNotifier {
   UserProfile? _userProfile;
   AppLocalizations? _l10n;
 
-  BaselineAssessmentController() {
-    _timerService.onCountdownTick = (remaining) {
-      _countdownSeconds = remaining;
-      _ttsService.speakCountdown(remaining);
-      notifyListeners();
-    };
-    _timerService.onCountdownComplete = _startRecording;
-
+  BaselineAssessmentController({STTService? sttService})
+    : _sttService = sttService ?? getIt<STTService>() {
     _timerService.onWorkoutTick = (elapsed) {
       _recordingSeconds = elapsed;
       notifyListeners();
@@ -83,6 +75,7 @@ class BaselineAssessmentController extends ChangeNotifier {
     _ttsService.updateLocalizations(l10n);
 
     await _ttsService.initialize();
+    await _sttService.initialize();
     await _cameraManager.initialize();
     _cameraManager.startPoseDetection();
 
@@ -97,41 +90,29 @@ class BaselineAssessmentController extends ChangeNotifier {
 
   void startReadyPhase() {
     _updatePhase(AssessmentPhase.ready);
+    _startListeningForCommand();
+  }
+
+  void _startListeningForCommand() {
+    _sttService.startListening(
+      onResult: (recognizedText) {
+        final text = recognizedText.toLowerCase().trim();
+        if (text.contains('start') || text.contains('시작')) {
+          _sttService.stopListening();
+          _startRecording();
+        }
+      },
+      languageCode: _l10n?.localeName == 'ko' ? 'ko-KR' : 'en-US',
+    );
   }
 
   void _processPose(List<Pose> poses) {
-    if (poses.isEmpty ||
-        (_phase != AssessmentPhase.ready &&
-            _phase != AssessmentPhase.recording)) {
+    if (poses.isEmpty || _phase != AssessmentPhase.recording) {
       return;
     }
 
     final pose = poses.first;
-
-    if (_phase == AssessmentPhase.ready) {
-      final result = _readyPoseDetector.processFrame(pose, null);
-
-      if (result.isBodyVisible != _isFullBodyVisible ||
-          result.holdSeconds != _holdSeconds) {
-        _isFullBodyVisible = result.isBodyVisible;
-        _holdSeconds = result.holdSeconds;
-        notifyListeners();
-      }
-
-      if (result.isReady) {
-        _startCountdown();
-      }
-    } else if (_phase == AssessmentPhase.recording) {
-      _videoRecorder.updatePose(pose);
-    }
-  }
-
-  void _startCountdown() {
-    _updatePhase(AssessmentPhase.countdown);
-    _readyPoseDetector.reset();
-    _countdownSeconds = 5;
-    _ttsService.speakReady();
-    _timerService.startCountdown(5);
+    _videoRecorder.updatePose(pose);
   }
 
   Future<void> _startRecording() async {
@@ -213,9 +194,9 @@ class BaselineAssessmentController extends ChangeNotifier {
 
   void retry() {
     _timerService.stopWorkoutTimer();
+    _sttService.stopListening();
     _isFullBodyVisible = false;
     _holdSeconds = 0;
-    _countdownSeconds = 5;
     _recordingSeconds = 0;
     _errorMessage = null;
     _analysisResult = null;
@@ -236,6 +217,7 @@ class BaselineAssessmentController extends ChangeNotifier {
   @override
   void dispose() {
     _timerService.dispose();
+    _sttService.stopListening();
     _cameraManager.dispose();
     _videoRecorder.dispose();
     _ttsService.dispose();

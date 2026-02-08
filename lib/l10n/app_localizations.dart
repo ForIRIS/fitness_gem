@@ -1487,7 +1487,7 @@ abstract class AppLocalizations {
   /// Title text for the onboarding welcome screen
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Fitness Gem'**
+  /// **'Welcome to\nFitness Gem'**
   String get onboardingWelcomeTitle;
 
   /// Subtitle text for the onboarding welcome screen
@@ -1963,6 +1963,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Flexibility'**
   String get goalFlexibility;
+
+  /// No description provided for @baselineRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'RETRY'**
+  String get baselineRetry;
+
+  /// No description provided for @baselineSkipAssessment.
+  ///
+  /// In en, this message translates to:
+  /// **'SKIP ASSESSMENT'**
+  String get baselineSkipAssessment;
 }
 
 class _AppLocalizationsDelegate

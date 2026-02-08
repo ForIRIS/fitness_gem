@@ -80,3 +80,25 @@ AI-powered home fitness coaching app that combines real-time device-side pose an
 ---
 **Google Gemini API Developer Competition 2024 Entry.**  
 *Empowering health through accessible, intelligent movement analysis.*
+
+## 📦 Submission & Media Assets
+
+For the hackathon submission, all model files, images, and sample videos must be organized and uploaded to your **Firebase Storage** bucket.
+
+### 📁 Firebase Storage Structure
+Ensure your bucket follows this exact hierarchy:
+- `/videos/` - Raw MP4 guide videos (e.g., `squat_01.mp4`)
+- `/thumbnails/` - Preview JPG images (e.g., `squat_01.jpg`)
+- `/images/` - "Ready Pose" sample images (e.g., `squat_01_ready.jpg`)
+- `/bundles/` - Zipped asset bundles for each exercise (e.g., `squat_01.zip`)
+
+### 🤐 How to Package Bundles
+1. **iOS Models**: Zip your `.mlpackage` folder into a file named **`pose_model.mlpackage.zip`**.
+2. **Exercise Bundle**: Create a single ZIP file for the exercise (e.g., `squat_01.zip`) containing:
+   - `pose_model.mlpackage.zip` (for iOS)
+   - `pose_model.onnx` (for Android)
+   - The video, thumbnail, and ready pose image.
+3. **Upload**: Upload the final exercise ZIP to the `/bundles/` folder in Firebase Storage.
+
+> [!TIP]
+> Refer to [asset_packaging_guide.md](file:///Volumes/Luuse/Developments/fitness-gem/fitness_gem/asset_packaging_guide.md) for a detailed checklist and automation tips.

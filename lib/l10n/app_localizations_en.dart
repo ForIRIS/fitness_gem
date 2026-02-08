@@ -763,7 +763,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiInviteAssessmentSkip => 'Skip for now';
 
   @override
-  String get onboardingWelcomeTitle => 'Welcome to Fitness Gem';
+  String get onboardingWelcomeTitle => 'Welcome to\nFitness Gem';
 
   @override
   String get onboardingWelcomeSubtitle =>
@@ -1026,4 +1026,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get goalFlexibility => 'Flexibility';
+
+  @override
+  String get baselineRetry => 'RETRY';
+
+  @override
+  String get baselineSkipAssessment => 'SKIP ASSESSMENT';
 }

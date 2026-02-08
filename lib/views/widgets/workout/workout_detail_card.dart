@@ -24,6 +24,7 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
   bool _isExpanded = false;
+  bool _isDescriptionExpanded = false;
 
   @override
   void initState() {
@@ -245,12 +246,40 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        widget.task.description,
-                        style: GoogleFonts.outfit(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 13,
-                          height: 1.4,
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isDescriptionExpanded = !_isDescriptionExpanded;
+                          });
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.task.description,
+                              maxLines: _isDescriptionExpanded ? null : 2,
+                              overflow: _isDescriptionExpanded
+                                  ? TextOverflow.visible
+                                  : TextOverflow.ellipsis,
+                              style: GoogleFonts.outfit(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 13,
+                                height: 1.4,
+                              ),
+                            ),
+                            if (!_isDescriptionExpanded)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  'Tap for more',
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                    fontSize: 11,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 16),

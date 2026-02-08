@@ -103,6 +103,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
           // 2. Content
           SafeArea(
+            bottom: false,
             child: Stack(
               children: [
                 Column(
@@ -208,7 +209,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                         ],
                       ),
                     ),
-                    _buildBottomControls(),
+                    SafeArea(top: false, child: _buildBottomControls()),
                   ],
                 ),
 

@@ -128,6 +128,8 @@ class DailyStatsCard extends StatelessWidget {
                         ),
                         Text(
                           curriculum!.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.outfit(
                             fontSize: 12,
                             color: Colors.white.withValues(alpha: 0.9),

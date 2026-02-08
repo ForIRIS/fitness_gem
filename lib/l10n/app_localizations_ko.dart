@@ -738,7 +738,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiInviteAssessmentSkip => '나중에 하기';
 
   @override
-  String get onboardingWelcomeTitle => 'Fitness Gem에 오신 것을 환영합니다';
+  String get onboardingWelcomeTitle => 'Fitness Gem에\n오신 것을 환영합니다';
 
   @override
   String get onboardingWelcomeSubtitle => 'AI와 함께하는 맞춤형 피트니스 여정';
@@ -986,4 +986,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get goalFlexibility => '유연성 향상';
+
+  @override
+  String get baselineRetry => '다시 시도';
+
+  @override
+  String get baselineSkipAssessment => '건너뛰기';
 }

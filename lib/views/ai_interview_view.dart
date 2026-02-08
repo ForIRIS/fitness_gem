@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'onboarding/baseline_assessment_view.dart'; // Added import
+import 'package:provider/provider.dart';
+import 'onboarding/baseline_assessment_view.dart';
+import 'widgets/curriculum_loading_card.dart';
 
 import '../core/di/injection.dart';
 import '../domain/entities/user_profile.dart';
-import '../presentation/controllers/ai_interview_controller.dart'
+import '../../presentation/controllers/ai_interview_controller.dart'
     hide ChatMessage;
-import '../presentation/controllers/ai_interview_controller.dart'
+import '../../presentation/controllers/ai_interview_controller.dart'
     as controller_model;
 // To avoid conflict with local simplified usage or alias,
 // though we will use the controller's model directly.
@@ -252,10 +254,15 @@ class _AIInterviewViewState extends State<AIInterviewView>
               if (!_controller.isInterviewComplete) ...[
                 // Mic Button
                 GestureDetector(
-                  onLongPress: () => _controller.startListening(
-                    onPermissionDenied: _onPermissionDenied,
-                  ),
-                  onLongPressUp: _controller.stopListening,
+                  onTap: () {
+                    if (_controller.isListening) {
+                      _controller.stopListening();
+                    } else {
+                      _controller.startListening(
+                        onPermissionDenied: _onPermissionDenied,
+                      );
+                    }
+                  },
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -297,6 +304,14 @@ class _AIInterviewViewState extends State<AIInterviewView>
   }
 
   Widget _buildMessageBubble(controller_model.ChatMessage message) {
+    if (message.isLoading) {
+      return const CurriculumLoadingCard();
+    }
+
+    if (message.isAssessmentInvite) {
+      return _buildAssessmentInviteCard();
+    }
+
     if (message.isCard) {
       if (message.cardWidget != null) {
         return Padding(
@@ -304,11 +319,14 @@ class _AIInterviewViewState extends State<AIInterviewView>
           child: message.cardWidget!,
         );
       }
-      // Fallback or specific handling for system generated card signals
-      // Since Controller logic just added a blank "isCard: true" message for the curriculum:
+      if (message.text == 'Curriculum Created') {
+        return _buildCurriculumSuccessCard();
+      }
+      // Fallback usage if needed
       return _buildAssessmentRecommendation(context);
     }
 
+    // ... existing text message logic ...
     return Align(
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -343,6 +361,148 @@ class _AIInterviewViewState extends State<AIInterviewView>
           ),
         ),
         child: _buildParsedText(message.text, isUser: message.isUser),
+      ),
+    );
+  }
+
+  Widget _buildAssessmentInviteCard() {
+    final controller = context.read<AIInterviewController>();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.deepPurpleAccent.withValues(alpha: 0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.deepPurpleAccent.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurpleAccent.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.fitness_center_rounded,
+                  color: Colors.deepPurpleAccent,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Physical Assessment Recommended", // ToDo: Localize key added?
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Let's check your form level.",
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () async {
+                if (controller.userProfile == null) return;
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BaselineAssessmentView(
+                      userProfile: controller.userProfile!,
+                    ),
+                  ),
+                );
+
+                // Reuse existing logic:
+                controller.generateCurriculum();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurpleAccent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+              ),
+              child: Text(
+                AppLocalizations.of(context)!.aiInviteAssessmentButton,
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: TextButton(
+              onPressed: () {
+                controller.generateCurriculum();
+              },
+              child: Text(
+                AppLocalizations.of(context)!.aiInviteAssessmentSkip,
+                style: GoogleFonts.outfit(color: Colors.grey, fontSize: 14),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCurriculumSuccessCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle, color: Colors.green),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              "Curriculum Generated Successfully!",
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                color: Colors.green[800],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

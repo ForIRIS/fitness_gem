@@ -14,6 +14,12 @@ abstract class GeminiRemoteDataSource {
   /// Upload a file for multimodal use
   Future<String?> uploadFile({required String apiKey, required File file});
 
+  /// Check file state and wait until active
+  Future<bool> waitForFileActive({
+    required String apiKey,
+    required String fileUri,
+  });
+
   /// specific raw HTTP call for inter-set analysis (Multimodal + System Instruction)
   Future<Map<String, dynamic>?> analyzeInterSet({
     required String apiKey,

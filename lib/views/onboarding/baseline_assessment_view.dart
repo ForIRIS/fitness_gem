@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:video_player/video_player.dart';
 import 'dart:ui';
 import '../../core/di/injection.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../presentation/controllers/baseline_assessment_controller.dart';
 import '../../l10n/app_localizations.dart';
-import '../home_view.dart';
 import '../widgets/ai_pose_camera_preview.dart';
 
 class BaselineAssessmentView extends StatefulWidget {
@@ -20,11 +20,14 @@ class BaselineAssessmentView extends StatefulWidget {
 
 class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
   late final BaselineAssessmentController _controller;
+  VideoPlayerController? _videoPlayerController;
 
   // Constants
   static const int _kRecordingDuration = 10;
   static const double _kMetricValueFontSize = 48.0;
   static const double _kMetricLabelFontSize = 12.0;
+  static const String _kExampleVideoPath =
+      'assets/videos/workouts/example_squat.mp4';
 
   @override
   void initState() {
@@ -38,47 +41,86 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
   }
 
   Future<void> _checkCameraPermission() async {
-    final status = await Permission.camera.status;
-    if (!status.isGranted) {
-      // Show reasoning if needed, but since this Page IS the camera view,
-      // requesting immediately is 'contextual'.
-      final newStatus = await Permission.camera.request();
-      if (!newStatus.isGranted) {
-        if (!mounted) return;
-        _showPermissionDialog();
-        return;
+    debugPrint('[BaselineView] Checking permissions...');
+    try {
+      // Check Camera
+      final cameraStatus = await Permission.camera.status;
+      if (!cameraStatus.isGranted) {
+        final newStatus = await Permission.camera.request();
+        if (!newStatus.isGranted) {
+          debugPrint('[BaselineView] Camera permission denied.');
+          if (!mounted) return;
+          _showPermissionDialog();
+          return;
+        }
       }
-    }
 
-    // Proceed to initialize
-    if (mounted) {
-      _controller.initialize(widget.userProfile, AppLocalizations.of(context)!);
+      // Check Microphone for STT
+      final micStatus = await Permission.microphone.status;
+      if (!micStatus.isGranted) {
+        final newMicStatus = await Permission.microphone.request();
+        if (!newMicStatus.isGranted) {
+          debugPrint('[BaselineView] Microphone permission denied.');
+          if (!mounted) return;
+          _showPermissionDialog(isMicrophone: true);
+          return;
+        }
+      }
+
+      // Initialize video player
+      debugPrint('[BaselineView] Initializing video player...');
+      _videoPlayerController = VideoPlayerController.asset(_kExampleVideoPath);
+      await _videoPlayerController!.initialize();
+      await _videoPlayerController!.setLooping(true);
+
+      if (mounted) {
+        debugPrint('[BaselineView] Video player ready. Playing.');
+        await _videoPlayerController!.play();
+        setState(() {}); // Rebuild to show video
+      }
+
+      // Proceed to initialize controller
+      if (mounted) {
+        debugPrint('[BaselineView] Initializing controller...');
+        await _controller.initialize(
+          widget.userProfile,
+          AppLocalizations.of(context)!,
+        );
+      }
+    } catch (e, stack) {
+      debugPrint('[BaselineView] Error during initialization: $e');
+      debugPrint('$stack');
+      // Optionally show error dialog
     }
   }
 
-  void _showPermissionDialog() {
+  void _showPermissionDialog({bool isMicrophone = false}) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      barrierDismissible: false, // Must decide
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.permissionRequired),
-        content: Text(AppLocalizations.of(context)!.cameraPermissionReason),
+        title: Text(l10n.permissionRequired),
+        content: Text(
+          isMicrophone
+              ? 'Microphone access is required for voice commands.'
+              : l10n.cameraPermissionReason,
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), // Go back?
-            child: Text(AppLocalizations.of(context)!.cancel),
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
               openAppSettings();
             },
-            child: Text(AppLocalizations.of(context)!.openSettings),
+            child: Text(l10n.openSettings),
           ),
         ],
       ),
     ).then((_) {
       if (mounted) {
-        // If they cancel out of dialog, usually pop the view
         Navigator.pop(context);
       }
     });
@@ -86,6 +128,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
 
   @override
   void dispose() {
+    _videoPlayerController?.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -93,7 +136,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
@@ -101,16 +144,19 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
           return Stack(
             fit: StackFit.expand,
             children: [
-              // 1. Camera Feed (Back layer)
-              _buildCameraFeed(controller),
+              // 1. Video Background (Main Layer)
+              _buildVideoBackground(),
 
-              // 2. Glass Overlay for Instructions / Feedback
+              // 2. PIP Camera (Small overlay)
+              _buildPIPCamera(controller),
+
+              // 3. Glass Overlay for Instructions / Feedback
               _buildOverlay(context, controller),
 
-              // 3. Header
+              // 4. Header
               _buildHeader(context),
 
-              // 4. Phase-Specific Overlays
+              // 5. Phase-Specific Overlays
               if (controller.phase == AssessmentPhase.analyzing)
                 _buildAnalyzingOverlay(context),
 
@@ -126,8 +172,50 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
     );
   }
 
-  Widget _buildCameraFeed(BaselineAssessmentController controller) {
-    return AIPoseCameraPreview(cameraManager: controller.cameraManager);
+  Widget _buildVideoBackground() {
+    if (_videoPlayerController == null ||
+        !_videoPlayerController!.value.isInitialized) {
+      return Container(
+        color: Colors.white,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Center(
+      child: AspectRatio(
+        aspectRatio: _videoPlayerController!.value.aspectRatio,
+        child: VideoPlayer(_videoPlayerController!),
+      ),
+    );
+  }
+
+  Widget _buildPIPCamera(BaselineAssessmentController controller) {
+    return Positioned(
+      bottom: 30,
+      right: 16,
+      child: Container(
+        width: 180,
+        height: 240,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.deepPurple, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(9),
+          child: AIPoseCameraPreview(
+            cameraManager: controller.cameraManager,
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -142,14 +230,14 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
+                icon: const Icon(Icons.close, color: Colors.black87),
                 onPressed: () => Navigator.pop(context),
               ),
               const SizedBox(width: 8),
               Text(
                 l10n.baselineTitle,
                 style: GoogleFonts.barlowCondensed(
-                  color: Colors.white,
+                  color: Colors.black87,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
@@ -174,10 +262,6 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
       return _buildReadyPoseGuidance(context, controller);
     }
 
-    if (controller.phase == AssessmentPhase.countdown) {
-      return _buildCountdown(controller);
-    }
-
     if (controller.phase == AssessmentPhase.recording) {
       return _buildRecordingUI(context, controller);
     }
@@ -198,7 +282,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
             padding: const EdgeInsets.all(24),
             margin: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: Colors.black.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(32),
               border: Border.all(color: Colors.white24),
             ),
@@ -220,7 +304,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
                         l10n.baselineMovementBenchmark,
                         style: GoogleFonts.barlow(
                           color: Colors.white,
-                          fontSize: 24,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -265,58 +349,41 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
     BaselineAssessmentController controller,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (!controller.isFullBodyVisible) ...[
-            const Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.orange,
-              size: 64,
-            ),
-            const SizedBox(height: 16),
+    final isKorean = l10n.localeName == 'ko';
+    final voiceCommand = isKorean ? '시작' : 'Start';
+    final listeningText = isKorean
+        ? '음성 명령을 듣고 있습니다...'
+        : 'Listening for voice command...';
+
+    return Positioned(
+      bottom: 32,
+      left: 16,
+      right: 140, // Leave space for PIP camera
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.mic, color: Colors.cyanAccent, size: 48),
+            const SizedBox(height: 12),
             Text(
-              l10n.baselineFullBodyNotVisible,
-              style: const TextStyle(
+              '"$voiceCommand"',
+              style: GoogleFonts.barlow(
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 8),
             Text(
-              l10n.baselineMoveBack,
-              style: const TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ] else ...[
-            CircularProgressIndicator(
-              value: (controller.holdSeconds / 5).clamp(0.0, 1.0),
-              color: Colors.cyanAccent,
-              strokeWidth: 8,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              l10n.baselineHoldingPosition,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              listeningText,
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
             ),
           ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCountdown(BaselineAssessmentController controller) {
-    return Center(
-      child: Text(
-        "${controller.countdownSeconds}",
-        style: GoogleFonts.barlowCondensed(
-          color: Colors.amber,
-          fontSize: 180,
-          fontWeight: FontWeight.w900,
         ),
       ),
     );
@@ -458,11 +525,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const HomeView()),
-                      (route) => false,
-                    );
+                    Navigator.pop(context, true);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurpleAccent,
@@ -512,30 +575,81 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
     return Container(
       color: Colors.black87,
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline, color: Colors.redAccent, size: 80),
-            const SizedBox(height: 24),
-            Text(
-              l10n.baselineErrorTitle,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                color: Colors.redAccent,
+                size: 80,
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              controller.errorMessage ?? l10n.unknownError,
-              style: const TextStyle(color: Colors.white54),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: controller.retry,
-              child: Text(l10n.baselineTryAgainLater),
-            ),
-          ],
+              const SizedBox(height: 24),
+              Text(
+                l10n.baselineErrorTitle,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                controller.errorMessage ?? l10n.unknownError,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white54),
+              ),
+              const SizedBox(height: 40),
+              // Primary action: Retry
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: controller.retry,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurpleAccent,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.baselineRetry,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Secondary action: Skip Assessment
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pop(context, false);
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    side: const BorderSide(color: Colors.white38),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.baselineSkipAssessment,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

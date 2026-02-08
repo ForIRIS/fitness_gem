@@ -34,6 +34,15 @@ You have the authority to optimize the following for each session:
 - **Sets**: Total number of sets.
 - **TimeoutSec**: Rest duration between sets or exercises.
 
+### **Critical Constraint: 0 Reps**
+- **Only static hold exercises (e.g., planks) may have `reps: 0`.**
+- All other rep-based exercises MUST have `reps > 0`.
+
+### **Critical Constraint: No Consecutive Duplicates**
+- **The same exercise CANNOT appear consecutively in a single curriculum.**
+- If a user needs more volume for a specific exercise, increase the `sets` value instead of adding another entry.
+- Example: Instead of `squat_01, squat_01`, use `squat_01` with `sets: 4`.
+
 ---
 
 ## 3. Curriculum Structure
