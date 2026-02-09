@@ -43,27 +43,41 @@ class WorkoutModelService {
     }
   }
 
-  /// Load the sample model based on platform
-  Future<bool> loadSampleModel() async {
-    const basePath = 'assets/models/31c7abde-ede2-4647-b366-4cfb9bf55bbe';
+  /// Load a local model bundle from assets
+  Future<bool> loadLocalBundle(String bundleId) async {
+    final assetPath = 'assets/bundles/$bundleId.zip';
 
     final isIOSTarget = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
     if (isIOSTarget) {
       try {
-        // Unzip the .mlpackage.zip to temp directory
+        // Unzip the .zip bundle to temp directory
+        // The zip should contain a folder named {bundleId} or directly the contents
+        // For consistency with Firebase, we expect the zip to extract into a folder
         final unzippedPath = await AssetUtils.unzipAssetToTemp(
-          '$basePath/pose_model.mlpackage.zip',
-          'pose_model.mlpackage',
+          assetPath,
+          bundleId,
         );
-        final tempDir = p.dirname(unzippedPath);
-        return await loadModel(tempDir);
+
+        // For iOS, we look for pose_model.mlpackage inside the extracted folder
+        // The MLPackage itself is a directory
+        return await loadModel(unzippedPath);
       } catch (e) {
-        debugPrint("Failed to load iOS model: $e");
+        debugPrint("Failed to load local iOS bundle: $e");
         return false;
       }
     } else {
-      const assetPath = '$basePath/pose_model.onnx';
-      return await loadModelFromAsset(assetPath);
+      // For Android, we need to extract the ONNX model from the zip
+      try {
+        final unzippedPath = await AssetUtils.unzipAssetToTemp(
+          assetPath,
+          bundleId,
+        );
+        final modelPath = '$unzippedPath/pose_model.onnx';
+        return await loadModel(p.dirname(modelPath));
+      } catch (e) {
+        debugPrint("Failed to load local Android bundle: $e");
+        return false;
+      }
     }
   }
 

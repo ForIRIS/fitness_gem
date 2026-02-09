@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../domain/entities/exercise_config.dart';
 import '../../../domain/entities/workout_task.dart';
 import '../../../services/cache_service.dart';
 import '../models/exercise_config_model.dart';
 import '../models/workout_task_model.dart';
+import '../../../core/constants/mock_data.dart';
+import '../../../utils/asset_utils.dart';
 import 'exercise_local_datasource.dart';
 
 class ExerciseLocalDataSourceImpl implements ExerciseLocalDataSource {
@@ -39,18 +40,48 @@ class ExerciseLocalDataSourceImpl implements ExerciseLocalDataSource {
 
   @override
   Future<ExerciseConfig> getSampleExerciseConfig(String taskId) async {
-    // Load from assets or return default config
+    // Load from assets bundle
     try {
-      final jsonString = await rootBundle.loadString(
-        'assets/configs/$taskId.json',
+      final bundlePath = 'assets/bundles/$taskId.zip';
+      final unzippedPath = await AssetUtils.unzipAssetToTemp(
+        bundlePath,
+        taskId,
       );
-      final data = json.decode(jsonString);
+
+      final classLabelsFile = File('$unzippedPath/class_labels.json');
+      final statsFile = File('$unzippedPath/base_model_stats.json');
+      final cuesFile = File('$unzippedPath/base_model_cues.json');
+
+      if (!await classLabelsFile.exists()) {
+        return const ExerciseConfig(id: 'default');
+      }
+
+      final classLabelsStr = await classLabelsFile.readAsString();
+      final statsStr = await statsFile.readAsString();
+      final cuesStr = await cuesFile.readAsString();
+
+      final data = {
+        'id': taskId,
+        'class_labels': json.decode(classLabelsStr),
+        'median_stats': json.decode(statsStr),
+        'coaching_cues': json.decode(cuesStr),
+      };
+
       final model = ExerciseConfigModel.fromMap(data);
       return model.toEntity();
     } catch (e) {
       // Return default config
       return const ExerciseConfig(id: 'default');
     }
+  }
+
+  @override
+  Future<WorkoutTask> getSampleWorkoutTask() async {
+    // Return the first available mock task or a specific one
+    if (mockWorkoutTasks.isNotEmpty) {
+      return mockWorkoutTasks.first.toEntity();
+    }
+    throw Exception('No sample workout available');
   }
 
   @override

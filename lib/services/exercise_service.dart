@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,6 +12,7 @@ import 'cache_service.dart';
 import 'firebase_service.dart';
 import '../data/datasources/gemini_remote_datasource_impl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../utils/asset_utils.dart';
 
 class ExerciseService {
   // TODO: Replace with your actual Firebase Cloud Function URL
@@ -78,27 +78,7 @@ class ExerciseService {
   }) async {
     final workoutsMap = <String, WorkoutTask>{};
 
-    // Add Sample Workout for Testing
-    final sampleWorkout = WorkoutTask(
-      id: '31c7abde-ede2-4647-b366-4cfb9bf55bbe',
-      title: 'Back Lunge',
-      category: 'lunge',
-      description:
-          'A unilateral movement that focuses on the quadriceps and glutes while minimizing stress on the front knee. Improves lower body stability and functional strength.',
-      reps: 10,
-      sets: 3,
-      timeoutSec: 60,
-      difficulty: 2,
-      isCountable: true,
-      advice:
-          'Step back precisely and drop your back knee toward the floor. Maintain an upright torso and drive through your front heel to return to center.',
-      thumbnail: '',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-    );
-    workoutsMap[sampleWorkout.id] = sampleWorkout;
+    // Sample workout removed in favor of dynamic bundle loading
 
     // ... rest of the method
 
@@ -157,22 +137,34 @@ class ExerciseService {
     await prefs.setString(_localWorkoutsKey, json.encode(jsonList));
   }
 
-  /// Get Sample Configuration from assets
+  /// Get Sample Configuration from assets bundle
   Future<ExerciseConfig?> _getSampleConfig(String exerciseId) async {
     try {
-      // Base path for sample assets
-      const basePath = 'assets/models/31c7abde-ede2-4647-b366-4cfb9bf55bbe';
+      // 1. Define asset bundle path
+      final bundlePath = 'assets/bundles/$exerciseId.zip';
 
-      // Load and parse JSON files
-      final classLabelsStr = await rootBundle.loadString(
-        '$basePath/class_labels.json',
+      // 2. Unzip to temp directory using AssetUtils
+      // This will extract to {tempDir}/{exerciseId}/
+      final unzippedPath = await AssetUtils.unzipAssetToTemp(
+        bundlePath,
+        exerciseId,
       );
-      final statsStr = await rootBundle.loadString(
-        '$basePath/base_model_stats.json',
-      );
-      final cuesStr = await rootBundle.loadString(
-        '$basePath/base_model_cues.json',
-      );
+
+      // 3. Read JSON files from the unzipped directory
+      final classLabelsFile = File('$unzippedPath/class_labels.json');
+      final statsFile = File('$unzippedPath/base_model_stats.json');
+      final cuesFile = File('$unzippedPath/base_model_cues.json');
+
+      if (!await classLabelsFile.exists() ||
+          !await statsFile.exists() ||
+          !await cuesFile.exists()) {
+        debugPrint('Missing config files in bundle: $exerciseId');
+        return null;
+      }
+
+      final classLabelsStr = await classLabelsFile.readAsString();
+      final statsStr = await statsFile.readAsString();
+      final cuesStr = await cuesFile.readAsString();
 
       final Map<String, dynamic> configMap = {
         'id': exerciseId,
@@ -181,10 +173,10 @@ class ExerciseService {
         'coaching_cues': json.decode(cuesStr),
       };
 
-      debugPrint('Loaded sample config for: $exerciseId');
+      debugPrint('Loaded local bundle config for: $exerciseId');
       return ExerciseConfig.fromMap(configMap, category: exerciseId);
     } catch (e) {
-      debugPrint('Error loading sample config: $e');
+      debugPrint('Error loading local bundle config for $exerciseId: $e');
       return null;
     }
   }

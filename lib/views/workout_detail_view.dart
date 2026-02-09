@@ -53,8 +53,13 @@ class _WorkoutDetailViewState extends ConsumerState<WorkoutDetailView> {
   Future<void> _preloadModel() async {
     // Fire and forget - just warm up the model loading
     try {
-      await _modelService.loadSampleModel();
-      debugPrint('Background model preloading completed');
+      if (widget.curriculum.workoutTasks.isNotEmpty) {
+        final initialTask = widget.curriculum.workoutTasks[widget.initialIndex];
+        await _modelService.loadLocalBundle(initialTask.id);
+        debugPrint(
+          'Background model preloading completed for ${initialTask.id}',
+        );
+      }
     } catch (e) {
       debugPrint('Background model preloading failed: $e');
     }

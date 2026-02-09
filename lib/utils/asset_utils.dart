@@ -53,11 +53,13 @@ class AssetUtils {
       final filename = file.name;
       if (file.isFile) {
         final data = file.content as List<int>;
-        final outFile = File('${tempDir.path}/$filename');
+        // Fix: Extract into the target directory, not just tempDir
+        final outFile = File('${targetDir.path}/$filename');
         await outFile.parent.create(recursive: true);
         await outFile.writeAsBytes(data);
       } else {
-        await Directory('${tempDir.path}/$filename').create(recursive: true);
+        // Fix: Create directory inside target directory
+        await Directory('${targetDir.path}/$filename').create(recursive: true);
       }
     }
 

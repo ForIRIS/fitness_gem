@@ -22,7 +22,7 @@ class ManualMockWorkoutModelService implements WorkoutModelService {
   Future<bool> loadModelFromAsset(String assetPath) async => true;
 
   @override
-  Future<bool> loadSampleModel() async => true;
+  Future<bool> loadLocalBundle(String bundleId) async => true;
 
   @override
   Future<bool> loadBaselineModel() async => true;
