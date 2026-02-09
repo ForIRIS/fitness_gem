@@ -108,10 +108,10 @@ class OnboardingIntroPage extends StatelessWidget {
         Positioned(
           left: 24,
           right: 24,
-          bottom: -24,
+          bottom: 16,
           child: SafeArea(
             child: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(32),
@@ -128,42 +128,56 @@ class OnboardingIntroPage extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: ElevatedButton(
                       onPressed: onNext,
-                      icon: const Icon(Icons.arrow_forward_rounded),
-                      label: Text(
-                        AppLocalizations.of(context)!.getStarted,
-                        style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(32),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         elevation: 0,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.getStarted,
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward_rounded, size: 20),
+                        ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextButton.icon(
+                  TextButton(
                     onPressed: onShowApiKeyDialog,
-                    icon: const Icon(
-                      Icons.key,
-                      size: 16,
-                      color: Colors.black26,
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    label: Text(
-                      AppLocalizations.of(context)!.enterApiKeyHackathon,
-                      style: GoogleFonts.outfit(
-                        color: AppTheme.textSecondary.withValues(alpha: 0.5),
-                        fontSize: 12,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.key, size: 14, color: Colors.black26),
+                        const SizedBox(width: 6),
+                        Text(
+                          AppLocalizations.of(context)!.enterApiKeyHackathon,
+                          style: GoogleFonts.outfit(
+                            color: AppTheme.textSecondary.withValues(
+                              alpha: 0.5,
+                            ),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

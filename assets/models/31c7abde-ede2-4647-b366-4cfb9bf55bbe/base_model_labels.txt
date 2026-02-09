@@ -1,7 +1,0 @@
-1_Ready
-2_Down_L
-2_Down_R
-3_Peak_L
-3_Peak_R
-4_Up_L
-4_Up_R

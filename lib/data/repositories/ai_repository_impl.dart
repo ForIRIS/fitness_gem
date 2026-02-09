@@ -280,7 +280,7 @@ Output JSON only.
   @override
   Future<Either<Failure, Map<String, dynamic>?>> analyzeVideoSession({
     required File rgbVideoFile,
-    required File controlNetVideoFile,
+    File? controlNetVideoFile,
     required UserProfile profile,
     required String exerciseName,
     required int setNumber,
@@ -299,12 +299,15 @@ Output JSON only.
         return const Left(ServerFailure('Failed to upload RGB video'));
       }
 
-      final controlNetUri = await remoteDataSource.uploadFile(
-        apiKey: _apiKey,
-        file: controlNetVideoFile,
-      );
-      if (controlNetUri == null) {
-        return const Left(ServerFailure('Failed to upload ControlNet video'));
+      String? controlNetUri;
+      if (controlNetVideoFile != null) {
+        controlNetUri = await remoteDataSource.uploadFile(
+          apiKey: _apiKey,
+          file: controlNetVideoFile,
+        );
+        if (controlNetUri == null) {
+          return const Left(ServerFailure('Failed to upload ControlNet video'));
+        }
       }
 
       // Wait for processing
@@ -544,8 +547,9 @@ Please start the interview in English.
 
   @override
   Future<Either<Failure, InterviewResponse>> sendInterviewMessage(
-    String userMessage,
-  ) async {
+    String userMessage, {
+    File? image, // Added image parameter
+  }) async {
     if (_interviewSession == null) {
       return Left(const ServerFailure('No active interview session'));
     }
@@ -554,6 +558,7 @@ Please start the interview in English.
       final responseText = await remoteDataSource.sendMessage(
         chatSession: _interviewSession!,
         message: userMessage,
+        image: image, // Pass image
       );
 
       final text = responseText ?? '';

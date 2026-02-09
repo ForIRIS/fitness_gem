@@ -72,6 +72,7 @@ import '../../presentation/viewmodels/home_viewmodel.dart';
 
 // Controllers (added)
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../services/gemini_cache_manager.dart';
 import '../../presentation/controllers/baseline_assessment_controller.dart';
 import '../../presentation/controllers/ai_interview_controller.dart';
 
@@ -87,6 +88,8 @@ Future<void> setupDependencyInjection() async {
   final connectivityService = ConnectivityService();
   await connectivityService.initialize();
   getIt.registerLazySingleton(() => connectivityService);
+
+  getIt.registerLazySingleton(() => GeminiCacheManager());
 
   // ============ Data Sources ============
 
@@ -225,6 +228,7 @@ Future<void> setupDependencyInjection() async {
       saveCurriculumUseCase: getIt(),
       ttsService: getIt(),
       sttService: getIt(),
+      cacheManager: getIt(),
     ),
   );
 }

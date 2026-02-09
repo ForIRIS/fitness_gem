@@ -26,7 +26,7 @@ abstract class GeminiRemoteDataSource {
     required String systemInstruction,
     required Map<String, dynamic> inputContext,
     required String rgbUri,
-    required String controlNetUri,
+    String? controlNetUri,
     String mimeType = 'video/mp4',
     String model = 'gemini-3-flash-preview',
   });
@@ -51,6 +51,7 @@ abstract class GeminiRemoteDataSource {
   Future<String?> sendMessage({
     required ChatSession chatSession,
     required String message,
+    File? image,
   });
 
   /// Generate post-workout summary using the Storyteller agent
@@ -64,5 +65,13 @@ abstract class GeminiRemoteDataSource {
     required int sessionStability,
     required int totalReps,
     String? primaryFaultDetected,
+  });
+
+  /// Analyze a single image (e.g., Food Log)
+  Future<String?> analyzeImage({
+    required String apiKey,
+    required String prompt,
+    required File image,
+    String model = 'gemini-3-flash-preview',
   });
 }

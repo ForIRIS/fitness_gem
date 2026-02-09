@@ -19,6 +19,7 @@ import '../../services/workout_timer_service.dart';
 import '../../services/ready_pose_detector.dart';
 import '../states/workout_session_state.dart';
 import '../../viewmodels/display_viewmodel.dart';
+import '../../services/gemini_cache_manager.dart';
 
 class WorkoutSessionController extends ChangeNotifier {
   // Internal State
@@ -272,8 +273,7 @@ class WorkoutSessionController extends ChangeNotifier {
       final analysisResult = await _analyzeVideoSession.execute(
         AnalyzeVideoSessionParams(
           rgbVideoFile: recordingResult.rgbFile,
-          controlNetVideoFile:
-              recordingResult.controlNetFile ?? recordingResult.rgbFile,
+          controlNetVideoFile: recordingResult.controlNetFile,
           profile: _userProfile!,
           exerciseName: _state.currentTask!.title,
           setNumber: _state.currentSet,
@@ -350,6 +350,23 @@ class WorkoutSessionController extends ChangeNotifier {
   void _finishWorkout() {
     _updateState(_state.copyWith(phase: SessionPhase.completed));
     _ttsService.speakWorkoutComplete();
+
+    // Log Workout to History for Progress Tracking
+    try {
+      final cacheManager = GeminiCacheManager();
+      cacheManager.logEvent(
+        type: 'workout',
+        data: {
+          'exercise': _state.curriculum?.currentTask?.title ?? 'Unknown',
+          'sets_completed': _state.currentSet,
+          'total_reps':
+              _state.currentRep, // This is just last set, ideally total
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      );
+    } catch (e) {
+      debugPrint('Error logging workout: $e');
+    }
   }
 
   SessionPhase? _previousPhase;

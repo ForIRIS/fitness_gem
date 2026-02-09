@@ -1721,7 +1721,7 @@ abstract class AppLocalizations {
   /// Description for Gemini analysis in privacy policy
   ///
   /// In en, this message translates to:
-  /// **'Data is used for real-time analysis only. NOT used for training.'**
+  /// **'Data is used for real-time analysis only. NOT used for training. Based on Gemini 3.'**
   String get privacyGeminiDesc;
 
   /// Description for the purpose of guardian push notifications

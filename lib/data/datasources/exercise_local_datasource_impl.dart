@@ -111,7 +111,7 @@ class ExerciseLocalDataSourceImpl implements ExerciseLocalDataSource {
           'Step back precisely and drop your back knee toward the floor. Maintain an upright torso and drive through your front heel to return to center.',
       thumbnail: '',
       readyPoseImageUrl: '',
-      exampleVideoUrl: '',
+      exampleVideoUrl: 'assets/videos/back_lunge.mp4',
       configureUrl: '',
       guideAudioUrl: '',
     );

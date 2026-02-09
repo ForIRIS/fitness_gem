@@ -4,6 +4,9 @@ import 'dart:io';
 import '../../../domain/entities/chat_message.dart';
 import '../../../domain/entities/workout_curriculum.dart';
 import 'curriculum_card.dart';
+import 'assessment_invite_card.dart';
+import 'shimmer_curriculum_card.dart'; // Import shimmer
+import '../../../domain/entities/user_profile.dart'; // Import UserProfile
 
 class ChatMessageBubble extends StatelessWidget {
   final ChatMessage message;
@@ -11,6 +14,9 @@ class ChatMessageBubble extends StatelessWidget {
   final Function(WorkoutCurriculum) onViewCurriculumDetail;
   final VoidCallback? onRetry;
   final double maxWidth;
+  final UserProfile? userProfile;
+  final VoidCallback? onAssessmentComplete;
+  final VoidCallback? onSkipAssessment;
 
   const ChatMessageBubble({
     super.key,
@@ -19,10 +25,33 @@ class ChatMessageBubble extends StatelessWidget {
     required this.onViewCurriculumDetail,
     this.onRetry,
     required this.maxWidth,
+    this.userProfile,
+    this.onAssessmentComplete,
+    this.onSkipAssessment,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Display Shimmer loading
+    if (message.isLoading) {
+      return const ShimmerCurriculumCard();
+    }
+
+    // Display Assessment Invite
+    if (message.isAssessmentInvite) {
+      if (userProfile != null &&
+          onAssessmentComplete != null &&
+          onSkipAssessment != null) {
+        return AssessmentInviteCard(
+          userProfile: userProfile!,
+          onAssessmentComplete: onAssessmentComplete!,
+          onSkip: onSkipAssessment!,
+        );
+      }
+      // Fallback if params missing
+      return const SizedBox.shrink();
+    }
+
     // Display as Card if message contains curriculum
     if (message.curriculum != null) {
       return CurriculumCard(

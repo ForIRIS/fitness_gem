@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart'; // For TextEditingController
 import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 
 import '../../l10n/app_localizations.dart';
 import '../../core/di/injection.dart';
@@ -11,29 +12,9 @@ import '../../domain/usecases/workout/save_curriculum.dart';
 import '../../services/tts_service.dart';
 import '../../services/stt_service.dart';
 import '../../services/firebase_service.dart';
+import '../../services/gemini_cache_manager.dart';
 
-// We will define ChatMessage here or in a separate file.
-// For now, let's redefine it here or make it generic.
-// Actually, let's assume we'll move ChatMessage to a shared model file, but for now I'll include a simple class or use the one from View via callbacks?
-// No, Controller should hold the state.
-
-class ChatMessage {
-  final String text;
-  final bool isUser;
-  final bool isCard;
-  final Widget? cardWidget;
-  final bool isLoading;
-  final bool isAssessmentInvite;
-
-  ChatMessage({
-    required this.text,
-    required this.isUser,
-    this.isCard = false,
-    this.isLoading = false,
-    this.isAssessmentInvite = false,
-    this.cardWidget,
-  });
-}
+import '../../domain/entities/chat_message.dart';
 
 class AIInterviewController extends ChangeNotifier {
   final StartInterviewUseCase _startInterviewUseCase;
@@ -42,6 +23,7 @@ class AIInterviewController extends ChangeNotifier {
   final SaveCurriculumUseCase _saveCurriculumUseCase;
   final TTSService _ttsService;
   final STTService _sttService;
+  final GeminiCacheManager _cacheManager;
 
   // State
   final List<ChatMessage> _messages = [];
@@ -77,6 +59,7 @@ class AIInterviewController extends ChangeNotifier {
     SaveCurriculumUseCase? saveCurriculumUseCase,
     TTSService? ttsService,
     STTService? sttService,
+    GeminiCacheManager? cacheManager,
   }) : _startInterviewUseCase =
            startInterviewUseCase ?? getIt<StartInterviewUseCase>(),
        _sendInterviewMessageUseCase =
@@ -87,7 +70,8 @@ class AIInterviewController extends ChangeNotifier {
        _saveCurriculumUseCase =
            saveCurriculumUseCase ?? getIt<SaveCurriculumUseCase>(),
        _ttsService = ttsService ?? getIt<TTSService>(),
-       _sttService = sttService ?? getIt<STTService>();
+       _sttService = sttService ?? getIt<STTService>(),
+       _cacheManager = cacheManager ?? getIt<GeminiCacheManager>();
 
   Future<void> initialize(UserProfile profile, AppLocalizations l10n) async {
     _userProfile = profile;
@@ -139,16 +123,36 @@ class AIInterviewController extends ChangeNotifier {
     notifyListeners();
   }
 
+  File? _selectedImage;
+  File? get selectedImage => _selectedImage;
+
+  void selectImage(File image) {
+    _selectedImage = image;
+    notifyListeners();
+  }
+
+  void clearImage() {
+    _selectedImage = null;
+    notifyListeners();
+  }
+
   Future<void> sendMessage(String message) async {
     if (message.isEmpty || _isLoading) return;
 
-    _messages.add(ChatMessage(text: message, isUser: true));
+    _messages.add(
+      ChatMessage(text: message, isUser: true, imagePath: _selectedImage?.path),
+    );
+
+    final imageToSend = _selectedImage;
+    _selectedImage = null; // Clear image after sending
     _isLoading = true;
     _hasError = false;
     messageController.clear();
     notifyListeners();
 
-    final result = await _sendInterviewMessageUseCase.execute(message);
+    final result = await _sendInterviewMessageUseCase.execute(
+      SendInterviewMessageParams(message: message, image: imageToSend),
+    );
 
     result.fold(
       (failure) {
@@ -194,6 +198,16 @@ class AIInterviewController extends ChangeNotifier {
 
         if (response.isComplete) {
           _lastInterviewDetails = response.extractedDetails;
+
+          // Log to long-term memory (Holistic Agent Context)
+          _cacheManager.logEvent(
+            type: 'onboarding',
+            data: {
+              'summary': response.summaryText,
+              'details': response.extractedDetails,
+            },
+          );
+
           _inviteToAssessment();
         }
       },
@@ -258,26 +272,10 @@ class AIInterviewController extends ChangeNotifier {
 
             // Replace Shimmer with Result Card
             _messages[loadingMessageIndex] = ChatMessage(
-              text: 'Curriculum Created', // Placeholder text, View renders card
+              text:
+                  'Curriculum created: ${curriculum.title}\nDuration: ${curriculum.estimatedMinutes} min',
               isUser: false,
-              isCard: true,
-              // Ideally pass curriculum data here if View needs it,
-              // but current architecture might rely on Repository/State elsewhere.
-              // For now, let's assume View fetches latest or we re-trigger.
-              // Actually, looking at original code, it just added a card message.
-            );
-
-            // Add a text summary before or part of the card?
-            // Original code added two messages: text summary AND card.
-            // Requirement: "Refactor Shimmer Component: Ensure the Shimmer loader and the final Curriculum Card share the same state/ID."
-            // So we should replace the Shimmer with the Card.
-
-            _messages.add(
-              ChatMessage(
-                text:
-                    'Curriculum created: ${curriculum.title}\nDuration: ${curriculum.estimatedMinutes} min',
-                isUser: false,
-              ),
+              curriculum: curriculum,
             );
 
             _isInterviewComplete = true;
@@ -332,6 +330,7 @@ class AIInterviewController extends ChangeNotifier {
 
     final available = await _sttService.initialize();
     if (available) {
+      await _ttsService.stop(); // Stop TTS if speaking
       _isListening = true;
       notifyListeners();
       // Language code usually comes from context, but Controller shouldn't depend on Context.

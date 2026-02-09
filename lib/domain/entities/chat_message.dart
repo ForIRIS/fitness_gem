@@ -6,6 +6,8 @@ class ChatMessage {
   final String? imagePath;
   final WorkoutCurriculum? curriculum;
   final bool isError;
+  final bool isLoading;
+  final bool isAssessmentInvite;
 
   ChatMessage({
     required this.text,
@@ -13,5 +15,7 @@ class ChatMessage {
     this.imagePath,
     this.curriculum,
     this.isError = false,
+    this.isLoading = false,
+    this.isAssessmentInvite = false,
   });
 }

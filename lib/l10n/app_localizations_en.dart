@@ -898,7 +898,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyGeminiDesc =>
-      'Data is used for real-time analysis only. NOT used for training.';
+      'Data is used for real-time analysis only. NOT used for training. Based on Gemini 3.';
 
   @override
   String get guardianPushPurpose => 'Used ONLY for fall detection alerts.';

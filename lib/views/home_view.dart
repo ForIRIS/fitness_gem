@@ -6,13 +6,12 @@ import '../services/cache_service.dart';
 import '../presentation/viewmodels/home_viewmodel.dart';
 import 'camera_view.dart';
 import 'settings_view.dart';
-import 'ai_chat_view.dart';
+import 'life_log/life_log_view.dart';
 import 'workout_detail_view.dart';
 import 'featured_program_detail_view.dart';
 import 'statistics_view.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
-import '../domain/entities/workout_curriculum.dart';
 import '../widgets/glass_dialog.dart';
 import 'widgets/home/home_header.dart';
 import 'widgets/home/daily_stats_card.dart';
@@ -75,27 +74,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
   }
 
   void _openAIChat() async {
-    final viewModel = ref.read(homeViewModelProvider);
-    if (viewModel.userProfile == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('User profile not loaded')));
-      return;
-    }
-    final newCurriculum = await Navigator.of(context).push<WorkoutCurriculum>(
-      MaterialPageRoute(
-        builder: (_) => AIChatView(
-          userProfile: ref.read(homeViewModelProvider).userProfile!,
-        ),
-      ),
-    );
-
-    if (newCurriculum != null) {
-      await viewModel.updateTodayCurriculum(newCurriculum);
-      if (mounted) {
-        setState(() {});
-      }
-    }
+    // Navigate to Life Log (Holistic Companion)
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const LifeLogView()));
+    // After returning, maybe refresh data if needed
+    // The LifeLog updates the *cache*, which might affect curriculum if we regenerate it.
   }
 
   void _startWorkout() async {

@@ -11,6 +11,8 @@ import '../domain/entities/workout_task.dart';
 import '../data/models/workout_task_model.dart';
 import 'cache_service.dart';
 import 'firebase_service.dart';
+import '../data/datasources/gemini_remote_datasource_impl.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ExerciseService {
   // TODO: Replace with your actual Firebase Cloud Function URL
@@ -205,7 +207,74 @@ class ExerciseService {
       return ExerciseConfig.fromMap(configMap, category: exerciseId);
     } catch (e) {
       debugPrint('Error loading sample config: $e');
-      return ExerciseConfig.defaultSquat();
+      return null;
+    }
+  }
+
+  /// Generate the next workout task dynamically based on context
+  Future<WorkoutTask?> generateNextCurriculum() async {
+    try {
+      final dataSource = GeminiRemoteDataSourceImpl();
+      final apiKey = dotenv.env['GEMINI_API_KEY'];
+
+      if (apiKey == null) return null;
+
+      // 1. Get Context (History + Food + Chat)
+      // The dataSource.generateContent ALREADY appends this context if we use it.
+      // But we need a specific prompt to force JSON output for a WorkoutTask.
+
+      const prompt = """
+      Based on my recent history, food intake, and energy levels from the context:
+      Generate the best NEXT exercise for me to do right now.
+      Return strictly a JSON object matching this structure:
+      {
+        "id": "generated_id",
+        "title": "Exercise Name",
+        "category": "squat",
+        "description": "Short description",
+        "reps": 10,
+        "sets": 3,
+        "timeoutSec": 60,
+        "difficulty": 1, 
+        "advice": "Specific advice based on my history"
+      }
+      Do not include markdown markers.
+      """;
+
+      final jsonString = await dataSource.generateContent(
+        apiKey: apiKey,
+        systemInstruction: "You are an elite fitness coach. Output only JSON.",
+        prompt: prompt,
+        responseMimeType: 'application/json',
+      );
+
+      if (jsonString != null) {
+        final Map<String, dynamic> map = json.decode(jsonString);
+        // Map to WorkoutTask
+        return WorkoutTask(
+          id: map['id'] ?? 'gen_${DateTime.now().millisecondsSinceEpoch}',
+          title: map['title'] ?? 'Freestyle',
+          category:
+              map['category'] ??
+              'squat', // Mapping to known categories might be needed
+          description: map['description'] ?? '',
+          reps: map['reps'] ?? 10,
+          sets: map['sets'] ?? 3,
+          timeoutSec: map['timeoutSec'] ?? 60,
+          difficulty: map['difficulty'] ?? 1,
+          isCountable: true, // Default to true or infer
+          advice: map['advice'] ?? '',
+          thumbnail: '', // Needs a default or generation
+          readyPoseImageUrl: '',
+          exampleVideoUrl: '',
+          configureUrl: '',
+          guideAudioUrl: '',
+        );
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error generating curriculum: $e');
+      return null;
     }
   }
 }

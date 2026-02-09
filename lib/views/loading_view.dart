@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import '../domain/entities/workout_curriculum.dart';
 import '../services/cache_service.dart';
+import '../theme/app_theme.dart';
 
 /// LoadingView - Resource Download Screen
 class LoadingView extends StatefulWidget {
@@ -43,10 +44,6 @@ class _LoadingViewState extends State<LoadingView> {
     // Calculate total resources (excluding empty URLs)
     int total = 0;
     for (final _ in widget.curriculum.workoutTasks) {
-      // Note: Initially URLs might be empty, but CacheService will fetch them.
-      // We assume each task has 4 resources.
-      // If we want a more accurate progress bar BEFORE fetching, we might need a different approach.
-      // For now, let's assume 4 items per task for the progress bar.
       total += 4;
     }
 
@@ -135,146 +132,175 @@ class _LoadingViewState extends State<LoadingView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // Background Image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/fitness_bg.png',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  Container(color: Colors.black),
-            ),
-          ),
-          // Gradient Overlay
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withValues(alpha: 0.7),
-                    Colors.black.withValues(alpha: 0.5),
-                    Colors.black.withValues(alpha: 0.8),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+      backgroundColor: AppTheme.background,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Animation or Lottie could go here. For now, themed icon.
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color:
+                      (_isComplete
+                              ? AppTheme.success
+                              : _hasError
+                              ? AppTheme.error
+                              : AppTheme.primary)
+                          .withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _isComplete
+                      ? Icons.check_circle_rounded
+                      : _hasError
+                      ? Icons.error_rounded
+                      : Icons.downloading_rounded,
+                  size: 80,
+                  color: _isComplete
+                      ? AppTheme.success
+                      : _hasError
+                      ? AppTheme.error
+                      : AppTheme.primary,
                 ),
               ),
-            ),
-          ),
-          // Content
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Icon
-                  Icon(
-                    _isComplete
-                        ? Icons.check_circle
-                        : _hasError
-                        ? Icons.error
-                        : Icons.downloading,
-                    size: 80,
-                    color: _isComplete
-                        ? Colors.green
-                        : _hasError
-                        ? Colors.red
-                        : Colors.deepPurple,
+
+              const SizedBox(height: 48),
+
+              // Status Message
+              Text(
+                _statusMessage,
+                style: const TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Current downloading item
+              AnimatedOpacity(
+                opacity: (_currentItem.isNotEmpty && !_isComplete && !_hasError)
+                    ? 1.0
+                    : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  _currentItem,
+                  style: const TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
                   ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
 
-                  const SizedBox(height: 32),
+              const SizedBox(height: 40),
 
-                  // Status Message
-                  Text(
-                    _statusMessage,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Current downloading file
-                  if (_currentItem.isNotEmpty && !_isComplete && !_hasError)
-                    Text(
-                      _currentItem,
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 14,
-                      ),
-                    ),
-
-                  const SizedBox(height: 24),
-
-                  // Progress Bar
-                  if (_totalCount > 0 && !_isComplete && !_hasError)
-                    Column(
+              // Progress Bar
+              if (_totalCount > 0 && !_isComplete && !_hasError)
+                Column(
+                  children: [
+                    Stack(
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: LinearProgressIndicator(
-                            value: _completedCount / _totalCount,
-                            backgroundColor: Colors.white.withValues(
-                              alpha: 0.1,
-                            ),
-                            valueColor: const AlwaysStoppedAnimation(
-                              Colors.deepPurple,
-                            ),
-                            minHeight: 8,
+                        Container(
+                          height: 12,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '$_completedCount / $_totalCount',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          height: 12,
+                          width:
+                              MediaQuery.of(context).size.width *
+                              32 *
+                              2 /
+                              MediaQuery.of(context).size.width, // Calculation
+                          // Better to use LayoutBuilder or simple fraction
+                          child: FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: (_completedCount / _totalCount).clamp(
+                              0.0,
+                              1.0,
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.primaryGradient,
+                                borderRadius: BorderRadius.circular(6),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-
-                  // Indeterminate Loading (When no URLs)
-                  if (_totalCount == 0 && !_isComplete && !_hasError)
-                    const CircularProgressIndicator(color: Colors.deepPurple),
-
-                  const SizedBox(height: 32),
-
-                  // Retry Button on Error
-                  if (_hasError)
-                    ElevatedButton.icon(
-                      onPressed: _retry,
-                      icon: const Icon(Icons.refresh),
-                      label: Text(AppLocalizations.of(context)!.retry),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '$_completedCount / $_totalCount',
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+                  ],
+                ),
 
-                  // Cancel Button
-                  if (!_isComplete)
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: Text(
-                        AppLocalizations.of(context)!.cancel,
-                        style: const TextStyle(color: Colors.white54),
-                      ),
+              // Indeterminate Loading (Initial state)
+              if (_totalCount == 0 && !_isComplete && !_hasError)
+                const CircularProgressIndicator(
+                  color: AppTheme.primary,
+                  strokeWidth: 3,
+                ),
+
+              const Spacer(),
+
+              // Retry Button on Error
+              if (_hasError)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _retry,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(AppLocalizations.of(context)!.retry),
+                  ),
+                ),
+
+              const SizedBox(height: 16),
+
+              // Cancel Button
+              if (!_isComplete)
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(
+                    AppLocalizations.of(context)!.cancel,
+                    style: const TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w600,
                     ),
-                ],
-              ),
-            ),
+                  ),
+                ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

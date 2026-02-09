@@ -3,6 +3,7 @@ import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/session_analysis.dart';
 import '../domain/entities/workout_curriculum.dart';
+import '../theme/app_theme.dart';
 
 /// ResultsView - Session completion results screen
 class ResultsView extends StatefulWidget {
@@ -49,110 +50,79 @@ class _ResultsViewState extends State<ResultsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(
           AppLocalizations.of(context)!.workoutComplete,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: AppTheme.textPrimary),
         ),
         automaticallyImplyLeading: false,
       ),
-      body: Stack(
-        children: [
-          // Background Image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/fitness_bg.png',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  Container(color: Colors.black),
-            ),
-          ),
-          // Gradient Overlay
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withValues(alpha: 0.7),
-                    Colors.black.withValues(alpha: 0.5),
-                    Colors.black.withValues(alpha: 0.8),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Score Card
+            _buildScoreCard(),
+
+            const SizedBox(height: 24),
+
+            // Score chart by set
+            _buildScoreChart(),
+
+            const SizedBox(height: 24),
+
+            // Feedback Summary
+            _buildFeedbackSummary(),
+
+            const SizedBox(height: 32),
+
+            // Return Home button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                },
+                child: Text(AppLocalizations.of(context)!.returnHome),
               ),
             ),
-          ),
-          // Content
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Score Card
-                _buildScoreCard(),
-
-                const SizedBox(height: 24),
-
-                // Score chart by set
-                _buildScoreChart(),
-
-                const SizedBox(height: 24),
-
-                // Feedback Summary
-                _buildFeedbackSummary(),
-
-                const SizedBox(height: 32),
-
-                // Return Home button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context)!.returnHome,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildScoreCard() {
+    final scoreColor = _getScoreColor(_totalScore);
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            _getScoreColor(_totalScore).withValues(alpha: 0.8),
-            _getScoreColor(_totalScore).withValues(alpha: 0.5),
-          ],
+          colors: [scoreColor, scoreColor.withValues(alpha: 0.7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: scoreColor.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Text(
             AppLocalizations.of(context)!.todayScore,
-            style: const TextStyle(color: Colors.white70, fontSize: 16),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -166,9 +136,13 @@ class _ResultsViewState extends State<ResultsView> {
           const SizedBox(height: 8),
           Text(
             _getScoreMessage(_totalScore),
-            style: const TextStyle(color: Colors.white, fontSize: 18),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -176,7 +150,7 @@ class _ResultsViewState extends State<ResultsView> {
                 AppLocalizations.of(context)!.sets,
                 '${widget.setAnalyses.length}',
               ),
-              const SizedBox(width: 32),
+              const SizedBox(width: 48),
               _buildStatItem(
                 AppLocalizations.of(context)!.repsTotal,
                 '$_totalReps',
@@ -195,13 +169,17 @@ class _ResultsViewState extends State<ResultsView> {
           value,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 24,
+            fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
           label,
-          style: const TextStyle(color: Colors.white70, fontSize: 14),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
@@ -213,10 +191,17 @@ class _ResultsViewState extends State<ResultsView> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,12 +209,12 @@ class _ResultsViewState extends State<ResultsView> {
           Text(
             AppLocalizations.of(context)!.scoreBySet,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppTheme.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           SizedBox(
             height: 200,
             child: BarChart(
@@ -243,11 +228,15 @@ class _ResultsViewState extends State<ResultsView> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        return Text(
-                          'S${value.toInt() + 1}',
-                          style: const TextStyle(
-                            color: Colors.white54,
-                            fontSize: 12,
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            'S${value.toInt() + 1}',
+                            style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         );
                       },
@@ -262,7 +251,7 @@ class _ResultsViewState extends State<ResultsView> {
                           return Text(
                             '${value.toInt()}',
                             style: const TextStyle(
-                              color: Colors.white38,
+                              color: AppTheme.textSecondary,
                               fontSize: 10,
                             ),
                           );
@@ -279,7 +268,14 @@ class _ResultsViewState extends State<ResultsView> {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-                gridData: const FlGridData(show: false),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: AppTheme.textSecondary.withValues(alpha: 0.1),
+                    strokeWidth: 1,
+                  ),
+                ),
                 barGroups: widget.setAnalyses.asMap().entries.map((entry) {
                   return BarChartGroupData(
                     x: entry.key,
@@ -287,10 +283,12 @@ class _ResultsViewState extends State<ResultsView> {
                       BarChartRodData(
                         toY: entry.value.score.toDouble(),
                         color: _getScoreColor(entry.value.score),
-                        width: 20,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4),
-                          topRight: Radius.circular(4),
+                        width: 16,
+                        borderRadius: BorderRadius.circular(4),
+                        backDrawRodData: BackgroundBarChartRodData(
+                          show: true,
+                          toY: 100,
+                          color: AppTheme.background,
                         ),
                       ),
                     ],
@@ -305,7 +303,6 @@ class _ResultsViewState extends State<ResultsView> {
   }
 
   Widget _buildFeedbackSummary() {
-    // Collect main issues
     final issues = <String>{};
     for (final analysis in widget.setAnalyses) {
       if (analysis.mainIssue.isNotEmpty) {
@@ -318,10 +315,17 @@ class _ResultsViewState extends State<ResultsView> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,30 +333,38 @@ class _ResultsViewState extends State<ResultsView> {
           Text(
             AppLocalizations.of(context)!.improvementPoints,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppTheme.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           ...issues.map(
             (issue) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.lightbulb_outline,
-                    color: Colors.amber,
-                    size: 20,
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.brightMarigold.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.lightbulb_outline,
+                      color: AppTheme.brightMarigold,
+                      size: 18,
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       issue,
                       style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
+                        color: AppTheme.textPrimary,
+                        fontSize: 15,
+                        height: 1.4,
                       ),
                     ),
                   ),
@@ -366,10 +378,10 @@ class _ResultsViewState extends State<ResultsView> {
   }
 
   Color _getScoreColor(int score) {
-    if (score >= 80) return Colors.green;
-    if (score >= 60) return Colors.blue;
-    if (score >= 40) return Colors.orange;
-    return Colors.red;
+    if (score >= 80) return AppTheme.success;
+    if (score >= 60) return AppTheme.accent;
+    if (score >= 40) return AppTheme.brightMarigold;
+    return AppTheme.error;
   }
 
   String _getScoreMessage(int score) {

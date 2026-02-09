@@ -27,7 +27,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
   static const double _kMetricValueFontSize = 48.0;
   static const double _kMetricLabelFontSize = 12.0;
   static const String _kExampleVideoPath =
-      'assets/videos/workouts/example_squat.mp4';
+      'assets/videos/workouts/air_squat.mp4';
 
   @override
   void initState() {
@@ -38,6 +38,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
         _checkCameraPermission();
       }
     });
+    _controller.addListener(_onPhaseChanged);
   }
 
   Future<void> _checkCameraPermission() async {
@@ -74,9 +75,10 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
       await _videoPlayerController!.setLooping(true);
 
       if (mounted) {
-        debugPrint('[BaselineView] Video player ready. Playing.');
-        await _videoPlayerController!.play();
-        setState(() {}); // Rebuild to show video
+        debugPrint(
+          '[BaselineView] Video player ready. Waiting for recording to start.',
+        );
+        setState(() {}); // Rebuild to show video preview (paused)
       }
 
       // Proceed to initialize controller
@@ -129,8 +131,30 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
   @override
   void dispose() {
     _videoPlayerController?.dispose();
+    _controller.removeListener(_onPhaseChanged);
     _controller.dispose();
     super.dispose();
+  }
+
+  void _onPhaseChanged() {
+    if (_videoPlayerController == null ||
+        !_videoPlayerController!.value.isInitialized) {
+      return;
+    }
+
+    // Play video only during recording
+    if (_controller.phase == AssessmentPhase.recording) {
+      if (!_videoPlayerController!.value.isPlaying) {
+        _videoPlayerController!.seekTo(Duration.zero);
+        _videoPlayerController!.play();
+      }
+    } else {
+      // Pause/Stop otherwise
+      if (_videoPlayerController!.value.isPlaying) {
+        _videoPlayerController!.pause();
+        _videoPlayerController!.seekTo(Duration.zero);
+      }
+    }
   }
 
   @override
@@ -382,6 +406,18 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
             Text(
               listeningText,
               style: const TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            // Fallback Button
+            TextButton.icon(
+              onPressed: () {
+                controller.forceStartRecording();
+              },
+              icon: const Icon(Icons.touch_app, color: Colors.white70),
+              label: Text(
+                isKorean ? '터치하셔도 됩니다' : 'Tap to Start',
+                style: const TextStyle(color: Colors.white70),
+              ),
             ),
           ],
         ),

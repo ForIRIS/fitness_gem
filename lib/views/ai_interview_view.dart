@@ -2,20 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
-import 'onboarding/baseline_assessment_view.dart';
-import 'widgets/curriculum_loading_card.dart';
 
+import 'dart:io'; // For File
+import 'package:image_picker/image_picker.dart';
 import '../core/di/injection.dart';
 import '../domain/entities/user_profile.dart';
-import '../../presentation/controllers/ai_interview_controller.dart'
-    hide ChatMessage;
-import '../../presentation/controllers/ai_interview_controller.dart'
-    as controller_model;
-// To avoid conflict with local simplified usage or alias,
-// though we will use the controller's model directly.
-// Ideally, ChatMessage should be in a model file.
-// For now, I will use controller_model.ChatMessage.
+import '../domain/entities/chat_message.dart';
+import '../../presentation/controllers/ai_interview_controller.dart';
+import 'widgets/ai/chat_message_bubble.dart';
+import 'workout_detail_view.dart';
 
 class AIInterviewView extends StatefulWidget {
   final UserProfile userProfile;
@@ -98,6 +93,27 @@ class _AIInterviewViewState extends State<AIInterviewView>
     );
   }
 
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      if (pickedFile != null) {
+        _controller.selectImage(File(pickedFile.path));
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -178,13 +194,8 @@ class _AIInterviewViewState extends State<AIInterviewView>
                     horizontal: 16,
                     vertical: 20,
                   ),
-                  itemCount:
-                      _controller.messages.length +
-                      (_controller.isLoading ? 1 : 0),
+                  itemCount: _controller.messages.length,
                   itemBuilder: (context, index) {
-                    if (index == _controller.messages.length) {
-                      return _buildLoadingBubble();
-                    }
                     final message = _controller.messages[index];
                     return _buildMessageBubble(message);
                   },
@@ -219,83 +230,222 @@ class _AIInterviewViewState extends State<AIInterviewView>
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
-          return Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _controller.messageController,
-                  enabled:
-                      !_controller.isLoading &&
-                      !_controller.isInterviewComplete,
-                  decoration: InputDecoration(
-                    hintText: _controller.isListening
-                        ? l10n.listening
-                        : l10n.typeMessageHint,
-                    hintStyle: GoogleFonts.barlow(
-                      color: _controller.isListening
-                          ? Colors.deepPurpleAccent
-                          : Colors.grey[400],
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F5FA),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
+          // 1. Loading Text / Generating State
+          if (_controller.isLoading) {
+            return SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: null, // Disabled
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[200],
+                  foregroundColor: Colors.grey,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  onSubmitted: _controller.sendMessage,
+                  elevation: 0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      l10n.generatingWorkout, // "Generating your curriculum..."
+                      style: GoogleFonts.barlow(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              if (!_controller.isInterviewComplete) ...[
-                // Mic Button
-                GestureDetector(
-                  onTap: () {
-                    if (_controller.isListening) {
-                      _controller.stopListening();
-                    } else {
-                      _controller.startListening(
-                        onPermissionDenied: _onPermissionDenied,
-                      );
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: _controller.isListening
-                          ? Colors.redAccent
-                          : Colors.deepPurple.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
+            );
+          }
+
+          // 2. Completed State -> Navigation Button
+          if (_controller.isInterviewComplete) {
+            return Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Go Home
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: Colors.deepPurple),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
                     ),
-                    child: Icon(
-                      _controller.isListening ? Icons.mic : Icons.mic_none,
-                      color: _controller.isListening
-                          ? Colors.white
-                          : Colors.deepPurple,
-                    ),
+                    child: const Text("Home"),
                   ),
                 ),
-                const SizedBox(width: 8),
-                // Send Button
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.deepPurple,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.send, color: Colors.white, size: 20),
-                    onPressed: _controller.isLoading
-                        ? null
-                        : () => _controller.sendMessage(
-                            _controller.messageController.text,
-                          ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Navigate to Workout (if we have current curriculum info, or just pop to home then navigate?)
+                      // Actually, the latest curriculum should be available.
+                      // For now, let's assume "Home" is enough or trigger detail view if curriculum is in the chat.
+                      // The curriculum card in chat mimics "Start".
+                      // This bottom button can be "Done" or "Go to Home".
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: Text(
+                      "Finish",
+                      style: GoogleFonts.barlow(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
                 ),
               ],
+            );
+          }
+
+          // 3. Normal Input State
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Image Preview
+              if (_controller.selectedImage != null)
+                Container(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  alignment: Alignment.centerLeft,
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          _controller.selectedImage!,
+                          height: 80,
+                          width: 80,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: GestureDetector(
+                          onTap: _controller.clearImage,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.add_photo_alternate_rounded,
+                      color: Colors.deepPurple,
+                    ),
+                    onPressed: () => _pickImage(ImageSource.gallery),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: _controller.messageController,
+                      decoration: InputDecoration(
+                        hintText: _controller.isListening
+                            ? l10n.listening
+                            : l10n.typeMessageHint,
+                        hintStyle: GoogleFonts.barlow(
+                          color: _controller.isListening
+                              ? Colors.deepPurpleAccent
+                              : Colors.grey[400],
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF5F5FA),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                      ),
+                      onSubmitted: _controller.sendMessage,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      if (_controller.isListening) {
+                        _controller.stopListening();
+                      } else {
+                        _controller.startListening(
+                          onPermissionDenied: _onPermissionDenied,
+                        );
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _controller.isListening
+                            ? Colors.redAccent
+                            : Colors.deepPurple.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _controller.isListening ? Icons.mic : Icons.mic_none,
+                        color: _controller.isListening
+                            ? Colors.white
+                            : Colors.deepPurple,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.deepPurple,
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.send,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      onPressed: () => _controller.sendMessage(
+                        _controller.messageController.text,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           );
         },
@@ -303,408 +453,31 @@ class _AIInterviewViewState extends State<AIInterviewView>
     );
   }
 
-  Widget _buildMessageBubble(controller_model.ChatMessage message) {
-    if (message.isLoading) {
-      return const CurriculumLoadingCard();
-    }
-
-    if (message.isAssessmentInvite) {
-      return _buildAssessmentInviteCard();
-    }
-
-    if (message.isCard) {
-      if (message.cardWidget != null) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: message.cardWidget!,
-        );
-      }
-      if (message.text == 'Curriculum Created') {
-        return _buildCurriculumSuccessCard();
-      }
-      // Fallback usage if needed
-      return _buildAssessmentRecommendation(context);
-    }
-
-    // ... existing text message logic ...
-    return Align(
-      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(14),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
-        ),
-        decoration: BoxDecoration(
-          color: message.isUser ? null : Colors.white,
-          gradient: message.isUser
-              ? const LinearGradient(
-                  colors: [Color(0xFF5E35B1), Color(0xFF9575CD)],
-                )
-              : null,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: message.isUser
-                ? const Radius.circular(16)
-                : const Radius.circular(4),
-            bottomRight: message.isUser
-                ? const Radius.circular(4)
-                : const Radius.circular(16),
-          ),
-        ),
-        child: _buildParsedText(message.text, isUser: message.isUser),
-      ),
-    );
-  }
-
-  Widget _buildAssessmentInviteCard() {
-    final controller = context.read<AIInterviewController>();
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.deepPurpleAccent.withValues(alpha: 0.2),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.deepPurpleAccent.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.deepPurpleAccent.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.fitness_center_rounded,
-                  color: Colors.deepPurpleAccent,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Physical Assessment Recommended", // ToDo: Localize key added?
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Let's check your form level.",
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () async {
-                if (controller.userProfile == null) return;
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => BaselineAssessmentView(
-                      userProfile: controller.userProfile!,
-                    ),
-                  ),
-                );
-
-                // Reuse existing logic:
-                controller.generateCurriculum();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurpleAccent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 2,
-              ),
-              child: Text(
-                AppLocalizations.of(context)!.aiInviteAssessmentButton,
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  letterSpacing: 1.0,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Center(
-            child: TextButton(
-              onPressed: () {
-                controller.generateCurriculum();
-              },
-              child: Text(
-                AppLocalizations.of(context)!.aiInviteAssessmentSkip,
-                style: GoogleFonts.outfit(color: Colors.grey, fontSize: 14),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCurriculumSuccessCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.green.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: Colors.green),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              "Curriculum Generated Successfully!",
-              style: GoogleFonts.outfit(
-                fontWeight: FontWeight.bold,
-                color: Colors.green[800],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildParsedText(String text, {required bool isUser}) {
-    final List<TextSpan> spans = [];
-    final RegExp regex = RegExp(r'\*\*(.*?)\*\*');
-    int lastMatchEnd = 0;
-
-    for (final Match match in regex.allMatches(text)) {
-      if (match.start > lastMatchEnd) {
-        spans.add(
-          TextSpan(
-            text: text.substring(lastMatchEnd, match.start),
-            style: GoogleFonts.barlow(
-              color: isUser ? Colors.white : Colors.black87,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              height: 1.4,
-            ),
-          ),
-        );
-      }
-      spans.add(
-        TextSpan(
-          text: match.group(1),
-          style: GoogleFonts.barlow(
-            color: isUser ? Colors.white : Colors.black,
-            fontSize: 16,
-            fontWeight: FontWeight.w800, // Extra bold for visibility
-            height: 1.4,
-          ),
-        ),
-      );
-      lastMatchEnd = match.end;
-    }
-
-    if (lastMatchEnd < text.length) {
-      spans.add(
-        TextSpan(
-          text: text.substring(lastMatchEnd),
-          style: GoogleFonts.barlow(
-            color: isUser ? Colors.white : Colors.black87,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            height: 1.4,
-          ),
-        ),
-      );
-    }
-
-    return RichText(text: TextSpan(children: spans));
-  }
-
-  // Reused from original but optimized
-  Widget _buildLoadingBubble() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildDot(0),
-            const SizedBox(width: 4),
-            _buildDot(1),
-            const SizedBox(width: 4),
-            _buildDot(2),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDot(int index) {
-    return AnimatedBuilder(
-      animation: _shimmerController,
-      builder: (context, child) {
-        final offset = (_shimmerController.value + (2 - index) * 0.15) % 1.0;
-        final opacity = (1 - (offset * 2 - 1).abs()).clamp(0.3, 1.0);
-        return Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: const Color(0xFF5E35B1).withValues(alpha: opacity),
-            shape: BoxShape.circle,
+  Widget _buildMessageBubble(ChatMessage message) {
+    return ChatMessageBubble(
+      message: message,
+      maxWidth: MediaQuery.of(context).size.width * 0.8,
+      userProfile: widget.userProfile,
+      onAssessmentComplete: () => _controller.generateCurriculum(),
+      onSkipAssessment: () => _controller.generateCurriculum(),
+      onConfirmCurriculum: (curriculum) {
+        // Navigate to WorkoutDetailView or perform action
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WorkoutDetailView(curriculum: curriculum),
           ),
         );
       },
-    );
-  }
-
-  // This was previously part of the view, keeping it as valid UI logic
-  Widget _buildAssessmentRecommendation(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.deepPurpleAccent.withValues(alpha: 0.3),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.deepPurple.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
+      onViewCurriculumDetail: (curriculum) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WorkoutDetailView(curriculum: curriculum),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.deepPurpleAccent.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.fitness_center,
-                  color: Colors.deepPurple,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.assessmentRecommended, // "Physical Assessment Recommended"
-                      style: GoogleFonts.barlow(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      l10n.assessmentRecommendedDesc, // "Let's check your form level."
-                      style: GoogleFonts.barlow(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                // Navigation to Assessment
-                // Using named route or direct push
-                // Assuming BaselineAssessmentView is in the onboarding folder or main views
-                // We need to import it if we push directly.
-                // For now, I will use Navigator.pushNamed if possible or import it.
-                // The original code used Navigator.push(MaterialPageRoute(builder: (_) => BaselineAssessmentView(userProfile: widget.userProfile)));
-                // I need to import BaselineAssessmentView.
-                // Let's add that import!
-                _navigateToAssessment();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Text(l10n.aiInviteAssessmentButton),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _navigateToAssessment() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            BaselineAssessmentView(userProfile: widget.userProfile),
-      ),
+        );
+      },
+      onRetry: () => _controller.retryConnection(),
     );
   }
 }

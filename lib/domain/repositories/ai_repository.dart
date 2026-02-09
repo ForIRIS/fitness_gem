@@ -32,7 +32,7 @@ abstract class AIRepository {
   /// Analyze a workout video session (RGB + ControlNet)
   Future<Either<Failure, Map<String, dynamic>?>> analyzeVideoSession({
     required File rgbVideoFile,
-    required File controlNetVideoFile,
+    File? controlNetVideoFile,
     required UserProfile profile,
     required String exerciseName,
     required int setNumber,
@@ -57,8 +57,9 @@ abstract class AIRepository {
 
   /// Send a message in the interview session
   Future<Either<Failure, InterviewResponse>> sendInterviewMessage(
-    String userMessage,
-  );
+    String userMessage, {
+    File? image,
+  });
 
   /// Generate post-workout summary using Storyteller agent
   Future<Either<Failure, Map<String, dynamic>?>> generatePostWorkoutSummary({

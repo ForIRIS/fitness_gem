@@ -1,4 +1,9 @@
 import 'package:dartz/dartz.dart';
+import 'dart:io';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+
 import '../../core/error/failures.dart';
 import '../../domain/entities/exercise_config.dart';
 import '../../domain/entities/workout_task.dart';
@@ -9,6 +14,10 @@ import '../datasources/exercise_remote_datasource.dart';
 class ExerciseRepositoryImpl implements ExerciseRepository {
   final ExerciseRemoteDataSource remoteDataSource;
   final ExerciseLocalDataSource localDataSource;
+
+  // Placeholder URL for the Back Lunge video - User to update
+  static const String _kBackLungeVideoUrl =
+      'https://example.com/placeholder_back_lunge.mp4';
 
   ExerciseRepositoryImpl({
     required this.remoteDataSource,
@@ -98,9 +107,51 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
   Future<Either<Failure, WorkoutTask>> getSampleWorkoutTask() async {
     try {
       final task = await localDataSource.getSampleWorkoutTask();
-      return Right(task);
+
+      // 1. Check if asset exists in bundle
+      try {
+        // If this throws, asset doesn't exist
+        await rootBundle.load(task.exampleVideoUrl);
+        return Right(task);
+      } catch (_) {
+        // Asset not found, continue to check local storage
+      }
+
+      // 2. Check Local File System
+      try {
+        final directory = await getApplicationDocumentsDirectory();
+        final localPath = '${directory.path}/videos/back_lunge.mp4';
+        final localFile = File(localPath);
+
+        if (await localFile.exists()) {
+          return Right(task.copyWith(exampleVideoUrl: localPath));
+        }
+
+        // 3. Download if missing
+        try {
+          await _downloadVideo(_kBackLungeVideoUrl, localFile);
+          return Right(task.copyWith(exampleVideoUrl: localPath));
+        } catch (e) {
+          // If download fails, return task with original URL (graceful degradation)
+          // The UI will likely fail to play, but handles error
+          return Right(task);
+        }
+      } catch (e) {
+        // Fallback to original task if file system access fails
+        return Right(task);
+      }
     } catch (e) {
       return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  Future<void> _downloadVideo(String url, File targetFile) async {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      await targetFile.parent.create(recursive: true);
+      await targetFile.writeAsBytes(response.bodyBytes);
+    } else {
+      throw Exception('Failed to download video: ${response.statusCode}');
     }
   }
 

@@ -45,7 +45,7 @@ class GeminiDataSourceImpl implements GeminiDataSource {
         );
 
         final model = GenerativeModel(
-          model: 'gemini-3.0-flash',
+          model: 'gemini-3-flash-preview',
           apiKey: apiKey,
           systemInstruction: Content.system(systemInstructionContent),
           generationConfig: GenerationConfig(

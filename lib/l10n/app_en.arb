@@ -502,7 +502,7 @@
   "@privacyGeminiTitle": {
     "description": "Title for Gemini analysis in privacy policy"
   },
-  "privacyGeminiDesc": "Data is used for real-time analysis only. NOT used for training.",
+  "privacyGeminiDesc": "Data is used for real-time analysis only. NOT used for training. Based on Gemini 3.",
   "@privacyGeminiDesc": {
     "description": "Description for Gemini analysis in privacy policy"
   },

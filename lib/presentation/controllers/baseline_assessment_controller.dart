@@ -97,7 +97,13 @@ class BaselineAssessmentController extends ChangeNotifier {
     _sttService.startListening(
       onResult: (recognizedText) {
         final text = recognizedText.toLowerCase().trim();
-        if (text.contains('start') || text.contains('시작')) {
+        debugPrint('[BaselineController] STT Recognized: $text');
+        if (text.contains('start') ||
+            text.contains('begin') ||
+            text.contains('go') ||
+            text.contains('ready') ||
+            text.contains('시작') ||
+            text.contains('고')) {
           _sttService.stopListening();
           _startRecording();
         }
@@ -113,6 +119,11 @@ class BaselineAssessmentController extends ChangeNotifier {
 
     final pose = poses.first;
     _videoRecorder.updatePose(pose);
+  }
+
+  void forceStartRecording() {
+    _sttService.stopListening();
+    _startRecording();
   }
 
   Future<void> _startRecording() async {

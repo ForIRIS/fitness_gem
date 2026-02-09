@@ -7,7 +7,7 @@ import '../../entities/user_profile.dart';
 
 class AnalyzeVideoSessionParams {
   final File rgbVideoFile;
-  final File controlNetVideoFile;
+  final File? controlNetVideoFile;
   final UserProfile profile;
   final String exerciseName;
   final int setNumber;
@@ -17,7 +17,7 @@ class AnalyzeVideoSessionParams {
 
   AnalyzeVideoSessionParams({
     required this.rgbVideoFile,
-    required this.controlNetVideoFile,
+    this.controlNetVideoFile,
     required this.profile,
     required this.exerciseName,
     required this.setNumber,
