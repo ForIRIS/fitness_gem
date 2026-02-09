@@ -50,7 +50,7 @@ void main() {
   );
 
   final tTask = WorkoutTaskModel(
-    id: 'squat_01',
+    id: 'squat_air',
     title: 'Squat',
     description: 'Basic Squat',
     advice: 'Keep back straight',

@@ -454,7 +454,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get exercisePushup => '상체 (푸시업)';
 
   @override
-  String get exerciseLunge => '런지';
+  String get exerciseLunge => '하체 (런지)';
 
   @override
   String get exercisePlank => '코어 (플랭크)';

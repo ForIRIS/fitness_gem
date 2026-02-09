@@ -71,28 +71,6 @@ class ExerciseService {
     }
   }
 
-  Future<WorkoutTask> getSampleWorkoutTask() async {
-    return WorkoutTask(
-      id: '31c7abde-ede2-4647-b366-4cfb9bf55bbe',
-      title: 'Back Lunge',
-      category: 'lunge',
-      description:
-          'A unilateral movement that focuses on the quadriceps and glutes while minimizing stress on the front knee. Improves lower body stability and functional strength.',
-      reps: 10,
-      sets: 3,
-      timeoutSec: 60,
-      difficulty: 2,
-      isCountable: true,
-      advice:
-          'Step back precisely and drop your back knee toward the floor. Maintain an upright torso and drive through your front heel to return to center.',
-      thumbnail: '',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: '',
-      configureUrl: '',
-      guideAudioUrl: '',
-    );
-  }
-
   /// Get Workout List (Repository Pattern)
   /// Merges: Built-in + Local + Remote
   Future<List<WorkoutTask>> getAvailableWorkouts({

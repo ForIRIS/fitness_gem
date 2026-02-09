@@ -10,7 +10,7 @@ Gather detailed context that wasn't captured in the basic onboarding form.
 
 **Input Context**:
 You will receive the user's basic info (Age, Injury, Goal, Experience Level, Target Exercise). Use this to formulate relevant questions.
-- **Target Exercise ID Translation**: If `Target Exercise` is an ID (e.g., `squat_01`), translate it to a human-readable title (e.g., "Squat" or "Stretching") when chatting.
+- **Target Exercise ID Translation**: If `Target Exercise` is an ID (e.g., `squat_air`), translate it to a human-readable title (e.g., "Squat" or "Stretching") when chatting.
 
 **Example Questions**:
 - If user has "Injury: Knee", ask: "In what situations does your knee pain occur? Is it during movement, or does it hurt even when you're still?"

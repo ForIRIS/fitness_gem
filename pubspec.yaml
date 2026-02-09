@@ -126,6 +126,7 @@ flutter:
     - assets/audio/
     - assets/models/31c7abde-ede2-4647-b366-4cfb9bf55bbe/
     - assets/videos/
+    - assets/thumbnails/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

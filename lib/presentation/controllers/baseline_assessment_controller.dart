@@ -135,10 +135,13 @@ class BaselineAssessmentController extends ChangeNotifier {
       await _videoRecorder.startRecording(_cameraManager.controller!);
     }
 
-    _timerService.startWorkoutTimer(timeoutSeconds: 10);
+    // Standard assessment duration
+    const assessmentDuration = 30;
+
+    _timerService.startWorkoutTimer(timeoutSeconds: assessmentDuration);
     _ttsService.speak(
       _l10n?.baselineTtsPerformSquats ??
-          'Please perform 3 moderate air squats.',
+          'Please perform squats for $assessmentDuration seconds.',
     );
   }
 

@@ -3,7 +3,13 @@ import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 
-admin.initializeApp();
+
+import * as dotenv from "dotenv";
+dotenv.config();
+
+admin.initializeApp({
+    databaseId: process.env.FITNESS_DATABASE_ID
+} as any);
 
 // ---------------------------------------------------------
 // Auth Triggers (Gen 1)
@@ -106,12 +112,9 @@ export const getDailyHotCategories = onCall(async (request) => {
 
     return {
         categories: [
-            'Upper Body',
             'Build Strength',
+            'Upper Body',
             'Beginner',
-            'Core Workout',
-            'Lower Body',
-            'HIIT Training',
         ]
     };
 });
@@ -124,29 +127,74 @@ export const getFeaturedProgram = onCall(async (request) => {
         throw new HttpsError("unauthenticated", "User must be signed in.");
     }
 
-    return {
-        id: 'summer_shred_mock',
-        title: 'Summer Shred Challenge',
-        description: 'High-intensity routine to burn calories and build muscle.',
-        imageUrl: 'assets/images/workouts/squat_04.png',
-        slogan: 'Get Set, Stay Ignite.',
-        membersCount: '5.8k+',
-        rating: 5.0,
-        difficulty: 3,
-        task_ids: [
-            'squat_04',
-            'push_03',
-            'lunge_03',
-            'core_03',
-            'squat_03',
-            'push_02',
-        ],
-        userAvatars: [
-            'https://i.pravatar.cc/150?img=12',
-            'https://i.pravatar.cc/150?img=24',
-            'https://i.pravatar.cc/150?img=33',
-        ]
+    const category = request.data.category || 'Build Strength'; // Default to Build Strength
+
+    const programs: { [key: string]: any } = {
+        'Build Strength': {
+            id: 'summer_shred_mock',
+            title: 'Summer Shred Challenge',
+            description: 'High-intensity routine to burn calories and build muscle.',
+            imageUrl: 'assets/thumbnails/air_squat_ready.png',
+            slogan: 'Get Set, Stay Ignite.',
+            membersCount: '5.8k+',
+            rating: 5.0,
+            difficulty: 3,
+            duration: '18 Min',
+            task_ids: [
+                'squat_air',
+                'pushup_standard',
+                'lunge_standard',
+                'plank_standard',
+                'squat_wide',
+                'pushup_knee',
+            ],
+            userAvatars: [
+                'https://i.pravatar.cc/150?img=11',
+                'https://i.pravatar.cc/150?img=12',
+                'https://i.pravatar.cc/150?img=33',
+            ]
+        },
+        'Upper Body': {
+            id: 'upper_blast_mock',
+            title: 'Boulder Shoulders 30',
+            description: 'Focus on deltoids and chest with this intense circuit.',
+            imageUrl: 'assets/thumbnails/pushup_ready.png',
+            slogan: 'Sculpt Your Upper Body.',
+            membersCount: '2.1k+',
+            rating: 4.8,
+            difficulty: 4,
+            duration: '20 Min',
+            task_ids: [
+                'pushup_standard',
+                'pushup_diamond',
+                'plank_elbow',
+                'plank_side',
+            ],
+            userAvatars: [
+                'https://i.pravatar.cc/150?img=59',
+                'https://i.pravatar.cc/150?img=60',
+            ]
+        },
+        'Beginner': {
+            id: 'starter_mock',
+            title: 'Zero to Hero: Week 1',
+            description: 'Low impact movements designed for absolute beginners.',
+            imageUrl: 'assets/thumbnails/glute_bridge_ready.png',
+            slogan: 'Start Your Journey Today.',
+            membersCount: '12k+',
+            rating: 4.9,
+            difficulty: 1,
+            duration: '10 Min',
+            task_ids: ['squat_air', 'core_glutebridge'],
+            userAvatars: [
+                'https://i.pravatar.cc/150?img=1',
+                'https://i.pravatar.cc/150?img=2',
+            ]
+        }
     };
+
+    const program = programs[category] || programs['Build Strength'];
+    return program;
 });
 
 
@@ -368,7 +416,10 @@ export const respondToGuardianRequest = onCall(async (request) => {
  * sendGuardianRequestNotification
  */
 export const sendGuardianRequestNotification = onDocumentCreated(
-    "guardian_relations/{docId}",
+    {
+        document: "guardian_relations/{docId}",
+        database: process.env.FITNESS_DATABASE_ID
+    },
     async (event) => {
         const snapshot = event.data;
         if (!snapshot) {

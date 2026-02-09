@@ -947,7 +947,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseLunge.
   ///
   /// In en, this message translates to:
-  /// **'Lunge'**
+  /// **'Lunge (Lower Body)'**
   String get exerciseLunge;
 
   /// No description provided for @exercisePlank.

@@ -93,27 +93,4 @@ class ExerciseLocalDataSourceImpl implements ExerciseLocalDataSource {
     final jsonString = json.encode(models.map((m) => m.toMap()).toList());
     await prefs.setString(_localWorkoutsKey, jsonString);
   }
-
-  @override
-  Future<WorkoutTask> getSampleWorkoutTask() async {
-    return const WorkoutTask(
-      id: '31c7abde-ede2-4647-b366-4cfb9bf55bbe',
-      title: 'Back Lunge',
-      category: 'lunge',
-      description:
-          'A unilateral movement that focuses on the quadriceps and glutes while minimizing stress on the front knee. Improves lower body stability and functional strength.',
-      reps: 10,
-      sets: 3,
-      timeoutSec: 60,
-      difficulty: 2,
-      isCountable: true,
-      advice:
-          'Step back precisely and drop your back knee toward the floor. Maintain an upright torso and drive through your front heel to return to center.',
-      thumbnail: '',
-      readyPoseImageUrl: '',
-      exampleVideoUrl: 'assets/videos/back_lunge.mp4',
-      configureUrl: '',
-      guideAudioUrl: '',
-    );
-  }
 }

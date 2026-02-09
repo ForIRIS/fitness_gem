@@ -206,10 +206,12 @@ class HomeViewModel extends ChangeNotifier {
           );
         },
         (categories) {
-          _hotCategories = categories;
-          if (categories.isNotEmpty &&
-              !categories.contains(_selectedCategory)) {
-            _selectedCategory = categories.first;
+          // Force limit to 3 items as per user request (UI Hotfix)
+          final limitedCategories = categories.take(3).toList();
+          _hotCategories = limitedCategories;
+          if (limitedCategories.isNotEmpty &&
+              !limitedCategories.contains(_selectedCategory)) {
+            _selectedCategory = limitedCategories.first;
           }
         },
       );
@@ -257,7 +259,7 @@ class HomeViewModel extends ChangeNotifier {
       title: 'Workout Program',
       slogan: 'Get Set, Stay Ignite.',
       description: 'Choose a category to see featured challenges.',
-      imageUrl: 'assets/images/workouts/squat_01.png',
+      imageUrl: 'assets/images/workouts/air_squat_ready.png',
       membersCount: '0',
       rating: 5.0,
       difficulty: '1',

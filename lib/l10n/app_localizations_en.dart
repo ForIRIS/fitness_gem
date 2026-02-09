@@ -466,7 +466,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exercisePushup => 'Push-up (Upper Body)';
 
   @override
-  String get exerciseLunge => 'Lunge';
+  String get exerciseLunge => 'Lunge (Lower Body)';
 
   @override
   String get exercisePlank => 'Plank (Core)';

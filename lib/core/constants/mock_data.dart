@@ -45,11 +45,7 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
     thumbnail: 'assets/thumbnails/jump_squat.png', // Fallback
     readyPoseImageUrl:
         'assets/images/workouts/jump_squat_ready.png', // Fallback
-    exampleVideoUrl:
-        'assets/videos/jump_squat.mp4', // Fallback or distinct if available? User asked for 12 specifics. Jump Squat was requested?
-    // Wait, user requested: Air Squat, Wide Squat, Jump Squat. Yes.
-    // But video list: air_squat.mp4, wide_squat.mp4. No jump_squat.mp4.
-    // Use air_squat.mp4 as fallback or generic.
+    exampleVideoUrl: 'assets/videos/jump_squat.mp4',
     reps: 10,
     sets: 3,
     timeoutSec: 60,
@@ -60,7 +56,7 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   // === Lunge ===
   WorkoutTaskModel(
     id: 'lunge_standard',
-    title: 'Lunge',
+    title: 'Standard Lunge',
     description:
         'A unilateral leg exercise that improves balance, coordination, and strength.',
     advice:
@@ -95,7 +91,7 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   // === Push ===
   WorkoutTaskModel(
     id: 'pushup_standard',
-    title: 'Push-up',
+    title: 'Standard Push-up',
     description:
         'A classic upper body exercise for chest, shoulders, and triceps strength.',
     advice:
@@ -145,7 +141,7 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
   // === Core ===
   WorkoutTaskModel(
     id: 'plank_standard',
-    title: 'Plank',
+    title: 'Standard Plank',
     description:
         'An isometric core exercise that strengthens the entire body, especially the abs.',
     advice:
@@ -187,7 +183,7 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
         'Targets the obliques and improves lateral core stability and balance.',
     advice:
         'Lie on your side, lift your hips to form a straight line, and hold.',
-    thumbnail: 'assets/images/workouts/side_plank.png', // Fallback
+    thumbnail: 'assets/thumbnails/side_plank.png',
     readyPoseImageUrl: 'assets/images/workouts/side_plank.jpg', // Fallback
     exampleVideoUrl: 'assets/videos/side_plank.mp4',
     reps: 0,
@@ -205,7 +201,7 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
         'Improves balance and stability by simultaneously extending opposite arm and leg.',
     advice:
         'On hands and knees, extend opposite arm and leg, hold briefly, then switch.',
-    thumbnail: 'assets/images/workouts/birddog_ready.png',
+    thumbnail: 'assets/thumbnails/birddog.png',
     readyPoseImageUrl: 'assets/images/workouts/birddog_ready.jpg',
     exampleVideoUrl: 'assets/videos/bird_dog.mp4',
     reps: 12,
@@ -233,12 +229,9 @@ const List<WorkoutTaskModel> mockWorkoutTasks = [
 
 /// Mock daily hot categories
 const List<String> mockDailyHotCategories = [
-  'Upper Body',
   'Build Strength',
+  'Upper Body',
   'Beginner',
-  'Core Workout',
-  'Lower Body',
-  'HIIT Training',
 ];
 
 /// Mock featured programs by category
@@ -248,7 +241,7 @@ const Map<String, Map<String, dynamic>> mockFeaturedPrograms = {
     'title': 'Summer Shred Challenge',
     'slogan': 'Get Set, Stay Ignite.',
     'description': 'High-intensity routine to burn calories and build muscle.',
-    'imageUrl': 'assets/images/workouts/air_squat_ready.png',
+    'imageUrl': 'assets/thumbnails/air_squat_ready.png',
     'membersCount': '5.8k+',
     'rating': 5.0,
     'difficulty': 3,
@@ -272,7 +265,7 @@ const Map<String, Map<String, dynamic>> mockFeaturedPrograms = {
     'title': 'Boulder Shoulders 30',
     'slogan': 'Sculpt Your Upper Body.',
     'description': 'Focus on deltoids and chest with this intense circuit.',
-    'imageUrl': 'assets/images/workouts/pushup_ready.png',
+    'imageUrl': 'assets/thumbnails/pushup_ready.png',
     'membersCount': '2.1k+',
     'rating': 4.8,
     'difficulty': 4,
@@ -293,7 +286,7 @@ const Map<String, Map<String, dynamic>> mockFeaturedPrograms = {
     'title': 'Zero to Hero: Week 1',
     'slogan': 'Start Your Journey Today.',
     'description': 'Low impact movements designed for absolute beginners.',
-    'imageUrl': 'assets/images/workouts/glute_bridge_ready.png',
+    'imageUrl': 'assets/thumbnails/glute_bridge_ready.png',
     'membersCount': '12k+',
     'rating': 4.9,
     'difficulty': 1,
