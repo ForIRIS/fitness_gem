@@ -152,8 +152,6 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
     _cameraManager.startPoseDetection();
 
-    _cameraManager.startPoseDetection();
-
     // 4. Initialize Video
     _initializeGuideVideo();
 
@@ -297,7 +295,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   // --- Sub-Widgets (extracted from logic) ---
 
   Widget _buildMainContent(WorkoutSessionState state) {
-    if (state.isTestMode) {
+    if (state.isTestMode || state.isWaitingForReadyPose) {
       return _buildCameraWithSkeleton();
     }
     if (_isVideoFullscreen) {
@@ -327,27 +325,28 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: _isVideoFullscreen
+            child: _isVideoFullscreen && !state.isWaitingForReadyPose
                 ? _buildCameraWithSkeleton(isPIP: true)
                 : _buildGuideVideoPlayer(fit: BoxFit.cover),
           ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: GestureDetector(
-              onTap: () =>
-                  setState(() => _isVideoFullscreen = !_isVideoFullscreen),
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                child: const Icon(
-                  Icons.swap_calls,
-                  color: Colors.white,
-                  size: 18,
+          if (!state.isWaitingForReadyPose)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: GestureDetector(
+                onTap: () =>
+                    setState(() => _isVideoFullscreen = !_isVideoFullscreen),
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  child: const Icon(
+                    Icons.swap_calls,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -376,25 +375,34 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
   Widget _buildReadyPoseOverlay(WorkoutSessionState state) {
     return Container(
-      color: Colors.white,
+      color: Colors.black.withValues(alpha: 0.4),
       child: Stack(
         alignment: Alignment.center,
         children: [
           if (state.currentTask?.readyPoseImageUrl.isNotEmpty == true)
-            Positioned.fill(
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: 1.0,
+            Positioned(
+              top: 100,
+              right: 20,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white, width: 2),
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.black54,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
                   child: state.currentTask!.readyPoseImageUrl.startsWith('http')
                       ? Image.network(
                           state.currentTask!.readyPoseImageUrl,
-                          fit: BoxFit.contain,
+                          fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               const SizedBox(),
                         )
                       : Image.asset(
                           state.currentTask!.readyPoseImageUrl,
-                          fit: BoxFit.contain,
+                          fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               const SizedBox(),
                         ),
@@ -413,11 +421,29 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                       color: const Color(0xFFFEE715),
                       fontSize: 160,
                       fontWeight: FontWeight.w900,
+                      shadows: [
+                        const Shadow(
+                          blurRadius: 10,
+                          color: Colors.black,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
                   ),
-                  const Text(
+                  Text(
                     "Get Ready!",
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.barlowCondensed(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        const Shadow(
+                          blurRadius: 10,
+                          color: Colors.black,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
                   ),
                 ] else if (!state.isFullBodyVisible) ...[
                   const Icon(
@@ -430,8 +456,16 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                     'Stand back to show\nyour full body',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.barlowCondensed(
-                      fontSize: 28,
+                      fontSize: 36,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        const Shadow(
+                          blurRadius: 10,
+                          color: Colors.black,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
                   ),
                 ] else ...[
@@ -439,16 +473,39 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
                     value: (state.readyPoseHoldSeconds / 5).clamp(0.0, 1.0),
                     strokeWidth: 8,
                     color: const Color(0xFF00B0E0),
+                    backgroundColor: Colors.white24,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     '${5 - state.readyPoseHoldSeconds}',
-                    style: const TextStyle(
-                      fontSize: 48,
+                    style: GoogleFonts.barlowCondensed(
+                      fontSize: 64,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        const Shadow(
+                          blurRadius: 10,
+                          color: Colors.black,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
                   ),
-                  const Text("Hold Position", style: TextStyle(fontSize: 24)),
+                  Text(
+                    "Hold Position",
+                    style: GoogleFonts.barlowCondensed(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        const Shadow(
+                          blurRadius: 10,
+                          color: Colors.black,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ],
             ),

@@ -1271,7 +1271,7 @@ abstract class AppLocalizations {
   /// No description provided for @baselineInstructions.
   ///
   /// In en, this message translates to:
-  /// **'To personalize your experience, please perform 3 moderate air squats. \n\nEnsure your head and feet are visible in the frame.'**
+  /// **'To personalize your experience, please perform squats for 10 seconds. \n\nEnsure your head and feet are visible in the frame.'**
   String get baselineInstructions;
 
   /// No description provided for @baselineImReady.
@@ -1307,7 +1307,7 @@ abstract class AppLocalizations {
   /// No description provided for @baselinePerformSquats.
   ///
   /// In en, this message translates to:
-  /// **'Perform 3 moderate air squats now'**
+  /// **'Perform squats for 10 seconds'**
   String get baselinePerformSquats;
 
   /// No description provided for @baselineAnalyzing.
@@ -1433,7 +1433,7 @@ abstract class AppLocalizations {
   /// No description provided for @baselineTtsPerformSquats.
   ///
   /// In en, this message translates to:
-  /// **'Please perform 3 moderate air squats.'**
+  /// **'Please perform squats for 10 seconds.'**
   String get baselineTtsPerformSquats;
 
   /// No description provided for @baselineTtsComplete.

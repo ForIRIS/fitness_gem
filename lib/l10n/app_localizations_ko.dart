@@ -617,7 +617,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get baselineInstructions =>
-      '개인 맞춤형 경험을 위해 적당한 속도로 스쿼트 3회를 수행해주세요.\n\n머리부터 발끝까지 화면에 보이도록 해주세요.';
+      '개인 맞춤형 경험을 위해 10초 동안 스쿼트를 수행해주세요.\n\n머리부터 발끝까지 화면에 보이도록 해주세요.';
 
   @override
   String get baselineImReady => '준비 완료';
@@ -635,7 +635,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get baselineRecording => '녹화 중...';
 
   @override
-  String get baselinePerformSquats => '지금 스쿼트 3회를 수행하세요';
+  String get baselinePerformSquats => '10초 동안 스쿼트를 수행해주세요';
 
   @override
   String get baselineAnalyzing => 'GEMINI 분석 중...';
@@ -706,7 +706,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get baselineTtsStart => '지금부터 신체 능력 측정을 시작합니다. 전신이 보이도록 뒤로 물러나주세요.';
 
   @override
-  String get baselineTtsPerformSquats => '적당한 속도로 스쿼트 3회를 수행해주세요.';
+  String get baselineTtsPerformSquats => '10초 동안 스쿼트를 수행해주세요.';
 
   @override
   String get baselineTtsComplete => '측정이 완료되었습니다. 사용자의 신체 프로필을 업데이트했습니다.';

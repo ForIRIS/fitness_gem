@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../domain/entities/workout_task.dart';
 import 'package:fitness_gem/l10n/app_localizations.dart';
@@ -21,55 +20,8 @@ class WorkoutDetailCard extends StatefulWidget {
 }
 
 class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
-  VideoPlayerController? _videoController;
-  bool _isVideoInitialized = false;
   bool _isExpanded = false;
   bool _isDescriptionExpanded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize video controller if URL is present
-    if (widget.task.exampleVideoUrl.isNotEmpty) {
-      _initializeVideo();
-    }
-  }
-
-  Future<void> _initializeVideo() async {
-    if (widget.task.exampleVideoUrl.isEmpty) return;
-
-    try {
-      if (widget.task.exampleVideoUrl.startsWith('assets/')) {
-        _videoController = VideoPlayerController.asset(
-          widget.task.exampleVideoUrl,
-        );
-      } else {
-        _videoController = VideoPlayerController.networkUrl(
-          Uri.parse(widget.task.exampleVideoUrl),
-        );
-      }
-      await _videoController!.initialize();
-      _videoController!.setLooping(true);
-      _videoController!.setVolume(0); // Mute
-
-      if (widget.isActive) {
-        _videoController!.play();
-      }
-
-      if (mounted) {
-        setState(() => _isVideoInitialized = true);
-      }
-    } catch (e) {
-      debugPrint('Video init error: $e');
-      debugPrint('Media URL refresh skipped - immutable entity limitation');
-    }
-  }
-
-  @override
-  void dispose() {
-    _videoController?.dispose();
-    super.dispose();
-  }
 
   void _toggleExpansion() {
     setState(() {
@@ -345,16 +297,7 @@ class _WorkoutDetailCardState extends State<WorkoutDetailCard> {
 
   // Simplified visual for the card
   Widget _buildSimpleVisualPreview() {
-    if (_isVideoInitialized && _videoController != null) {
-      return FittedBox(
-        fit: BoxFit.cover,
-        child: SizedBox(
-          width: _videoController!.value.size.width,
-          height: _videoController!.value.size.height,
-          child: VideoPlayer(_videoController!),
-        ),
-      );
-    } else if (widget.task.thumbnail.isNotEmpty) {
+    if (widget.task.thumbnail.isNotEmpty) {
       if (widget.task.thumbnail.startsWith('http')) {
         return Image.network(
           widget.task.thumbnail,

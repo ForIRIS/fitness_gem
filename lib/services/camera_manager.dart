@@ -50,7 +50,10 @@ class CameraManager {
   }
 
   void startPoseDetection() {
-    if (_controller == null || !_controller!.value.isInitialized) return;
+    if (_controller == null ||
+        !_controller!.value.isInitialized ||
+        _controller!.value.isStreamingImages)
+      return;
 
     _controller!.startImageStream((CameraImage image) {
       if (_isDetecting) return;

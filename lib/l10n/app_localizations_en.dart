@@ -634,7 +634,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get baselineInstructions =>
-      'To personalize your experience, please perform 3 moderate air squats. \n\nEnsure your head and feet are visible in the frame.';
+      'To personalize your experience, please perform squats for 10 seconds. \n\nEnsure your head and feet are visible in the frame.';
 
   @override
   String get baselineImReady => 'I\'M READY';
@@ -653,7 +653,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get baselineRecording => 'RECORDING...';
 
   @override
-  String get baselinePerformSquats => 'Perform 3 moderate air squats now';
+  String get baselinePerformSquats => 'Perform squats for 10 seconds';
 
   @override
   String get baselineAnalyzing => 'GEMINI ANALYZING...';
@@ -729,7 +729,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get baselineTtsPerformSquats =>
-      'Please perform 3 moderate air squats.';
+      'Please perform squats for 10 seconds.';
 
   @override
   String get baselineTtsComplete =>
