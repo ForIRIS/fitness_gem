@@ -310,8 +310,17 @@ Output JSON only.
         }
       }
 
-      // Wait for processing
-      await Future.delayed(const Duration(seconds: 3));
+      // Wait for file to become ACTIVE
+      await remoteDataSource.waitForFileActive(
+        apiKey: _apiKey,
+        fileUri: rgbUri,
+      );
+      if (controlNetUri != null) {
+        await remoteDataSource.waitForFileActive(
+          apiKey: _apiKey,
+          fileUri: controlNetUri,
+        );
+      }
 
       // 2. Analyst Step (Direct Client Call - Fast & Efficient for Hackathon)
       final inputContext = {
@@ -418,7 +427,11 @@ Please provide the Next Step advice in the User Language.
         return const Left(ServerFailure('Failed to upload video'));
       }
 
-      await Future.delayed(const Duration(milliseconds: 1500));
+      // Wait for file to become ACTIVE
+      await remoteDataSource.waitForFileActive(
+        apiKey: _apiKey,
+        fileUri: videoUri,
+      );
 
       final inputContext = {
         "query_type": "FALL_VERIFICATION",

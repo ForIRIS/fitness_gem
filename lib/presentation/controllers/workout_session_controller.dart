@@ -7,6 +7,7 @@ import '../../domain/entities/workout_curriculum.dart';
 import '../../domain/entities/workout_task.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/usecases/workout/save_curriculum.dart';
+import '../../domain/entities/exercise_config.dart';
 import '../../domain/usecases/workout/get_exercise_config_usecase.dart';
 import '../../domain/usecases/ai/analyze_video_session_usecase.dart';
 import '../../domain/services/coaching_manager.dart';
@@ -20,6 +21,7 @@ import '../../services/ready_pose_detector.dart';
 import '../states/workout_session_state.dart';
 import '../../viewmodels/display_viewmodel.dart';
 import '../../services/gemini_cache_manager.dart';
+import '../../services/voice_command_service.dart';
 
 class WorkoutSessionController extends ChangeNotifier {
   // Internal State
@@ -40,6 +42,7 @@ class WorkoutSessionController extends ChangeNotifier {
       getIt<SaveCurriculumUseCase>();
   final AnalyzeVideoSessionUseCase _analyzeVideoSession =
       getIt<AnalyzeVideoSessionUseCase>();
+  final VoiceCommandService _voiceService = VoiceCommandService();
 
   // Logic Helpers
   RepCounter? _repCounter;
@@ -81,6 +84,21 @@ class WorkoutSessionController extends ChangeNotifier {
 
     // Initialize services
     await _ttsService.initialize();
+    await _voiceService.initialize();
+
+    // Voice Command Callbacks
+    _voiceService.onStart = () {
+      debugPrint("Voice detected START");
+      if (_state.phase == SessionPhase.ready) {
+        _startCountdown();
+      }
+    };
+    _voiceService.onPause = pause;
+    _voiceService.onResume = resume;
+    _voiceService.onStop = quit;
+
+    // Start Listening immediately
+    _voiceService.startListening();
 
     WorkoutCurriculum currentCurriculum = curriculum;
     WorkoutTask? initialTask;
@@ -123,16 +141,24 @@ class WorkoutSessionController extends ChangeNotifier {
       GetExerciseConfigParams(task: task),
     );
 
+    // Extract config from Either without async callback in fold
+    ExerciseConfig? config;
     result.fold(
       (failure) => debugPrint('Failed to load config: ${failure.message}'),
-      (config) {
-        _repCounter = RepCounter(
-          config,
-          coachingManager: _coachingManager,
-          onRepCountChanged: _onRepCounted,
-        );
-      },
+      (c) => config = c,
     );
+
+    if (config == null) return;
+
+    final counter = RepCounter(
+      config!,
+      coachingManager: _coachingManager,
+      onRepCountChanged: _onRepCounted,
+    );
+
+    final loaded = await counter.initialize();
+    debugPrint('Model loaded for ${task.title}: $loaded');
+    _repCounter = counter;
   }
 
   // --- Core Processing Loop (Called on every frame) ---
@@ -145,6 +171,9 @@ class WorkoutSessionController extends ChangeNotifier {
 
     // 1. Ready Pose Detection Phase
     if (_state.phase == SessionPhase.ready) {
+      // Feed frames to RepCounter so it can detect 'Ready' class
+      _repCounter?.processFrame(pose);
+
       final result = _readyPoseDetector.processFrame(pose, _repCounter);
 
       // Update Visibility only if changed significantly?
@@ -202,6 +231,9 @@ class WorkoutSessionController extends ChangeNotifier {
   Future<void> _onCountdownComplete() async {
     _ttsService.speakCountdown(0); // "Start!"
 
+    // Reset RepCounter to clear buffer of Ready poses
+    _repCounter?.reset();
+
     // Start Recording
     if (_cameraManager?.controller != null) {
       _videoRecorder.startRecording(_cameraManager!.controller!);
@@ -235,7 +267,7 @@ class WorkoutSessionController extends ChangeNotifier {
     _timerService.stopWorkoutTimer();
     final recordingResult = await _videoRecorder.stopRecording();
 
-    // 2. Start Rest Phase Immediately
+    // 2. Start Rest Phase Immediately — clear previous feedback
     final restTime = _state.currentTask?.timeoutSec ?? 15;
     _ttsService.speakRestStart(restTime);
 
@@ -244,6 +276,7 @@ class WorkoutSessionController extends ChangeNotifier {
         phase: SessionPhase.resting,
         timeoutSeconds: restTime,
         elapsedSeconds: 0,
+        lastFeedback: '', // Clear previous set's analysis
       ),
     );
 
@@ -298,13 +331,72 @@ class WorkoutSessionController extends ChangeNotifier {
   void _applyAiAdjustments(Map<String, dynamic> data) {
     // Implement AI adjustment log (same as original)
     final feedbackText = data['feedback']?['tts_message'];
-    if (feedbackText != null) _ttsService.speak(feedbackText);
+
+    if (feedbackText != null) {
+      _ttsService.speak(feedbackText);
+      // Update state to show feedback in UI
+      _updateState(_state.copyWith(lastFeedback: feedbackText));
+
+      // Clear feedback after 5 seconds
+      Future.delayed(const Duration(seconds: 5), () {
+        if (_state.lastFeedback == feedbackText) {
+          _updateState(_state.copyWith(lastFeedback: null));
+        }
+      });
+    }
 
     final adjustments = data['feedback']?['next_step_adjustments'];
     if (adjustments != null) {
-      // Logic to update curriculum with new reps/rest
-      // This requires mutating the curriculum and saving it
-      // Detailed implementation can be copied from original _applyAiAdjustments
+      final int? repsChange = adjustments['reps_change'];
+      final int? restChange = adjustments['rest_change'];
+
+      if (repsChange == null && restChange == null) return;
+
+      final currentTask = _state.currentTask;
+      if (currentTask == null || _state.curriculum == null) return;
+
+      // Calculate new values
+      int newReps = currentTask.adjustedReps + (repsChange ?? 0);
+      newReps = newReps.clamp(1, 100); // Safety bounds
+
+      int newRest = currentTask.timeoutSec + (restChange ?? 0);
+      newRest = newRest.clamp(5, 300); // Safety bounds
+
+      // Update Task in Curriculum
+      final updatedTasks = List<WorkoutTask>.from(
+        _state.curriculum!.workoutTasks,
+      );
+      final taskIndex = _state.curriculum!.currentTaskIndex;
+
+      updatedTasks[taskIndex] = currentTask.copyWith(
+        adjustedReps: newReps,
+        timeoutSec: newRest,
+      );
+
+      final updatedCurriculum = _state.curriculum!.copyWith(
+        workoutTasks: updatedTasks,
+      );
+
+      // Persist changes
+      _saveCurriculumUseCase.execute(updatedCurriculum);
+
+      // Update State
+      _updateState(
+        _state.copyWith(
+          curriculum: updatedCurriculum,
+          currentTask: updatedTasks[taskIndex],
+        ),
+      );
+
+      // Optional: Extend current rest if rest was increased?
+      // For now, we announce the change.
+      if (repsChange != null && repsChange != 0) {
+        // e.g. "Lowering reps to 8 for the next set."
+        final msg = repsChange < 0
+            ? "Decreasing reps to $newReps to help you maintain form."
+            : "Increasing reps to $newReps. You're doing great!";
+        _ttsService.speak(msg);
+      }
     }
   }
 
@@ -432,6 +524,8 @@ class WorkoutSessionController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _voiceService.stopListening();
+    _voiceService.dispose();
     _timerService.dispose();
     _videoRecorder.dispose();
     _ttsService.dispose();

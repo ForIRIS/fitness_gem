@@ -18,14 +18,7 @@ class ManualMockWorkoutModelService implements WorkoutModelService {
   @override
   Future<bool> loadModel(String modelPath) async => true;
 
-  @override
-  Future<bool> loadModelFromAsset(String assetPath) async => true;
-
-  @override
   Future<bool> loadLocalBundle(String bundleId) async => true;
-
-  @override
-  Future<bool> loadBaselineModel() async => true;
 }
 
 class MockFeedbackOutput implements FeedbackOutput {
@@ -36,6 +29,9 @@ class MockFeedbackOutput implements FeedbackOutput {
 class MockCoachingManager implements CoachingManager {
   @override
   Future<void> deliver(String message, {String? audioUrl}) async {}
+
+  @override
+  Future<void> deliverPositive(String message) async {}
 
   @override
   void dispose() {}

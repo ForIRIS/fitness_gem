@@ -7,7 +7,8 @@ import 'dart:math';
 /// camera distance or person height.
 class PoseNormalization {
   /// Normalize landmarks by torso scale and hip centering.
-  /// landmarks: List of [x, y, z] triples (typically 33 points).
+  /// landmarks: List of [x, y, z] or [x, y, z, visibility] per landmark (typically 33 points).
+  /// The 4th value (visibility) is preserved but not transformed.
   static List<List<double>> normalizeByTorso(
     List<List<double>> landmarks, {
     double? scale,
@@ -31,15 +32,16 @@ class PoseNormalization {
     ];
 
     // 2. Offset: Center all landmarks relative to the hip center
-    final offsetLandmarks = landmarks
-        .map(
-          (l) => [
-            l[0] - hipCenter[0],
-            l[1] - hipCenter[1],
-            l[2] - hipCenter[2],
-          ],
-        )
-        .toList();
+    final offsetLandmarks = landmarks.map((l) {
+      final result = [
+        l[0] - hipCenter[0],
+        l[1] - hipCenter[1],
+        l[2] - hipCenter[2],
+      ];
+      // Preserve additional values (e.g., visibility)
+      if (l.length > 3) result.add(l[3]);
+      return result;
+    }).toList();
 
     // 3. Scale Factor: Normalize by torso length
     double factor;
@@ -72,8 +74,11 @@ class PoseNormalization {
     }
 
     // 4. Return Normalized Landmarks
-    return offsetLandmarks
-        .map((l) => [l[0] / factor, l[1] / factor, l[2] / factor])
-        .toList();
+    return offsetLandmarks.map((l) {
+      final result = [l[0] / factor, l[1] / factor, l[2] / factor];
+      // Preserve additional values (e.g., visibility)
+      if (l.length > 3) result.add(l[3]);
+      return result;
+    }).toList();
   }
 }

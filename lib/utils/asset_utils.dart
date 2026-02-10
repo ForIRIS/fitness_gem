@@ -65,4 +65,35 @@ class AssetUtils {
 
     return targetDir.path;
   }
+
+  /// Unzips a regular file (not an asset) into a target directory.
+  /// Used for nested zips (e.g., pose_model.mlpackage.zip inside a bundle zip).
+  static Future<String> unzipFileToDir(
+    String zipFilePath,
+    String targetDirPath,
+  ) async {
+    final zipFile = File(zipFilePath);
+    final bytes = await zipFile.readAsBytes();
+    final targetDir = Directory(targetDirPath);
+
+    if (await targetDir.exists()) {
+      await targetDir.delete(recursive: true);
+    }
+
+    final archive = ZipDecoder().decodeBytes(bytes);
+
+    for (final file in archive) {
+      final filename = file.name;
+      if (file.isFile) {
+        final data = file.content as List<int>;
+        final outFile = File('${targetDir.path}/$filename');
+        await outFile.parent.create(recursive: true);
+        await outFile.writeAsBytes(data);
+      } else {
+        await Directory('${targetDir.path}/$filename').create(recursive: true);
+      }
+    }
+
+    return targetDir.path;
+  }
 }

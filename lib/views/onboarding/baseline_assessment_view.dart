@@ -26,8 +26,7 @@ class _BaselineAssessmentViewState extends State<BaselineAssessmentView> {
   static const int _kRecordingDuration = 10;
   static const double _kMetricValueFontSize = 48.0;
   static const double _kMetricLabelFontSize = 12.0;
-  static const String _kExampleVideoPath =
-      'assets/videos/workouts/air_squat.mp4';
+  static const String _kExampleVideoPath = 'assets/videos/air_squat.mp4';
 
   @override
   void initState() {

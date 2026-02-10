@@ -34,6 +34,30 @@ class ExerciseConfig extends Equatable {
   /// Get number of classes
   int? get numClasses => classLabels?['num_classes'];
 
+  /// Get class phases map
+  Map<String, dynamic>? get classPhases => classLabels?['class_phases'];
+
+  /// Get window size (sequence length) from input_shape
+  int get windowSize {
+    final shape = classLabels?['input_shape'];
+    if (shape is List && shape.length > 1) {
+      // Shape is usually [1, SEQUENCE_LENGTH, LANDMARKS, 3]
+      // or [1, SEQUENCE_LENGTH, ...]
+      return shape[1] as int;
+    }
+    return 30; // Default
+  }
+
+  /// Get landmark dimensions (values per landmark) from input_shape
+  /// e.g. 3 = [x, y, z], 4 = [x, y, z, visibility]
+  int get landmarkDimensions {
+    final shape = classLabels?['input_shape'];
+    if (shape is List && shape.length > 3) {
+      return shape[3] as int;
+    }
+    return 3; // Default to xyz only
+  }
+
   /// Get smoothing profile for One Euro Filter
   OneEuroProfile get smoothingProfile {
     final explicitProfile = classLabels?['smoothingProfile']?.toString();

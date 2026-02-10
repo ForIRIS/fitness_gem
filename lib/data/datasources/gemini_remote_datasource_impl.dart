@@ -261,7 +261,9 @@ class GeminiRemoteDataSourceImpl implements GeminiRemoteDataSource {
           'X-Goog-Upload-Header-Content-Type': 'video/mp4',
           'Content-Type': 'application/json',
         },
-        body: json.encode({'display_name': file.path.split('/').last}),
+        body: json.encode({
+          'file': {'display_name': file.path.split('/').last},
+        }),
       );
 
       if (startResponse.statusCode != 200) {

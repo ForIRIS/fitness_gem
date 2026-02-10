@@ -14,7 +14,6 @@ class CameraManager {
     ),
   );
 
-  bool _isDetecting = false;
   CameraDescription? _camera;
 
   final StreamController<List<Pose>> _poseStreamController =
@@ -57,12 +56,7 @@ class CameraManager {
     }
 
     _controller!.startImageStream((CameraImage image) {
-      if (_isDetecting) return;
-      _isDetecting = true;
-
-      _processImage(image).then((_) {
-        _isDetecting = false;
-      });
+      _processImage(image);
     });
   }
 

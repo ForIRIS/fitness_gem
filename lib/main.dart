@@ -88,16 +88,26 @@ class MainApp extends StatelessWidget {
   }
 }
 
-class LocalizationsSync extends StatelessWidget {
+class LocalizationsSync extends StatefulWidget {
   final Widget child;
   const LocalizationsSync({super.key, required this.child});
 
   @override
-  Widget build(BuildContext context) {
+  State<LocalizationsSync> createState() => _LocalizationsSyncState();
+}
+
+class _LocalizationsSyncState extends State<LocalizationsSync> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     final l10n = AppLocalizations.of(context);
     if (l10n != null) {
       TTSService().updateLocalizations(l10n);
     }
-    return child;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }

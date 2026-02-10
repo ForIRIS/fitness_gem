@@ -1,4 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 /// FunctionsService - Manage Firebase Cloud Functions calls
@@ -37,12 +38,17 @@ class FunctionsService {
     if (taskIds.isEmpty) return [];
 
     try {
-      final results = await _functions.httpsCallable('getWorkoutAssets').call({
+      // Ensure authenticated (Anonymous)
+      if (FirebaseAuth.instance.currentUser == null) {
+        await FirebaseAuth.instance.signInAnonymously();
+      }
+
+      final results = await _functions.httpsCallable('requestTaskInfo').call({
         'task_ids': taskIds,
       });
 
       final data = results.data as Map<dynamic, dynamic>;
-      final assets = data['assets'] as List<dynamic>?;
+      final assets = data['task_urls'] as List<dynamic>?;
 
       if (assets == null) return [];
       return assets.map((e) => Map<String, dynamic>.from(e as Map)).toList();

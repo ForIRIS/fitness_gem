@@ -638,6 +638,44 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               "Next set in ${state.timeoutSeconds - state.elapsedSeconds}s",
               style: const TextStyle(color: Colors.white70, fontSize: 18),
             ),
+            if (state.lastFeedback != null &&
+                state.lastFeedback!.isNotEmpty) ...[
+              const SizedBox(height: 32),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 40),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white30),
+                ),
+                child: Column(
+                  children: [
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.auto_awesome, color: Colors.amber, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          "AI Coach Feedback",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      state.lastFeedback!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),

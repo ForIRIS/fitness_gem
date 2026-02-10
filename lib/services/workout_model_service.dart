@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../models/exercise_model_output.dart';
 import '../utils/asset_utils.dart';
 import 'package:path/path.dart' as p;
+import 'dart:io';
 
 class WorkoutModelService {
   static const MethodChannel _channel = MethodChannel(
@@ -32,78 +33,123 @@ class WorkoutModelService {
     }
   }
 
-  /// Load the model from assets (extracts to temp file first)
-  Future<bool> loadModelFromAsset(String assetPath) async {
-    try {
-      final localPath = await AssetUtils.getAssetPath(assetPath);
-      return await loadModel(localPath);
-    } catch (e) {
-      debugPrint("Failed to load model from asset: $e");
-      return false;
-    }
-  }
-
-  /// Load a local model bundle from assets
   Future<bool> loadLocalBundle(String bundleId) async {
     final assetPath = 'assets/bundles/$bundleId.zip';
 
     final isIOSTarget = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
-    if (isIOSTarget) {
-      try {
-        // Unzip the .zip bundle to temp directory
-        // The zip should contain a folder named {bundleId} or directly the contents
-        // For consistency with Firebase, we expect the zip to extract into a folder
-        final unzippedPath = await AssetUtils.unzipAssetToTemp(
-          assetPath,
-          bundleId,
+    try {
+      // Step 1: Unzip the bundle zip to temp
+      final unzippedPath = await AssetUtils.unzipAssetToTemp(
+        assetPath,
+        bundleId,
+      );
+      final dir = Directory(unzippedPath);
+
+      if (isIOSTarget) {
+        // iOS: The bundle zip contains "pose_model.mlpackage.zip" (a nested zip).
+        // We need to find it and unzip it to get the actual .mlpackage directory.
+        final entities = dir.listSync(recursive: true);
+
+        // First, try to find pose_model.mlpackage.zip (nested zip)
+        final innerZipEntity = entities.cast<FileSystemEntity?>().firstWhere(
+          (e) => e != null && e.path.endsWith('pose_model.mlpackage.zip'),
+          orElse: () => null,
         );
 
-        // For iOS, we look for pose_model.mlpackage inside the extracted folder
-        // The MLPackage itself is a directory
-        return await loadModel(unzippedPath);
-      } catch (e) {
-        debugPrint("Failed to load local iOS bundle: $e");
-        return false;
-      }
-    } else {
-      // For Android, we need to extract the ONNX model from the zip
-      try {
-        final unzippedPath = await AssetUtils.unzipAssetToTemp(
-          assetPath,
-          bundleId,
+        if (innerZipEntity != null) {
+          // Step 2: Unzip the inner mlpackage zip to a temp staging dir
+          final stagingDir = '${dir.path}/_mlpackage_staging';
+          await AssetUtils.unzipFileToDir(innerZipEntity.path, stagingDir);
+          debugPrint("Extracted inner mlpackage zip to staging: $stagingDir");
+
+          // Step 3: Determine the actual mlpackage path.
+          // The zip may contain files at root (flat) or inside a nested folder.
+          final stagingDirObj = Directory(stagingDir);
+          final manifestFile = File('$stagingDir/Manifest.json');
+
+          String actualModelParentDir;
+          if (await manifestFile.exists()) {
+            // Flat structure: Manifest.json is at staging root.
+            // Rename staging dir to pose_model.mlpackage
+            final targetDir = '${dir.path}/pose_model.mlpackage';
+            await stagingDirObj.rename(targetDir);
+            actualModelParentDir = dir.path;
+            debugPrint(
+              "Flat mlpackage structure detected. Model at: $targetDir",
+            );
+          } else {
+            // Nested structure: look for Manifest.json inside a subdirectory
+            final nestedManifest = File(
+              '$stagingDir/pose_model.mlpackage/Manifest.json',
+            );
+            if (await nestedManifest.exists()) {
+              // The actual mlpackage dir is inside staging
+              actualModelParentDir = stagingDir;
+              debugPrint(
+                "Nested mlpackage structure detected. Model at: $stagingDir/pose_model.mlpackage",
+              );
+            } else {
+              // Last resort: find Manifest.json anywhere
+              final allEntities = stagingDirObj.listSync(recursive: true);
+              final manifestEntity = allEntities
+                  .cast<FileSystemEntity?>()
+                  .firstWhere(
+                    (e) => e != null && e.path.endsWith('Manifest.json'),
+                    orElse: () => null,
+                  );
+              if (manifestEntity != null) {
+                // Parent of Manifest.json is the mlpackage dir
+                final mlpkgDir = p.dirname(manifestEntity.path);
+                actualModelParentDir = p.dirname(mlpkgDir);
+                debugPrint("Found Manifest.json at: ${manifestEntity.path}");
+              } else {
+                debugPrint(
+                  "Manifest.json not found after extracting inner zip",
+                );
+                return false;
+              }
+            }
+          }
+
+          // loadModel appends /pose_model.mlpackage, so pass the parent
+          return await loadModel(actualModelParentDir);
+        }
+
+        // Fallback: maybe it's already a directory (older bundle format)
+        final mlpackageDirEntity = entities
+            .cast<FileSystemEntity?>()
+            .firstWhere(
+              (e) =>
+                  e != null &&
+                  e is Directory &&
+                  e.path.endsWith('pose_model.mlpackage'),
+              orElse: () => null,
+            );
+
+        if (mlpackageDirEntity != null) {
+          return await loadModel(p.dirname(mlpackageDirEntity.path));
+        }
+
+        debugPrint(
+          "Neither pose_model.mlpackage.zip nor pose_model.mlpackage found in bundle",
         );
-        final modelPath = '$unzippedPath/pose_model.onnx';
-        return await loadModel(p.dirname(modelPath));
-      } catch (e) {
-        debugPrint("Failed to load local Android bundle: $e");
         return false;
-      }
-    }
-  }
-
-  /// Load the baseline assessment model (Air Squat)
-  Future<bool> loadBaselineModel() async {
-    const basePath = 'assets/models/air_squat';
-
-    final isIOSTarget = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
-    if (isIOSTarget) {
-      try {
-        // Unzip the .mlpackage.zip to temp directory
-        final unzippedPath = await AssetUtils.unzipAssetToTemp(
-          '$basePath/pose_model.mlpackage.zip',
-          'pose_model.mlpackage',
+      } else {
+        // Android: Look for .onnx file
+        final entities = dir.listSync(recursive: true);
+        final modelEntity = entities.cast<FileSystemEntity?>().firstWhere(
+          (e) => e != null && e.path.endsWith('pose_model.onnx'),
+          orElse: () => null,
         );
-
-        // Pass the parent directory of the .mlpackage
-        final tempDir = p.dirname(unzippedPath);
-        return await loadModel(tempDir);
-      } catch (e) {
-        debugPrint("Failed to load iOS baseline model: $e");
-        return false;
+        if (modelEntity == null) {
+          debugPrint("ONNX model not found in zip");
+          return false;
+        }
+        return await loadModel(p.dirname(modelEntity.path));
       }
-    } else {
-      const assetPath = '$basePath/pose_model.onnx';
-      return await loadModelFromAsset(assetPath);
+    } catch (e) {
+      debugPrint("Failed to load local bundle $bundleId: $e");
+      return false;
     }
   }
 

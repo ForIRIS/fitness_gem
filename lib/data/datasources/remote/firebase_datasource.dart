@@ -130,9 +130,9 @@ class FirebaseDataSourceImpl implements FirebaseDataSource {
     String? category,
   ]) async {
     try {
-      final result = await _functions
-          .httpsCallable('getFeaturedProgram')
-          .call();
+      final result = await _functions.httpsCallable('getFeaturedProgram').call({
+        'category': category ?? 'Build Strength',
+      });
       return Map<String, dynamic>.from(result.data);
     } catch (e) {
       _markUsingMockData('Error fetching featured program: $e');

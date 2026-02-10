@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import '../utils/rep_counter.dart';
 
@@ -44,8 +45,16 @@ class ReadyPoseDetector {
     if (isReadyPoseDetected) {
       _lastReadySignalTime = now;
       _holdStartTime ??= now;
+      if (now.second % 2 == 0) {
+        debugPrint(
+          "Ready Pose Holding... ${(now.difference(_holdStartTime!).inMilliseconds / 1000).toStringAsFixed(1)}s",
+        );
+      }
     } else {
       // Signal lost Logic with noise tolerance
+      debugPrint(
+        "Ready Pose Signal Lost. Previous hold: ${_holdStartTime != null}",
+      );
       if (_lastReadySignalTime != null) {
         final silenceDuration = now
             .difference(_lastReadySignalTime!)

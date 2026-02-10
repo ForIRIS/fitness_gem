@@ -17,7 +17,7 @@ class RepCounter {
   final AdaptiveOneEuroFilter _smoothingFilter;
 
   // Settings
-  static const int _bufferSize = 30;
+  // Buffer size is now dynamic via config.windowSize
   static const double _inferenceThreshold = 0.9; // 90% confidence
 
   // State
@@ -28,7 +28,10 @@ class RepCounter {
   double _currentStability = 1.0;
   double _lastMaxProb = 0.0; // Expose probability
 
-  bool _isProcessing = false;
+  // 60Hz Interpolation State
+  static const double _targetHz = 60.0;
+  List<List<double>>? _prevFrame;
+  double _prevFrameTime = 0.0; // seconds (epoch-based)
 
   // Low confidence / Error tracking
   int _lowConfidenceCounter = 0;
@@ -44,10 +47,12 @@ class RepCounter {
   final Set<String> _detectedLabelsInRep = {};
   int _totalPhases = 0;
   final Set<String> _sidesCompletedInCycle = {};
+  int _goodRepStreak = 0;
 
   // Duration Mode Tracking
   double _cumulativeDuration = 0.0;
   DateTime? _lastInferenceTime;
+  DateTime? _lastLogTime; // For throttle logging
 
   // Evaluation & Performance Analysis
   final List<List<double>> _featureBuffer = [];
@@ -71,6 +76,24 @@ class RepCounter {
          adaptive: true,
        ) {
     _initializeMode();
+  }
+
+  /// Initialize the model (async)
+  Future<bool> initialize() async {
+    final bundleId = config.id;
+    debugPrint("RepCounter: Initializing model for bundleId: $bundleId");
+    try {
+      final success = await _modelService.loadLocalBundle(bundleId);
+      if (success) {
+        debugPrint("RepCounter: Model loaded successfully.");
+      } else {
+        debugPrint("RepCounter: Failed to load model bundle.");
+      }
+      return success;
+    } catch (e) {
+      debugPrint("RepCounter: Exception loading model: $e");
+      return false;
+    }
   }
 
   void _initializeMode() {
@@ -104,7 +127,8 @@ class RepCounter {
     _poseBuffer.clear();
     _currentState = null;
     _currentPhase = null;
-    _isProcessing = false;
+    _prevFrame = null;
+    _prevFrameTime = 0.0;
 
     _detectedLabelsInRep.clear();
     _featureBuffer.clear();
@@ -114,44 +138,97 @@ class RepCounter {
     _stateCounter = 0;
   }
 
-  /// Analyze pose and count reps
+  /// Analyze pose and count reps (with 60Hz interpolation)
   void processFrame(Pose pose) {
     final rawFrame = _poseToLandmarkList(pose);
 
-    // Apply temporal smoothing
-    final t = DateTime.now().millisecondsSinceEpoch / 1000.0;
-    final flat = rawFrame.expand((l) => l).toList();
-    final smoothedFlat = _smoothingFilter.filter(t, flat);
-
-    // Reconstruct frame
-    final List<List<double>> currentFrame = [];
-    for (int i = 0; i < smoothedFlat.length; i += 3) {
-      currentFrame.add([
-        smoothedFlat[i],
-        smoothedFlat[i + 1],
-        smoothedFlat[i + 2],
-      ]);
+    // Separate xyz from visibility for smoothing
+    final dims = config.landmarkDimensions;
+    final List<double> xyzFlat = [];
+    final List<double> visibilities = [];
+    for (final lm in rawFrame) {
+      xyzFlat.addAll([lm[0], lm[1], lm[2]]);
+      visibilities.add(lm.length > 3 ? lm[3] : 1.0);
     }
 
-    _poseBuffer.add(currentFrame);
+    // Apply temporal smoothing (only on xyz, not visibility)
+    final now = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    final smoothedXyz = _smoothingFilter.filter(now, xyzFlat);
 
-    if (_poseBuffer.length >= _bufferSize) {
-      if (!_isProcessing) {
-        _runInference();
+    // Reconstruct frame with correct number of values per landmark
+    final List<List<double>> currentFrame = [];
+    for (int i = 0; i < 33; i++) {
+      final lm = [
+        smoothedXyz[i * 3],
+        smoothedXyz[i * 3 + 1],
+        smoothedXyz[i * 3 + 2],
+      ];
+      if (dims >= 4) {
+        lm.add(visibilities[i]);
       }
+      currentFrame.add(lm);
+    }
+
+    // 60Hz Interpolation: fill gaps between camera frames
+    if (_prevFrame != null && _prevFrameTime > 0) {
+      final elapsed = now - _prevFrameTime;
+
+      // How many 60Hz ticks fit in this gap?
+      final expectedFrames = (elapsed * _targetHz).round();
+
+      if (expectedFrames > 1) {
+        // Interpolate intermediate frames (skip first = prev, last = current)
+        for (int f = 1; f < expectedFrames; f++) {
+          final t = f / expectedFrames; // 0.0 → 1.0
+          final interpolated = _lerpFrame(_prevFrame!, currentFrame, t);
+          _addFrameToBuffer(interpolated);
+        }
+      }
+    }
+
+    // Add the real current frame
+    _addFrameToBuffer(currentFrame);
+
+    // Save for next interpolation
+    _prevFrame = currentFrame;
+    _prevFrameTime = now;
+  }
+
+  /// Add a single frame to buffer and trigger inference if ready
+  void _addFrameToBuffer(List<List<double>> frame) {
+    _poseBuffer.add(frame);
+
+    if (_poseBuffer.length >= config.windowSize) {
+      _runInference(List.from(_poseBuffer));
       _poseBuffer.removeAt(0);
     }
   }
 
-  Future<void> _runInference() async {
-    _isProcessing = true;
+  /// Linearly interpolate between two landmark frames
+  List<List<double>> _lerpFrame(
+    List<List<double>> a,
+    List<List<double>> b,
+    double t,
+  ) {
+    final result = <List<double>>[];
+    for (int i = 0; i < a.length; i++) {
+      final lm = <double>[];
+      for (int j = 0; j < a[i].length; j++) {
+        lm.add(a[i][j] + (b[i][j] - a[i][j]) * t);
+      }
+      result.add(lm);
+    }
+    return result;
+  }
+
+  Future<void> _runInference(List<List<List<double>>> bufferSnapshot) async {
     try {
-      final result = await _modelService.runInference(List.from(_poseBuffer));
+      final result = await _modelService.runInference(bufferSnapshot);
       if (result != null) {
         _handleModelOutput(result);
       }
-    } finally {
-      _isProcessing = false;
+    } catch (e) {
+      debugPrint('Inference error: $e');
     }
   }
 
@@ -195,7 +272,10 @@ class RepCounter {
       }
 
       if (_stateCounter >= _debounceThreshold) {
-        final detectedPhase = ExercisePhase.fromLabel(detectedState);
+        final detectedPhase = ExercisePhase.fromLabel(
+          detectedState,
+          classPhases: config.classPhases,
+        );
         if (_currentState != detectedState) {
           _onStateChange(detectedState);
           _currentState = detectedState;
@@ -226,6 +306,15 @@ class RepCounter {
     if (config.countType == CountingMode.duration) {
       _handleDurationCounting(detectedState, maxProb);
     }
+
+    // Debug Logging (Throttled to ~1 second)
+    final now = DateTime.now();
+    if (_lastLogTime == null || now.difference(_lastLogTime!).inSeconds >= 1) {
+      _lastLogTime = now;
+      debugPrint(
+        'Pose Analysis: State=$detectedState, Conf=${(maxProb * 100).toStringAsFixed(1)}%, Stability=${(_currentStability * 100).toStringAsFixed(1)}%',
+      );
+    }
   }
 
   void _onStateChange(String newState) {
@@ -249,12 +338,36 @@ class RepCounter {
   void _incrementRep() {
     _repCount++;
     onRepCountChanged?.call(_repCount);
+
+    // Positive Feedback Check
+    if (_currentStability >= 0.85) {
+      _goodRepStreak++;
+      if (_goodRepStreak >= 3) {
+        // Trigger cheer
+        final cheers = [
+          "Great job!",
+          "Perfect form!",
+          "Keep it up!",
+          "Looking strong!",
+          "Excellent!",
+        ];
+        // Simple random selection
+        final message = cheers[_repCount % cheers.length];
+        _coachingManager.deliverPositive(message);
+        _goodRepStreak = 0; // Reset or keep counting? Reset to pace it out.
+      }
+    } else {
+      _goodRepStreak = 0;
+    }
   }
 
   /// Action Mode: Count specific actions
   void _handleActionTransition(String newState) {
     // Ignore utility states
-    final phase = ExercisePhase.fromLabel(newState);
+    final phase = ExercisePhase.fromLabel(
+      newState,
+      classPhases: config.classPhases,
+    );
     if (phase == ExercisePhase.error ||
         phase == ExercisePhase.idle ||
         phase == ExercisePhase.ready) {
@@ -274,7 +387,10 @@ class RepCounter {
 
     // Check for sequence completion (Restart/Ready state)
     // We count when returning to the starting position ('Ready' or '1_...')
-    final phase = ExercisePhase.fromLabel(newState);
+    final phase = ExercisePhase.fromLabel(
+      newState,
+      classPhases: config.classPhases,
+    );
     final isRestart = newState.startsWith('1') || phase == ExercisePhase.ready;
 
     if (isRestart && _detectedLabelsInRep.length >= 2) {
@@ -282,7 +398,9 @@ class RepCounter {
       if (_shouldCountSequentialRep()) {
         _processCompletion();
       } else if (_detectedLabelsInRep.any(
-        (l) => ExercisePhase.fromLabel(l) == ExercisePhase.peak,
+        (l) =>
+            ExercisePhase.fromLabel(l, classPhases: config.classPhases) ==
+            ExercisePhase.peak,
       )) {
         // Validation Error: If a "Peak" label exists in config but was skipped
         _checkPeakSkip();
@@ -329,7 +447,11 @@ class RepCounter {
     // 2. Peak Check / Sequence Completeness Check
     final labels = List<String>.from(config.classLabels!['classes'] ?? []);
     final peakLabels = labels
-        .where((l) => ExercisePhase.fromLabel(l) == ExercisePhase.peak)
+        .where(
+          (l) =>
+              ExercisePhase.fromLabel(l, classPhases: config.classPhases) ==
+              ExercisePhase.peak,
+        )
         .toList();
 
     final isSingleAction = config.countType == CountingMode.singleAction;
@@ -355,7 +477,7 @@ class RepCounter {
       } else {
         // Fallback for non-numeric labels: Ensure at least one non-ready/non-idle phase was hit
         final hasMovement = _detectedLabelsInRep.any((l) {
-          final p = ExercisePhase.fromLabel(l);
+          final p = ExercisePhase.fromLabel(l, classPhases: config.classPhases);
           return p == ExercisePhase.movement;
         });
         if (!hasMovement) return false;
@@ -410,7 +532,11 @@ class RepCounter {
   void _checkPeakSkip() {
     final labels = List<String>.from(config.classLabels!['classes'] ?? []);
     final peakLabels = labels
-        .where((l) => ExercisePhase.fromLabel(l) == ExercisePhase.peak)
+        .where(
+          (l) =>
+              ExercisePhase.fromLabel(l, classPhases: config.classPhases) ==
+              ExercisePhase.peak,
+        )
         .toList();
     bool peakSkipped = false;
 
@@ -612,13 +738,16 @@ class RepCounter {
   }
 
   List<List<double>> _poseToLandmarkList(Pose pose) {
+    final dims = config.landmarkDimensions;
     final List<List<double>> landmarks = List.generate(
       33,
-      (_) => [0.0, 0.0, 0.0],
+      (_) => List.filled(dims, 0.0),
     );
     pose.landmarks.forEach((type, landmark) {
       if (type.index < 33) {
-        landmarks[type.index] = [landmark.x, landmark.y, landmark.z];
+        final lm = [landmark.x, landmark.y, landmark.z];
+        if (dims >= 4) lm.add(landmark.likelihood);
+        landmarks[type.index] = lm;
       }
     });
     return PoseNormalization.normalizeByTorso(landmarks);

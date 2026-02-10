@@ -32,8 +32,10 @@ const tasks = [
         timeoutSec: 60,
         videoPath: 'videos/air_squat.mp4',
         bundlePath: 'bundles/squat_air.zip',
-        thumbnailPath: 'thumbnails/air_squat.png',
-        samplePosePath: 'images/air_squat_ready.png'
+        thumbnailPath: 'thumbnails/air_squat.png', // Storage path
+        samplePosePath: 'images/workouts/air_squat_ready.png', // Storage path
+        thumbnail: 'assets/thumbnails/air_squat.png', // Local Asset Fallback
+        readyPoseImageUrl: 'assets/images/workouts/air_squat_ready.png' // Local Asset Fallback
     },
     {
         id: 'squat_wide',
@@ -49,7 +51,9 @@ const tasks = [
         videoPath: 'videos/wide_squat.mp4',
         bundlePath: 'bundles/squat_wide.zip',
         thumbnailPath: 'thumbnails/wide_squat.png',
-        samplePosePath: 'images/wide_squat_ready.png'
+        samplePosePath: 'images/workouts/wide_squat_ready.png',
+        thumbnail: 'assets/thumbnails/wide_squat.png',
+        readyPoseImageUrl: 'assets/images/workouts/wide_squat_ready.png'
     },
     {
         id: 'squat_jump',
@@ -65,7 +69,9 @@ const tasks = [
         videoPath: 'videos/jump_squat.mp4',
         bundlePath: 'bundles/squat_jump.zip',
         thumbnailPath: 'thumbnails/jump_squat.png',
-        samplePosePath: 'images/jump_squat_ready.png'
+        samplePosePath: 'images/workouts/jump_squat_ready.png',
+        thumbnail: 'assets/thumbnails/jump_squat.png',
+        readyPoseImageUrl: 'assets/images/workouts/jump_squat_ready.png'
     },
 
     // === LUNGE ===
@@ -82,8 +88,10 @@ const tasks = [
         timeoutSec: 60,
         videoPath: 'videos/lunge.mp4',
         bundlePath: 'bundles/lunge_standard.zip',
-        thumbnailPath: 'images/lunge_ready.png', // Corrected: Using image from workouts folder as thumbnail
-        samplePosePath: 'images/lunge_ready.png'
+        thumbnailPath: 'images/workouts/lunge_ready.png',
+        samplePosePath: 'images/workouts/lunge_ready.png',
+        thumbnail: 'assets/images/workouts/lunge_ready.png',
+        readyPoseImageUrl: 'assets/images/workouts/lunge_ready.png'
     },
     {
         id: 'lunge_side',
@@ -99,7 +107,9 @@ const tasks = [
         videoPath: 'videos/side_lunge.mp4',
         bundlePath: 'bundles/lunge_side.zip',
         thumbnailPath: 'thumbnails/side_lunge.png',
-        samplePosePath: 'images/side_lunge_ready.png'
+        samplePosePath: 'images/workouts/side_lunge_ready.png',
+        thumbnail: 'assets/thumbnails/side_lunge.png',
+        readyPoseImageUrl: 'assets/images/workouts/side_lunge_ready.png'
     },
 
     // === PUSH ===
@@ -117,7 +127,9 @@ const tasks = [
         videoPath: 'videos/push_up.mp4',
         bundlePath: 'bundles/pushup_standard.zip',
         thumbnailPath: 'thumbnails/push_03.png',
-        samplePosePath: 'images/pushup_ready.png'
+        samplePosePath: 'images/workouts/pushup_ready.png',
+        thumbnail: 'assets/thumbnails/push_03.png',
+        readyPoseImageUrl: 'assets/images/workouts/pushup_ready.png'
     },
     {
         id: 'pushup_knee',
@@ -133,7 +145,9 @@ const tasks = [
         videoPath: 'videos/knee_pushup.mp4',
         bundlePath: 'bundles/pushup_knee.zip',
         thumbnailPath: 'thumbnails/push_03.png',
-        samplePosePath: 'images/pushup_ready.png'
+        samplePosePath: 'images/workouts/pushup_ready.png',
+        thumbnail: 'assets/thumbnails/push_03.png',
+        readyPoseImageUrl: 'assets/images/workouts/pushup_ready.png'
     },
     {
         id: 'pushup_diamond',
@@ -149,7 +163,9 @@ const tasks = [
         videoPath: 'videos/diamond_pushup.mp4',
         bundlePath: 'bundles/pushup_diamond.zip',
         thumbnailPath: 'thumbnails/push_04.png',
-        samplePosePath: 'images/push_04.png'
+        samplePosePath: 'images/workouts/push_04.png',
+        thumbnail: 'assets/thumbnails/push_04.png',
+        readyPoseImageUrl: 'assets/images/workouts/push_04.png'
     },
 
     // === CORE ===
@@ -168,7 +184,9 @@ const tasks = [
         videoPath: 'videos/plank.mp4',
         bundlePath: 'bundles/plank_standard.zip',
         thumbnailPath: 'thumbnails/plank.png',
-        samplePosePath: 'thumbnails/plank.png'
+        samplePosePath: 'thumbnails/plank.png',
+        thumbnail: 'assets/thumbnails/plank.png',
+        readyPoseImageUrl: 'assets/thumbnails/plank.png'
     },
     {
         id: 'plank_elbow',
@@ -185,7 +203,9 @@ const tasks = [
         videoPath: 'videos/elbow_plank.mp4',
         bundlePath: 'bundles/plank_elbow.zip',
         thumbnailPath: 'thumbnails/elbow_plank.png',
-        samplePosePath: 'images/elbow_plank_ready.jpeg'
+        samplePosePath: 'images/workouts/elbow_plank_ready.jpeg',
+        thumbnail: 'assets/thumbnails/elbow_plank.png',
+        readyPoseImageUrl: 'assets/images/workouts/elbow_plank_ready.jpeg'
     },
     {
         id: 'plank_side',
@@ -201,8 +221,10 @@ const tasks = [
         durationSec: 30,
         videoPath: 'videos/side_plank.mp4',
         bundlePath: 'bundles/plank_side.zip',
-        thumbnailPath: 'thumbnails/side_plank.png', // Corrected: Using file from thumbnails folder
-        samplePosePath: 'images/side_plank.jpg' // Corrected extension
+        thumbnailPath: 'thumbnails/side_plank.png',
+        samplePosePath: 'images/workouts/side_plank.jpg',
+        thumbnail: 'assets/thumbnails/side_plank.png',
+        readyPoseImageUrl: 'assets/images/workouts/side_plank.jpg'
     },
     {
         id: 'core_birddog',
@@ -217,8 +239,10 @@ const tasks = [
         timeoutSec: 60,
         videoPath: 'videos/bird_dog.mp4',
         bundlePath: 'bundles/core_birddog.zip',
-        thumbnailPath: 'thumbnails/birddog.png', // Corrected: Using file from thumbnails folder
-        samplePosePath: 'images/birddog_ready.jpg' // Corrected extension
+        thumbnailPath: 'thumbnails/birddog.png',
+        samplePosePath: 'images/workouts/birddog_ready.jpg',
+        thumbnail: 'assets/thumbnails/birddog.png',
+        readyPoseImageUrl: 'assets/images/workouts/birddog_ready.jpg'
     },
     {
         id: 'core_glutebridge',
@@ -234,7 +258,9 @@ const tasks = [
         videoPath: 'videos/glute_bridge.mp4',
         bundlePath: 'bundles/core_glutebridge.zip',
         thumbnailPath: 'thumbnails/glute_bridge.png',
-        samplePosePath: 'images/glute_bridge_ready.png'
+        samplePosePath: 'images/workouts/glute_bridge_ready.png',
+        thumbnail: 'assets/thumbnails/glute_bridge.png',
+        readyPoseImageUrl: 'assets/images/workouts/glute_bridge_ready.png'
     },
 ];
 

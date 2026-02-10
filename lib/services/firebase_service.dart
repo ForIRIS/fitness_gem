@@ -259,7 +259,7 @@ class FirebaseService {
         try {
           final result = await FirebaseFunctions.instance
               .httpsCallable('getFeaturedProgram')
-              .call();
+              .call({'category': 'Build Strength'});
           data = Map<String, dynamic>.from(result.data);
         } catch (e) {
           debugPrint('Error fetching featured program: $e');

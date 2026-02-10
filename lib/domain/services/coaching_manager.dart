@@ -41,6 +41,10 @@ class CoachingManager {
     'Keep your back straight': const Duration(seconds: 8),
   };
 
+  // Positive feedback cooling
+  DateTime? _lastPositiveMessageTime;
+  static const Duration positiveCooling = Duration(seconds: 15);
+
   DateTime? _lastMessageTime;
   final Map<String, DateTime> _lastMessageMap = {};
 
@@ -87,6 +91,37 @@ class CoachingManager {
     await _feedbackOutput.speak(message);
 
     // Auto-clear message after 3 seconds (2s visible + 1s fade)
+    Future.delayed(const Duration(seconds: 3), () {
+      if (_currentVisibleMessage == coachingMessage) {
+        _currentVisibleMessage = null;
+        _messageController.add(null);
+      }
+    });
+  }
+
+  /// Deliver a positive encouragement message (separate cooling logic)
+  Future<void> deliverPositive(String message) async {
+    final now = DateTime.now();
+    if (_lastPositiveMessageTime != null &&
+        now.difference(_lastPositiveMessageTime!) < positiveCooling) {
+      return;
+    }
+
+    // Also respect global cooling slightly to avoid overlapping with corrections
+    if (_lastMessageTime != null &&
+        now.difference(_lastMessageTime!) < const Duration(seconds: 2)) {
+      return;
+    }
+
+    _lastPositiveMessageTime = now;
+    _lastMessageTime = now; // Update global last message too
+
+    final coachingMessage = CoachingMessage(message: message);
+    _currentVisibleMessage = coachingMessage;
+
+    _messageController.add(coachingMessage);
+    await _feedbackOutput.speak(message);
+
     Future.delayed(const Duration(seconds: 3), () {
       if (_currentVisibleMessage == coachingMessage) {
         _currentVisibleMessage = null;

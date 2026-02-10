@@ -127,16 +127,27 @@ class BaselineAssessmentController extends ChangeNotifier {
   }
 
   Future<void> _startRecording() async {
+    if (_phase == AssessmentPhase.recording ||
+        _phase == AssessmentPhase.analyzing) {
+      return;
+    }
     _updatePhase(AssessmentPhase.recording);
     _recordingSeconds = 0;
     _ttsService.speakCountdown(0); // "Start"
 
-    if (_cameraManager.controller != null) {
-      await _videoRecorder.startRecording(_cameraManager.controller!);
+    try {
+      if (_cameraManager.controller != null &&
+          !_cameraManager.controller!.value.isRecordingVideo) {
+        await _videoRecorder.startRecording(_cameraManager.controller!);
+      }
+    } catch (e) {
+      debugPrint('Error starting recording: $e');
+      _handleError('Failed to start camera recording');
+      return;
     }
 
     // Standard assessment duration
-    const assessmentDuration = 30;
+    const assessmentDuration = 10;
 
     _timerService.startWorkoutTimer(timeoutSeconds: assessmentDuration);
     _ttsService.speak(

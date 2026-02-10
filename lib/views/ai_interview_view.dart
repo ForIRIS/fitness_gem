@@ -286,7 +286,13 @@ class _AIInterviewViewState extends State<AIInterviewView>
                         borderRadius: BorderRadius.circular(24),
                       ),
                     ),
-                    child: const Text("Home"),
+                    child: Text(
+                      "Finish",
+                      style: GoogleFonts.barlow(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -294,12 +300,24 @@ class _AIInterviewViewState extends State<AIInterviewView>
                   flex: 2,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Navigate to Workout (if we have current curriculum info, or just pop to home then navigate?)
-                      // Actually, the latest curriculum should be available.
-                      // For now, let's assume "Home" is enough or trigger detail view if curriculum is in the chat.
-                      // The curriculum card in chat mimics "Start".
-                      // This bottom button can be "Done" or "Go to Home".
-                      Navigator.pop(context);
+                      // Navigate to Workout
+                      final lastMessage = _controller.messages.lastWhere(
+                        (m) => m.curriculum != null,
+                        orElse: () => ChatMessage(text: '', isUser: false),
+                      );
+
+                      if (lastMessage.curriculum != null) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => WorkoutDetailView(
+                              curriculum: lastMessage.curriculum!,
+                            ),
+                          ),
+                        );
+                      } else {
+                        Navigator.pop(context);
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
@@ -311,7 +329,7 @@ class _AIInterviewViewState extends State<AIInterviewView>
                       elevation: 2,
                     ),
                     child: Text(
-                      "Finish",
+                      "Start Workout",
                       style: GoogleFonts.barlow(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,

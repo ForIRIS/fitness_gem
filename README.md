@@ -1,104 +1,92 @@
-# Fitness Gem 💎 - Google Gemini API Hackathon Edition
+# Fitness Gem 💎 - Gemini 3 Hackathon Edition
 
-AI-powered home fitness coaching app that combines real-time device-side pose analysis with **Google Gemini's multi-modal intelligence** for professional-grade feedback.
+**Your Hyper-Personalized, Multi-Modal AI Fitness Companion.**
+
+Fitness Gem leverages the groundbreaking capabilities of **Google Gemini 3** to transform home fitness. By combining a **1M+ token context window**, **Context Caching**, and **Native Multi-Modal Video Understanding**, we offer a coaching experience that remembers your entire journey, sees your form in real-time, and keeps you safe.
 
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat&logo=flutter&logoColor=white)
-![Gemini](https://img.shields.io/badge/Gemini_AI-8E75B2?style=flat&logo=google&logoColor=white)
-![ML Kit](https://img.shields.io/badge/ML_Kit-4285F4?style=flat&logo=google&logoColor=white)
-![FFmpeg](https://img.shields.io/badge/FFmpeg-0078D7?style=flat&logo=ffmpeg&logoColor=white)
+![Gemini 3](https://img.shields.io/badge/Gemini_3-8E75B2?style=flat&logo=google&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)
 
-## ✨ Hackathon Highlights
+---
 
-### 🧠 Multi-Modal AI Intelligence
-- **Twin-Stream Analysis**: We use **Gemini 3 Flash** to analyze two parallel video streams:
-  1. **RGB Stream**: Captures raw human movement.
-  2. **Skeleton (ControlNet) Stream**: A high-contrast, black-background video with color-coded bones (Red: Right, Blue: Left, Yellow: Torso) to eliminate environment noise and maximize Gemini's biomechanical accuracy.
-- **Biomechanical Context**: We inject serialized joint coordinate data and user profile history into the prompt, enabling Gemini to detect subtle form issues like "hip shift" or "knee valgus."
+## 🚀 Gemini 3 Powered Innovations
 
-### 🏋️ Dynamic Curriculum Engine
-- **AI Onboarding**: A deep-interview system that talks to users during onboarding to understand their injury history and fitness goals beyond simple checkboxes.
-- **Smart Planning**: Generates hyper-personalized workout plans using a library of 20+ exercise variations (Diamond Push-ups, Side Planks, etc.) based on available high-quality media assets.
+### 🧠 1M+ Context & "Life Log"
+Fitness Gem doesn't just remember your last workout; it remembers **everything**.
+- **Holistic Analysis**: We utilize Gemini 3's massive context window to ingest a continuous stream of "Life Logs" (diet photos, workout logs, mood notes, sleep data).
+- **Long-Term Pattern Recognition**: The AI detects subtle trends over months—correlating poor sleep with reduced squat depth, or identifying that a specific meal plan boosts your endurance.
 
-### ⚡ Technical Innovation
-- **Cloud-Native, Local-First**: ML Kit handles 30fps pose detection locally, while Gemini provides professional coaching feedback after each set.
-- **FFmpeg Hardware Acceleration**: Optimized client-side video processing to generate skeleton overlays without lagging the main UI thread.
+### ⚡ Smart Context Caching
+To deliver instant, personalized coaching without the latency or cost of re-processing massive history:
+- **Cached User Persona**: Your injuries, goals, equipment list, and rapid-access health history are cached.
+- **Efficient Conversations**: The chat interface feels instant and deeply contextual, recalling details from weeks ago as if they were mentioned seconds ago.
 
-## 🚀 Features
+### 🤖 Hybrid Intelligence (Real-Time + Deep Analysis)
+We combine the speed of **Edge AI** with the reasoning of **Cloud Gemini 3**:
+- **Real-Time Edge AI (Exercise-Specific)**: Specialized on-device models (ML Kit) are fine-tuned for specific exercises (e.g., Squats, Pushups) to count reps with <10ms latency and ensure immediate form safety.
+- **Deep Cloud Analysis**: Gemini 3 handles complex, non-deterministic tasks like **Fall Verification** and long-term fatigue analysis, ensuring high-stakes decisions are backed by SOTA reasoning.
 
-- 🎯 **AI Deep Interview** - Natural language onboarding for precise physical assessment.
-- 📹 **ControlNet Video Generation** - Real-time generation of noise-free skeleton videos for AI vision.
-- 🗣️ **Multilingual AI Coach** - Real-time TTS feedback in English/Korean with personalized encouragement.
-- 📊 **Stability Scoring** - Gemini-driven stability and safety scores (1-100) per set.
-- ⚠️ **AI Fall Verification** - Vision-based safety monitoring that distinguishes between "lying down to rest" and a "sudden fall."
+### 👁️ Native Multi-Modal Video Coaching
+Gone are the days of simple 2D pose heuristics.
+- **Deep Form Analysis**: Gemini views your workout video to provide professional-grade feedback (e.g., "Your knees are caving in slightly at the bottom of the squat").
+- **Real-Time Feedback Loop**: Analysis runs after every set to adjust the next set's difficulty or provide immediate corrective cues.
+
+---
+
+## 🛡️ Guardian Safety System
+
+Safety is paramount for home exercise.
+- **Gemini Fall Verification**: While local sensors detect sudden drops, **Gemini 3** analyzes the video context to distinguish between a "rest" and a "fall," reducing false positives.
+- **Emergency Protocols**: If a fall is confirmed and the user is unresponsive, the **Guardian System** automatically notifies pre-set emergency contacts with location context.
+
+---
+
+## ✨ Key Features
+
+- **🗣️ Natural Language Onboarding**: A conversational interview to understand your "Why", not just your stats.
+- **📅 Dynamic Curriculum**: Workouts are generated on the fly. Had a stressful day? The AI suggests a restorative flow. Feeling energetic? It ramps up the intensity.
+- **📹 Privacy-First Vision**: Processing happens securely, with strict user controls over video data.
+- **📊 Progress Dashboard**: Visual insights derived from complex unstructured data, turned into clear graphs and actionable advice.
+
+---
 
 ## 📦 Tech Stack
 
 | Component | Technology | Role |
 |-----------|------------|------|
-| **Mobile Core** | Flutter (Dart) | Multi-platform UI & Logic |
-| **Vision AI** | Google Gemini 3 Flash | High-level movement analysis & Coaching |
-| **Pose Logic** | Google ML Kit | Low-latency 2D/3D joint tracking |
-| **Video Engine** | FFmpeg (Mobile) | High-contrast skeleton video encoding |
-| **Backend** | Firebase (Cloud Functions, Firestore) | Dynamic exercise library & User data |
-| **Speech** | Flutter TTS / STT | Voice interaction for "hands-free" workouts |
-
-## 🛠️ Installation & Setup
-
-1. **Clone & Install**
-   ```bash
-   git clone https://github.com/yourusername/fitness-gem.git
-   cd fitness-gem/fitness_gem
-   flutter pub get
-   ```
-
-2. **Configure API Keys**
-   - Create a `.env` file in the root:
-     ```bash
-     GEMINI_API_KEY=your_key_here
-     ```
-   - (For reviewers) If you are testing on a simulator/emulator, ensure you have internet access.
-
-3. **Backend Setup (Optional)**
-   ```bash
-   cd functions
-   npm install
-   # Deploy to Firebase or use provided seed script:
-   npx ts-node src/scripts/seed_exercises.ts
-   ```
-
-## 📐 Project Structure
-
-- `lib/services/video_recorder.dart`: **The Core Innovation.** Handles color-coded skeleton drawing and FFmpeg encoding.
-- `assets/prompts/`: Contains the System Instructions for the Analyst (Vision) and Consultant (Coaching).
-- `lib/utils/rep_counter.dart`: State-machine based repetition counting logic.
-- `functions/src/scripts/seed_exercises.ts`: Dynamic exercise library configuration and multi-view sample metadata.
-
-### 📂 Multi-View Training Library
-- **Varied Sample Data**: The system supports multiple camera angles and variations for each exercise (e.g., `squat_01`, `squat_02`), enabling the AI to learn from diverse perspectives and provide robust form analysis.
-- **Seeding for Scale**: Automated seeding scripts populate Firestore with a rich hierarchy of exercise metadata, directly mapped to high-quality multi-view sample videos.
+| **Frontend** | Flutter (Dart) | Cross-platform mobile application |
+| **Brain** | **Google Gemini 3** | Reasoning, Vision, Long-context Analysis |
+| **Localization** | Context Caching | Low-latency personalized state management |
+| **Edge AI** | Google ML Kit | Real-time low-latency pose detection & fall monitoring |
+| **Backend** | Firebase | Auth, Firestore, Cloud Functions |
 
 ---
-**Google Gemini API Developer Competition 2024 Entry.**  
-*Empowering health through accessible, intelligent movement analysis.*
 
-## 📦 Submission & Media Assets
+## 🛠️ Getting Started
 
-For the hackathon submission, all model files, images, and sample videos must be organized and uploaded to your **Firebase Storage** bucket.
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/yourusername/fitness-gem.git
+    cd fitness-gem
+    ```
 
-### 📁 Firebase Storage Structure
-Ensure your bucket follows this exact hierarchy:
-- `/videos/` - Raw MP4 guide videos (e.g., `squat_01.mp4`)
-- `/thumbnails/` - Preview JPG images (e.g., `squat_01.jpg`)
-- `/images/` - "Ready Pose" sample images (e.g., `squat_01_ready.jpg`)
-- `/bundles/` - Zipped asset bundles for each exercise (e.g., `squat_01.zip`)
+2.  **Setup Environment**
+    Create a `.env` file in the root directory:
+    ```env
+    GEMINI_API_KEY=your_gemini_api_key
+    ```
 
-### 🤐 How to Package Bundles
-1. **iOS Models**: Zip your `.mlpackage` folder into a file named **`pose_model.mlpackage.zip`**.
-2. **Exercise Bundle**: Create a single ZIP file for the exercise (e.g., `squat_01.zip`) containing:
-   - `pose_model.mlpackage.zip` (for iOS)
-   - `pose_model.onnx` (for Android)
-   - The video, thumbnail, and ready pose image.
-3. **Upload**: Upload the final exercise ZIP to the `/bundles/` folder in Firebase Storage.
+3.  **Install Dependencies**
+    ```bash
+    flutter pub get
+    ```
 
-> [!TIP]
-> Refer to [asset_packaging_guide.md](file:///Volumes/Luuse/Developments/fitness-gem/fitness_gem/asset_packaging_guide.md) for a detailed checklist and automation tips.
+4.  **Run the App**
+    ```bash
+    flutter run
+    ```
+
+---
+
+*Built for the Google Gemini 3 Hackathon. Pushing the boundaries of personalized AI health.*
