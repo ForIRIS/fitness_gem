@@ -70,7 +70,8 @@ dependencies:
   # Environment Variables
   flutter_dotenv: ^5.2.1
   ffmpeg_kit_flutter_new: ^4.1.0
-  presentation_displays: ^1.0.0
+  presentation_displays:
+    path: packages/presentation_displays
   shimmer: ^3.0.0
   image_picker: ^1.2.1
   intl_phone_field: ^3.2.0

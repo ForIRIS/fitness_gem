@@ -32,6 +32,7 @@ class RepCounter {
   static const double _targetHz = 60.0;
   List<List<double>>? _prevFrame;
   double _prevFrameTime = 0.0; // seconds (epoch-based)
+  bool _isProcessing = false;
 
   // Low confidence / Error tracking
   int _lowConfidenceCounter = 0;
@@ -41,7 +42,7 @@ class RepCounter {
   String? _lastDetectedState;
   int _stateCounter = 0;
   static const int _debounceThreshold =
-      2; // Must appear 2 detected frames in a row
+      1; // Must appear 1 detected frame (immediately reactive if confidence is high)
 
   // Sequence Mode Tracking
   final Set<String> _detectedLabelsInRep = {};
@@ -126,9 +127,9 @@ class RepCounter {
     _repCount = 0;
     _poseBuffer.clear();
     _currentState = null;
-    _currentPhase = null;
     _prevFrame = null;
     _prevFrameTime = 0.0;
+    _isProcessing = false;
 
     _detectedLabelsInRep.clear();
     _featureBuffer.clear();
@@ -141,6 +142,11 @@ class RepCounter {
   /// Analyze pose and count reps (with 60Hz interpolation)
   void processFrame(Pose pose) {
     final rawFrame = _poseToLandmarkList(pose);
+
+    // DEBUG: Inspect first landmark to check normalization range
+    if (rawFrame.isNotEmpty && _repCount == 0 && _poseBuffer.length % 60 == 0) {
+      debugPrint('Input LMs[0]: ${rawFrame[0]}');
+    }
 
     // Separate xyz from visibility for smoothing
     final dims = config.landmarkDimensions;
@@ -208,7 +214,9 @@ class RepCounter {
     _poseBuffer.add(frame);
 
     if (_poseBuffer.length >= config.windowSize) {
-      _runInference(List.from(_poseBuffer));
+      if (!_isProcessing) {
+        _runInference(List.from(_poseBuffer));
+      }
       _poseBuffer.removeAt(0);
     }
   }
@@ -231,6 +239,7 @@ class RepCounter {
   }
 
   Future<void> _runInference(List<List<List<double>>> bufferSnapshot) async {
+    _isProcessing = true;
     try {
       final result = await _modelService.runInference(bufferSnapshot);
       if (result != null) {
@@ -238,6 +247,8 @@ class RepCounter {
       }
     } catch (e) {
       debugPrint('Inference error: $e');
+    } finally {
+      _isProcessing = false;
     }
   }
 
@@ -791,5 +802,10 @@ class RepCounter {
     if (config.classLabels == null) return false;
     final labels = List<String>.from(config.classLabels!['classes'] ?? []);
     return labels.any((l) => l.toLowerCase().contains(className.toLowerCase()));
+  }
+
+  /// Dispose resources
+  Future<void> dispose() async {
+    await _modelService.dispose();
   }
 }

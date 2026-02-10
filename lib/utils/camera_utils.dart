@@ -55,6 +55,9 @@ class CameraUtils {
   }
 
   static Uint8List _concatenatePlanes(List<Plane> planes) {
+    if (planes.length == 1) {
+      return planes.first.bytes;
+    }
     final WriteBuffer allBytes = WriteBuffer();
     for (final Plane plane in planes) {
       allBytes.putUint8List(plane.bytes);

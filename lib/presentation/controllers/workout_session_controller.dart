@@ -158,6 +158,9 @@ class WorkoutSessionController extends ChangeNotifier {
 
     final loaded = await counter.initialize();
     debugPrint('Model loaded for ${task.title}: $loaded');
+
+    // Dispose previous counter to free native resources
+    await _repCounter?.dispose();
     _repCounter = counter;
   }
 
@@ -530,6 +533,7 @@ class WorkoutSessionController extends ChangeNotifier {
     _videoRecorder.dispose();
     _ttsService.dispose();
     _displayViewModel.dispose();
+    _repCounter?.dispose(); // Release native ML resources
     super.dispose();
   }
 }
