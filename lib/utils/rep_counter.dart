@@ -169,7 +169,7 @@ class RepCounter {
       currentFrame.add(lm);
     }
 
-    // 60Hz Interpolation: fill gaps between camera frames
+    // 60Hz Interpolation: fill gaps between camera frames (buffer only, no inference)
     if (_prevFrame != null && _prevFrameTime > 0) {
       final elapsed = now - _prevFrameTime;
 
@@ -181,21 +181,30 @@ class RepCounter {
         for (int f = 1; f < expectedFrames; f++) {
           final t = f / expectedFrames; // 0.0 → 1.0
           final interpolated = _lerpFrame(_prevFrame!, currentFrame, t);
-          _addFrameToBuffer(interpolated);
+          _addFrameToBufferOnly(interpolated);
         }
       }
     }
 
-    // Add the real current frame
-    _addFrameToBuffer(currentFrame);
+    // Add the real current frame AND trigger inference if buffer is ready
+    _addFrameAndInfer(currentFrame);
 
     // Save for next interpolation
     _prevFrame = currentFrame;
     _prevFrameTime = now;
   }
 
-  /// Add a single frame to buffer and trigger inference if ready
-  void _addFrameToBuffer(List<List<double>> frame) {
+  /// Add interpolated frame to buffer only — no inference
+  void _addFrameToBufferOnly(List<List<double>> frame) {
+    _poseBuffer.add(frame);
+    // Keep buffer at windowSize (slide)
+    while (_poseBuffer.length > config.windowSize) {
+      _poseBuffer.removeAt(0);
+    }
+  }
+
+  /// Add real camera frame to buffer and trigger inference if ready
+  void _addFrameAndInfer(List<List<double>> frame) {
     _poseBuffer.add(frame);
 
     if (_poseBuffer.length >= config.windowSize) {
@@ -307,9 +316,9 @@ class RepCounter {
       _handleDurationCounting(detectedState, maxProb);
     }
 
-    // Debug Logging (Throttled to ~1 second)
+    // Debug Logging (Throttled to ~2 seconds)
     final now = DateTime.now();
-    if (_lastLogTime == null || now.difference(_lastLogTime!).inSeconds >= 1) {
+    if (_lastLogTime == null || now.difference(_lastLogTime!).inSeconds >= 2) {
       _lastLogTime = now;
       debugPrint(
         'Pose Analysis: State=$detectedState, Conf=${(maxProb * 100).toStringAsFixed(1)}%, Stability=${(_currentStability * 100).toStringAsFixed(1)}%',

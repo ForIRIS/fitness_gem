@@ -16,11 +16,12 @@ class ReadyPoseResult {
 
 class ReadyPoseDetector {
   static const int requiredHoldSeconds = 5;
-  static const int noiseToleranceMs = 100;
-  static const double minLikelihood = 0.5;
+  static const int noiseToleranceMs = 500;
+  static const double minLikelihood = 0.3;
 
   DateTime? _holdStartTime;
   DateTime? _lastReadySignalTime;
+  DateTime? _lastDebugLogTime;
 
   ReadyPoseResult processFrame(Pose pose, RepCounter? repCounter) {
     final isBodyVisible = _checkBodyVisibility(pose);
@@ -38,23 +39,30 @@ class ReadyPoseDetector {
     // Use RepCounter's specific "Ready" class detection if available
     // or fallback to just standing still (Body Visible) if specific Ready pose not defined
     final bool isReadyPoseDetected =
-        repCounter?.isClassDetected('Ready', threshold: 0.8) ?? true;
+        repCounter?.isClassDetected('Ready', threshold: 0.6) ?? true;
 
     final now = DateTime.now();
+    final shouldLog =
+        _lastDebugLogTime == null ||
+        now.difference(_lastDebugLogTime!).inSeconds >= 2;
 
     if (isReadyPoseDetected) {
       _lastReadySignalTime = now;
       _holdStartTime ??= now;
-      if (now.second % 2 == 0) {
+      if (shouldLog) {
+        _lastDebugLogTime = now;
         debugPrint(
           "Ready Pose Holding... ${(now.difference(_holdStartTime!).inMilliseconds / 1000).toStringAsFixed(1)}s",
         );
       }
     } else {
       // Signal lost Logic with noise tolerance
-      debugPrint(
-        "Ready Pose Signal Lost. Previous hold: ${_holdStartTime != null}",
-      );
+      if (shouldLog) {
+        _lastDebugLogTime = now;
+        debugPrint(
+          "Ready Pose Signal Lost. Previous hold: ${_holdStartTime != null}",
+        );
+      }
       if (_lastReadySignalTime != null) {
         final silenceDuration = now
             .difference(_lastReadySignalTime!)
@@ -105,7 +113,12 @@ class ReadyPoseDetector {
       }
     }
 
-    // OK if 6 or more out of 8 are visible
-    return visibleCount >= 6;
+    final visible = visibleCount >= 5;
+    if (!visible) {
+      debugPrint(
+        'Body visibility: $visibleCount/8 landmarks (need 5, likelihood >= $minLikelihood)',
+      );
+    }
+    return visible;
   }
 }
