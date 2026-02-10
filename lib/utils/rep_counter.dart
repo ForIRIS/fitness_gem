@@ -18,7 +18,7 @@ class RepCounter {
 
   // Settings
   // Buffer size is now dynamic via config.windowSize
-  static const double _inferenceThreshold = 0.9; // 90% confidence
+  static const double _inferenceThreshold = 0.7; // 70% confidence
 
   // State
   final List<List<List<double>>> _poseBuffer = [];
@@ -35,7 +35,7 @@ class RepCounter {
 
   // Low confidence / Error tracking
   int _lowConfidenceCounter = 0;
-  static const int _lowConfidenceThreshold = 10; // Frames
+  static const int _lowConfidenceThreshold = 60; // Frames
 
   // Debouncing & Sequence
   String? _lastDetectedState;
@@ -784,5 +784,12 @@ class RepCounter {
     }
 
     return false;
+  }
+
+  /// Check if the configuration includes a specific class label
+  bool canDetectClass(String className) {
+    if (config.classLabels == null) return false;
+    final labels = List<String>.from(config.classLabels!['classes'] ?? []);
+    return labels.any((l) => l.toLowerCase().contains(className.toLowerCase()));
   }
 }

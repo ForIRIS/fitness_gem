@@ -38,8 +38,18 @@ class ReadyPoseDetector {
 
     // Use RepCounter's specific "Ready" class detection if available
     // or fallback to just standing still (Body Visible) if specific Ready pose not defined
-    final bool isReadyPoseDetected =
-        repCounter?.isClassDetected('Ready', threshold: 0.6) ?? true;
+    bool isReadyPoseDetected;
+
+    if (repCounter == null) {
+      // Model not loaded yet -> Wait (False) rather than risk false positive
+      isReadyPoseDetected = false;
+    } else if (repCounter.canDetectClass('Ready')) {
+      // Strict check: Exercise has a "Ready" class, so we MUST detect it
+      isReadyPoseDetected = repCounter.isClassDetected('Ready', threshold: 0.6);
+    } else {
+      // Fallback: Exercise has no "Ready" class (e.g. simple timer), just check visibility
+      isReadyPoseDetected = true;
+    }
 
     final now = DateTime.now();
     final shouldLog =
