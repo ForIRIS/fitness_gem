@@ -770,7 +770,17 @@ class RepCounter {
         landmarks[type.index] = lm;
       }
     });
-    return PoseNormalization.normalizeByTorso(landmarks);
+
+    // Check config for normalization preference (Default: SKIP, based on user feedback)
+    final bool useNormalization =
+        config.classLabels?['use_normalization'] ?? false;
+
+    if (useNormalization) {
+      return PoseNormalization.normalizeByTorso(landmarks);
+    } else {
+      // Return raw landmarks (pixels)
+      return landmarks;
+    }
   }
 
   /// Check if the specific class is detected with high confidence

@@ -223,6 +223,8 @@ class WorkoutSessionController extends ChangeNotifier {
   }
 
   void _startCountdown() {
+    if (_state.phase == SessionPhase.countdown) return;
+
     _updateState(
       _state.copyWith(phase: SessionPhase.countdown, countdownSeconds: 5),
     );
