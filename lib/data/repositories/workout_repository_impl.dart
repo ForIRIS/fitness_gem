@@ -11,6 +11,7 @@ import '../datasources/remote/firebase_datasource.dart';
 import '../datasources/remote/gemini_datasource.dart';
 import '../models/workout_curriculum_model.dart';
 import '../models/user_profile_model.dart';
+import '../models/featured_program_model.dart';
 
 /// Implementation of WorkoutRepository
 class WorkoutRepositoryImpl implements WorkoutRepository {
@@ -109,6 +110,25 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
       debugPrint(
         'WorkoutRepo: Getting featured program for category: $category',
       );
+
+      // 1. Try Local Cache First
+      try {
+        final cachedModel = await localDataSource.getFeaturedProgram(
+          category ?? 'featured',
+        );
+        if (cachedModel != null) {
+          debugPrint('WorkoutRepo: Found cached featured program');
+          // Sanitize cached data just in case
+          final entity = cachedModel.toEntity();
+          return Right(entity);
+        }
+      } catch (e) {
+        debugPrint(
+          'WorkoutRepo: Cache lookup failed, proceeding to remote: $e',
+        );
+      }
+
+      // 2. Fetch Remote
       final data = await remoteDataSource.fetchFeaturedProgramData(category);
 
       final taskIds =
@@ -148,6 +168,11 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
         createdAt: DateTime.now(),
       );
 
+      // Create Model for Caching
+      // Note: We need to reconstruct the model from the fetched data + resolved tasks
+      // But FeaturedProgramModel expects a full curriculum model, not just tasks.
+      // We'll create the entity first, then the model.
+
       final featuredProgram = FeaturedProgram(
         id: data['id'] ?? 'featured',
         title: data['title'] ?? 'Featured Program',
@@ -164,6 +189,17 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
             [],
         workoutCurriculum: curriculum,
       );
+
+      // 3. Save to Cache
+      try {
+        final model = FeaturedProgramModel.fromEntity(featuredProgram);
+        await localDataSource.saveFeaturedProgram(
+          model,
+          category ?? 'featured',
+        );
+      } catch (e) {
+        debugPrint('WorkoutRepo: Failed to cache featured program: $e');
+      }
 
       return Right(featuredProgram);
     } catch (e) {

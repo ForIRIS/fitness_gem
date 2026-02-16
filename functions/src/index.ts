@@ -128,6 +128,7 @@ export const getFeaturedProgram = onCall(async (request) => {
     }
 
     const category = request.data.category || 'Build Strength'; // Default to Build Strength
+    console.log(`getFeaturedProgram v3 triggered for category: ${category}`);
 
     const programs: { [key: string]: any } = {
         'Build Strength': {

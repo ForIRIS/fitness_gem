@@ -116,6 +116,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   /// Load all data for home screen with granular updates
+  /// Load all data for home screen with granular updates
   Future<void> loadData() async {
     _isProfileLoading = true;
     _isCurriculumLoading = true;
@@ -126,20 +127,20 @@ class HomeViewModel extends ChangeNotifier {
 
     debugPrint('HomeViewModel: Loading dashboard data...');
 
-    // 1. Load User Profile First (Critical for Header)
+    // 1. Kick off independent requests concurrently
+    // These do not depend on UserProfile, so we start them immediately.
+    final hotFuture = _loadHotCategories();
+    final featuredFuture = _loadFeaturedProgram();
+    final tomorrowFuture = _loadTomorrowCurriculum();
+
+    // 2. Load User Profile (Critical dependency for Curriculum generation)
     await _loadUserProfile();
 
-    // 2. Load Curriculum (Critical for Daily Stats & FAB)
-    // We start this immediately after profile to ensure fastest TTI for main action
+    // 3. Load Curriculum (Now that we have profile, we can generate if needed)
     await _loadTodayCurriculum();
 
-    // 3. Load Secondary Content Concurrently
-    // These can load in parallel as they are lower on the page
-    Future.wait([
-      _loadHotCategories(),
-      _loadFeaturedProgram(),
-      _loadTomorrowCurriculum(),
-    ]);
+    // 4. Ensure everything else is done before returning (for Pull-to-Refresh)
+    await Future.wait([hotFuture, featuredFuture, tomorrowFuture]);
   }
 
   Future<void> _loadUserProfile() async {
@@ -241,6 +242,9 @@ class HomeViewModel extends ChangeNotifier {
       },
       (program) {
         if (program != null) {
+          debugPrint(
+            'HomeViewModel: Loaded featured program image: ${program.imageUrl}',
+          );
           _featuredProgram = program;
         } else {
           _setMockFeaturedProgram();
@@ -259,7 +263,7 @@ class HomeViewModel extends ChangeNotifier {
       title: 'Workout Program',
       slogan: 'Get Set, Stay Ignite.',
       description: 'Choose a category to see featured challenges.',
-      imageUrl: 'assets/images/workouts/air_squat_ready.png',
+      imageUrl: 'assets/thumbnails/air_squat.png',
       membersCount: '0',
       rating: 5.0,
       difficulty: '1',
